@@ -1,0 +1,78 @@
+package main
+
+templ indexTemplate() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>PLG Connect Display</title>
+			<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
+			<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.2" crossorigin="anonymous"></script>
+			<style>
+				body {
+				    display: flex;
+	                justify-content: center; /* centers horizontally */
+	                align-items: center;     /* centers vertically */
+	     			width: 100vw;    /* Viewport width */
+	                height: 100vh;   /* Viewport height */
+	                margin: 0;
+	                padding: 0;
+	                overflow: hidden;
+					background-color: hsl(256, 10%, 10%);
+					color: hsl(256, 90%, 95%);
+				}
+
+				video, img, iframe {
+	    			width: 100vw;    /* Viewport width */
+	                height: 100vh;   /* Viewport height */
+	    			object-fit: contain;
+				}
+
+				p {
+				    font-size: 6rem;
+					line-height: 1;
+					font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+					text-wrap: balance;
+					max-width: 90vw;
+					word-break: break-word;
+					display: block;
+				}
+			</style>
+			<script>
+				document.addEventListener('keydown', function(event) {
+				    if (event.code === 'Space') {
+				        event.preventDefault();
+				        var video = document.querySelector('video');
+				        if (video) {
+				            if (video.paused) {
+				                video.play();
+				            } else {
+				                video.pause();
+				            }
+				        }
+				    }
+				});
+			</script>
+		</head>
+		<body hx-ext="sse" sse-connect="/sse" sse-swap="message"></body>
+	</html>
+}
+
+templ videoTemplate(path string) {
+	<video autoplay>
+		<source src={ "/api/file/" + path } type="video/mp4"/>
+	</video>
+}
+
+templ imageTemplate(path string) {
+	<img src={ "/api/file/" + path }/>
+}
+
+templ deviceInfoTemplate(ip string, mac string) {
+	<p>
+		{ ip }
+		<br/>
+		<span style="text-transform: uppercase;">{ mac }</span>
+	</p>
+}
