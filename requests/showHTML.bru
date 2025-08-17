@@ -1,0 +1,21 @@
+meta {
+  name: showHTML
+  type: http
+  seq: 6
+}
+
+patch {
+  url: 127.0.0.1:1323/api/showHTML
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "html": "<p>this is a looooonnnng text. Loooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnng</p>"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

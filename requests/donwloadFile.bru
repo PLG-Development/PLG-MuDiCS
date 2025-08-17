@@ -1,0 +1,15 @@
+meta {
+  name: donwloadFile
+  type: http
+  seq: 4
+}
+
+get {
+  url: 127.0.0.1:1323/api/file/go.sum
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

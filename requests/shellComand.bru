@@ -1,0 +1,21 @@
+meta {
+  name: shellComand
+  type: http
+  seq: 1
+}
+
+patch {
+  url: 127.0.0.1:1323/api/shellCommand
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "ls"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

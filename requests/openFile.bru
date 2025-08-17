@@ -1,0 +1,19 @@
+meta {
+  name: openFile
+  type: http
+  seq: 5
+}
+
+patch {
+  url: 127.0.0.1:1323/api/file/test.mp4
+  body: file
+  auth: inherit
+}
+
+script:pre-request {
+  await bru.sleep(2000);
+}
+
+settings {
+  encodeUrl: true
+}

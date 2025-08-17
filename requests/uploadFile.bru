@@ -1,0 +1,15 @@
+meta {
+  name: uploadFile
+  type: http
+  seq: 3
+}
+
+post {
+  url: 127.0.0.1:1323/api/file/titel.jpg
+  body: file
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
