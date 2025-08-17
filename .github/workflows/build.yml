@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    paths:
+      - go.mod
+      - go.sum
+      - "**/*.go"
+      - "**/*.tmpl"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "^1.24"
+
+      - name: Install Dependencies
+        working-directory: display
+        run: go mod download
+
+      - name: Generate Templates
+        working-directory: display
+        run: go tool templ generate
+
+      - name: Build
+        working-directory: display
+        run: go build -o plg-mudics-display .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: display/plg-mudics-display
