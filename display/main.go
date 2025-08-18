@@ -18,22 +18,10 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
-type CommandRequest struct {
-	Command string `json:"command"`
-}
-
 type CommandResponse struct {
 	Stdout   string `json:"stdout"`
 	Stderr   string `json:"stderr"`
 	ExitCode int    `json:"exitCode"`
-}
-
-type KeyboardInputRequest struct {
-	Key string `json:"key"`
-}
-
-type HTMLRequest struct {
-	HTML string `json:"html"`
 }
 
 type ErrorResponse struct {
@@ -253,14 +241,16 @@ func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func shellCommandRoute(ctx echo.Context) error {
-	var commandInput CommandRequest
+	var commandInput struct {
+		Command string `json:"command"`
+	}
 	if err := ctx.Bind(&commandInput); err != nil {
 		slog.Error("Failed to parse shell command", "error", err)
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
 	}
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command("bash", "-c", "-r", fmt.Sprintf("%s", commandInput.Command))
+	cmd := exec.Command("bash", "-c", "-r", commandInput.Command)
 	cmd.Dir = storagePath
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -287,25 +277,27 @@ func shellCommandRoute(ctx echo.Context) error {
 }
 
 func keyboardInputRoute(ctx echo.Context) error {
-	var req KeyboardInputRequest
-	if err := ctx.Bind(&req); err != nil {
+	var request struct {
+		Key string `json:"key"`
+	}
+	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
 	}
 
-	code, ok := keyboardEvents[req.Key]
+	code, ok := keyboardEvents[request.Key]
 	if !ok {
-		slog.Error("Unsupported key", "key", req.Key)
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: fmt.Sprintf("Unsupported key: %s", req.Key)})
+		slog.Error("Unsupported key", "key", request.Key)
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: fmt.Sprintf("Unsupported key: %s", request.Key)})
 	}
 
 	err := keyboardInput(code)
 	if err != nil {
-		slog.Error("Failed to send keyboard input", "key", req.Key, "error", err)
+		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to send keyboard input"})
 	}
 
-	slog.Info("Keyboard input sent", "key", req.Key)
+	slog.Info("Keyboard input sent", "key", request.Key)
 	return ctx.NoContent(http.StatusOK)
 }
 
@@ -415,7 +407,9 @@ func keyboardInput(key int) error {
 }
 
 func showHTMLRoute(ctx echo.Context) error {
-	var request HTMLRequest
+	var request struct {
+		HTML string `json:"html"`
+	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
