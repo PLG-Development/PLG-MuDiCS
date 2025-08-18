@@ -1,0 +1,15 @@
+meta {
+  name: ping
+  type: http
+  seq: 7
+}
+
+get {
+  url: 127.0.0.1:1323/api/ping
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

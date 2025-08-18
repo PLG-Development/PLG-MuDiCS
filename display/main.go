@@ -53,6 +53,8 @@ var supportedExtensions = map[string]bool{
 	".odp":  true,
 }
 
+const Version = "0.1.0"
+
 func main() {
 	var err error
 
@@ -87,6 +89,7 @@ func main() {
 	e.GET("/sse", sseRoute)
 
 	apiGroup := e.Group("/api")
+	apiGroup.GET("/ping", pingRoute)
 	apiGroup.PATCH("/shellCommand", shellCommandRoute)
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
 	apiGroup.PATCH("/showHTML", showHTMLRoute)
@@ -428,6 +431,12 @@ func showHTMLRoute(ctx echo.Context) error {
 
 	slog.Info("HTML content sent to client")
 	return ctx.NoContent(http.StatusOK)
+}
+
+func pingRoute(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, struct {
+		Version string `json:"version"`
+	}{Version: Version})
 }
 
 // Reset previous file views so they dont collide with the new one
