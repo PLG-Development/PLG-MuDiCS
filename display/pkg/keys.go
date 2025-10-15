@@ -1,8 +1,8 @@
-package main
+package pkg
 
 import "github.com/micmonay/keybd_event"
 
-var keyboardEvents = map[string]int{
+var KeyboardEvents = map[string]int{
 	"VK_SP1":        keybd_event.VK_SP1,
 	"VK_SP2":        keybd_event.VK_SP2,
 	"VK_SP3":        keybd_event.VK_SP3,

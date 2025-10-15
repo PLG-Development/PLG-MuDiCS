@@ -3,34 +3,25 @@ package main
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/micmonay/keybd_event"
-)
 
-type CommandResponse struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	ExitCode int    `json:"exitCode"`
-}
+	"plg-mudics-display/pkg"
+)
 
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-var storagePath string
-var chromiumBin string
 var sseConnection chan string
 var supportedExtensions = map[string]bool{
 	".mp4":  true,
@@ -49,30 +40,16 @@ const Version = "0.1.0"
 func main() {
 	var err error
 
-	if err := checkDependencies(); err != nil {
-		slog.Error("Dependency check failed", "error", err)
-		os.Exit(1)
-	}
-
 	// Ensure local config directory exists
-	home, err := os.UserHomeDir()
+	_, err = pkg.GetStoragePath()
 	if err != nil {
-		slog.Error("Unable to determine user home directory", "error", err)
+		slog.Error("Failed to get storage path", "error", err)
 		os.Exit(1)
-	}
-	storagePath = filepath.Join(home, ".local", "share", "plg-connect-display")
-	if err := os.MkdirAll(storagePath, os.ModePerm); err != nil {
-		slog.Error("Failed to create local config directory", "path", storagePath, "error", err)
-		os.Exit(1)
+		return
 	}
 
 	// Open browser window
-	go func() {
-		args := fmt.Sprintf("%s --app='http://127.0.0.1:1323' --start-fullscreen --user-data-dir=$(mktemp -d) --autoplay-policy=no-user-gesture-required", chromiumBin)
-		cmd := exec.Command("bash", "-c", args)
-		_ = cmd.Run()
-	}()
-
+	go pkg.OpenBrowserWindow("http://127.0.0.1:1323")
 	// Webserver
 	e := echo.New()
 
@@ -98,32 +75,6 @@ func main() {
 	}
 }
 
-func checkDependencies() error {
-	// Detect available Chromium binary name
-	for _, b := range []string{"chromium", "chromium-browser"} {
-		if _, err := exec.LookPath(b); err == nil {
-			chromiumBin = b
-			break
-		}
-	}
-	if chromiumBin == "" {
-		return errors.New("chromium or chromium-browser not found in PATH")
-	}
-
-	// Check other dependencies
-	deps := []string{
-		"soffice", // LibreOffice
-		"bash",
-	}
-
-	for _, dep := range deps {
-		if _, err := exec.LookPath(dep); err != nil {
-			return errors.New(dep + " not found in PATH")
-		}
-	}
-	return nil
-}
-
 func indexRoute(ctx echo.Context) error {
 	return indexTemplate().Render(ctx.Request().Context(), ctx.Response().Writer)
 }
@@ -141,11 +92,11 @@ func sseRoute(ctx echo.Context) error {
 	sseConnection = make(chan string)
 
 	// init display
-	ip, err := getDeviceIp()
+	ip, err := pkg.GetDeviceIp()
 	if err != nil {
 		slog.Error("Failed to get device IP address", "error", err)
 	}
-	mac, err := getDeviceMac()
+	mac, err := pkg.GetDeviceMac()
 	if err != nil {
 		slog.Error("Failed to get device MAC address", "error", err)
 	}
@@ -179,65 +130,14 @@ func sseRoute(ctx echo.Context) error {
 	}
 }
 
-func getDeviceIp() (string, error) {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-	for _, addr := range addrs {
-		ipNet, ok := addr.(*net.IPNet)
-		if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-			return ipNet.IP.String(), nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable IP address found")
-}
-
-func getDeviceMac() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-
-	for _, interf := range interfaces {
-		mac := interf.HardwareAddr.String()
-		if mac != "" {
-			return mac, nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable MAC address found")
-}
-
 func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		// Retrieve and clean the path parameter
 		pathParam := ctx.Param("path")
-		cleanPath := filepath.Clean(pathParam)
-		fullPath := filepath.Join(storagePath, cleanPath)
-		rel, err := filepath.Rel(storagePath, fullPath)
-		if err != nil || strings.HasPrefix(rel, "..") {
+		fullPath, exists, err := pkg.ResolveStorageFilePath(pathParam)
+		if err != nil {
+			slog.Warn("Failed to validate file path", "path", pathParam, "error", err)
 			return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid file path"})
 		}
-
-		// Determine if the target path exists and is a file
-		var exists bool
-		info, statErr := os.Stat(fullPath)
-		if statErr != nil {
-			if os.IsNotExist(statErr) {
-				exists = false
-			} else {
-				slog.Error("Failed to stat path", "path", fullPath, "error", statErr)
-				return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
-			}
-		} else {
-			if info.IsDir() {
-				return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Path is a directory"})
-			}
-			exists = true
-		}
-
 		ctx.Set("fullPath", fullPath)
 		ctx.Set("fileExists", exists)
 		return next(ctx)
@@ -254,9 +154,14 @@ func shellCommandRoute(ctx echo.Context) error {
 	}
 
 	cmd := exec.Command("bash", "-c", "-r", commandInput.Command)
+	storagePath, err := pkg.GetStoragePath()
+	if err != nil {
+		slog.Error("Failed to get storage path", "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+	}
 	cmd.Dir = storagePath
 
-	commandOutput := runShellCommand(cmd)
+	commandOutput := pkg.RunShellCommand(cmd)
 	if commandOutput.ExitCode != 0 {
 		slog.Error("Shell command execution error", "error", commandOutput.Stderr)
 	}
@@ -274,13 +179,13 @@ func keyboardInputRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
 	}
 
-	code, ok := keyboardEvents[request.Key]
+	code, ok := pkg.KeyboardEvents[request.Key]
 	if !ok {
 		slog.Error("Unsupported key", "key", request.Key)
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: fmt.Sprintf("Unsupported key: %s", request.Key)})
 	}
 
-	err := keyboardInput(code)
+	err := pkg.KeyboardInput(code)
 	if err != nil {
 		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to send keyboard input"})
@@ -367,32 +272,13 @@ func openFileRoute(ctx echo.Context) error {
 		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
 		sseConnection <- templateBuffer.String()
 	case ".pptx", ".odp":
-		openPresentation(fullPath)
+		pkg.OpenPresentation(fullPath)
 	default:
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Unsupported file type"})
 	}
 
 	slog.Info("Successfully run file", "file", pathParam)
 	return ctx.NoContent(http.StatusOK)
-}
-
-func openPresentation(path string) {
-	cmd := exec.Command("bash", "-c", "-r", fmt.Sprintf("soffice --show %s -nologo -norestore", path))
-	_ = cmd.Run()
-}
-
-func keyboardInput(key int) error {
-	kb, err := keybd_event.NewKeyBonding()
-	if err != nil {
-		return fmt.Errorf("failed to create key bonding: %w", err)
-	}
-	kb.SetKeys(key)
-
-	if err := kb.Launching(); err != nil {
-		return fmt.Errorf("failed to launch key event: %w", err)
-	}
-
-	return nil
 }
 
 func showHTMLRoute(ctx echo.Context) error {
@@ -422,21 +308,10 @@ func pingRoute(ctx echo.Context) error {
 	}{Version: Version})
 }
 
-// Reset previous file views so they dont collide with the new one
-func resetView() error {
-	err := keyboardInput(keybd_event.VK_ESC)
-	if err != nil {
-		return fmt.Errorf("failed to send ESC key: %w", err)
-	}
-	sseConnection <- ""
-
-	return nil
-}
-
 func takeScreenshotRoute(ctx echo.Context) error {
 	var err error
 
-	screenshotPath, err := takeScreenshot()
+	screenshotPath, err := pkg.TakeScreenshot()
 	if err != nil {
 		slog.Error("Failed to take screenshot", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
@@ -451,36 +326,13 @@ func takeScreenshotRoute(ctx echo.Context) error {
 	return nil
 }
 
-func takeScreenshot() (string, error) {
-	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("screenshot_%d.png", time.Now().Unix()))
-
-	cmd := exec.Command("gnome-screenshot", "-f", tempFilePath)
-	commandOutput := runShellCommand(cmd)
-	if commandOutput.ExitCode != 0 {
-		return "", errors.New(commandOutput.Stderr)
-	}
-	return tempFilePath, nil
-}
-
-func runShellCommand(cmd *exec.Cmd) CommandResponse {
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	commandOutput := CommandResponse{
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
-		ExitCode: cmd.ProcessState.ExitCode(),
-	}
+// Reset previous file views so they dont collide with the new one
+func resetView() error {
+	err := pkg.KeyboardInput(keybd_event.VK_ESC)
 	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			commandOutput.ExitCode = exitErr.ExitCode()
-		} else {
-			commandOutput.Stderr = err.Error()
-		}
+		return fmt.Errorf("failed to send ESC key: %w", err)
 	}
+	sseConnection <- ""
 
-	return commandOutput
+	return nil
 }
