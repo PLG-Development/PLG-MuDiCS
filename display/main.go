@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/micmonay/keybd_event"
@@ -83,6 +84,7 @@ func main() {
 	apiGroup.PATCH("/shellCommand", shellCommandRoute)
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
 	apiGroup.PATCH("/showHTML", showHTMLRoute)
+	apiGroup.PATCH("/takeScreenshot", takeScreenshotRoute)
 
 	fileGroup := apiGroup.Group("/file")
 	fileGroup.Use(extractFilePathMiddleware)
@@ -429,6 +431,35 @@ func resetView() error {
 	sseConnection <- ""
 
 	return nil
+}
+
+func takeScreenshotRoute(ctx echo.Context) error {
+	var err error
+
+	screenshotPath, err := takeScreenshot()
+	if err != nil {
+		slog.Error("Failed to take screenshot", "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+	}
+
+	err = ctx.File(screenshotPath)
+	if err != nil {
+		slog.Error("Failed to serve file", "file", screenshotPath, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+	}
+
+	return nil
+}
+
+func takeScreenshot() (string, error) {
+	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("screenshot_%d.png", time.Now().Unix()))
+
+	cmd := exec.Command("gnome-screenshot", "-f", tempFilePath)
+	commandOutput := runShellCommand(cmd)
+	if commandOutput.ExitCode != 0 {
+		return "", errors.New(commandOutput.Stderr)
+	}
+	return tempFilePath, nil
 }
 
 func runShellCommand(cmd *exec.Cmd) CommandResponse {
