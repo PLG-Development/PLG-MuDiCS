@@ -43,6 +43,8 @@ var supportedExtensions = map[string]bool{
 
 const Version = "0.1.0"
 
+//go:generate go tool templ generate
+
 func main() {
 	var err error
 
