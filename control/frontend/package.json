@@ -30,9 +30,14 @@
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"svelte-dnd-action": "^0.9.65",
 		"tailwindcss": "^4.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.20.0",
 		"vite": "^7.0.4"
+	},
+	"dependencies": {
+		"@thisux/sveltednd": "^0.0.20",
+		"lucide-svelte": "^0.545.0"
 	}
 }
