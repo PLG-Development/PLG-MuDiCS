@@ -7,18 +7,10 @@
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
 	import DNDGrip from './DNDGrip.svelte';
-	import {
-	ArrowUpFromLine,
-		Eye,
-		Menu,
-		Pin,
-		PinOff,
-		SquareArrowOutDownLeft,
-		SquareArrowOutUpRight,
-		VideoOff
-	} from 'lucide-svelte';
+	import { Menu, Pencil, Pin, PinOff, Trash2, VideoOff, X } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import OnlineState from './OnlineState.svelte';
+	import type { Display } from '../ts/types';
 
 	let { display } = $props<{
 		display: Display;
@@ -53,7 +45,7 @@
 		hover: true,
 		active: !hovering_unselectable,
 		text: true
-	})} rounded-xl flex flex-row justify-between h-{$display_screen_height} overflow-hidde transition-colors duration-100 gap-2 cursor-pointer w-full overflow-hidden text-stone-200"
+	})} rounded-xl flex flex-row justify-between h-{$display_screen_height} transition-colors duration-100 gap-2 cursor-pointer w-full text-stone-200"
 >
 	<div class="flex flex-row gap-4 min-w-0 flex-1">
 		<!-- Left Preview Screen -->
@@ -128,6 +120,17 @@
 				click_function={(e) => {
 					e.stopPropagation();
 				}}
+				menu_options={[
+					{
+						icon: Pencil,
+						name: 'Bildschirm bearbeiten'
+					},
+					{
+						icon: Trash2,
+						name: 'Bildschirm löschen',
+						class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400'
+					}
+				]}
 			>
 				<Menu />
 			</Button>

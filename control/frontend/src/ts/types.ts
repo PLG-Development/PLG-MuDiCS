@@ -1,4 +1,4 @@
-import type { Component } from "lucide-svelte";
+import type { X } from "lucide-svelte";
 
 export type Display = {
     id: string;
@@ -15,8 +15,9 @@ export type DisplayGroup = {
 
 
 export type MenuOption = {
-    icon?: Component;
+    icon?: typeof X;
     name: string;
+    class?: string;
     on_select?: () => void;
     disabled?: boolean;
 }

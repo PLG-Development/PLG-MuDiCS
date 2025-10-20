@@ -16,6 +16,7 @@
 	} from '../ts/stores/displays';
 	import DNDGrip from './DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
+	import type { DisplayGroup } from '../ts/types';
 
 	let { display_group } = $props<{
 		display_group: DisplayGroup;

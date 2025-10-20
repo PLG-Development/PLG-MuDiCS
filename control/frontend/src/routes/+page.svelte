@@ -1,5 +1,27 @@
 <script lang="ts">
-	import { Menu, Minus, PinOff, Plus, Settings, Square, VideoOff, X } from 'lucide-svelte';
+	import {
+		ArrowBigLeft,
+		ArrowBigRight,
+		ChevronDown,
+		Info,
+		Keyboard,
+		Menu,
+		Minus,
+		Pencil,
+		PinOff,
+		Plus,
+		Power,
+		PowerOff,
+		Presentation,
+		Settings,
+		Square,
+		SquareTerminal,
+		TextAlignStart,
+		TrafficCone,
+		Trash2,
+		VideoOff,
+		X
+	} from 'lucide-svelte';
 	import Button from '../components/Button.svelte';
 	import SplashScreen from '../components/SplashScreen.svelte';
 	import {
@@ -27,6 +49,7 @@
 	import { blur, draw, fade, fly, scale, slide } from 'svelte/transition';
 	import OnlineState from '../components/OnlineState.svelte';
 	import type { DisplayGroup } from '../ts/types';
+	import PopUp from '../components/PopUp.svelte';
 
 	let displays_scroll_box: HTMLElement;
 
@@ -71,12 +94,12 @@
 		</Button>
 	</div>
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] grid grid-cols-2 gap-2">
-		<div class="h-[calc(100dvh-3rem-(12*var(--spacing)))] overflow-hidden flex flex-col gap-2">
+		<div class="h-[calc(100dvh-3rem-(12*var(--spacing)))] flex flex-col gap-2">
 			{#if $pinned_display_id}
 				<!-- Pinned Item -->
 				<div in:fade={{ duration: 140 }} out:fade={{ duration: 120 }}>
 					<div
-						class="grid grid-rows-[2.5rem_auto] overflow-hidden will-change-[height,opacity] rounded-2xl"
+						class="grid grid-rows-[2.5rem_auto] will-change-[height,opacity] overflow-hidden rounded-2xl"
 						transition:slide={{ duration: 260, easing: cubicOut }}
 					>
 						<div class="bg-stone-700 flex justify-between w-full p-1 min-w-0 basis-0 flex-1">
@@ -95,9 +118,20 @@
 								<Button
 									className="aspect-square !p-1"
 									bg="bg-stone-600"
-									click_function={() => {
-										change_display_screen_height(1);
+									click_function={(e) => {
+										e.stopPropagation();
 									}}
+									menu_options={[
+										{
+											icon: Pencil,
+											name: 'Bildschirm bearbeiten'
+										},
+										{
+											icon: Trash2,
+											name: 'Bildschirm löschen',
+											class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400'
+										}
+									]}
 								>
 									<Menu />
 								</Button>
@@ -207,8 +241,42 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] bg-stone-800 rounded-2xl">
-			ok
+		<div
+			class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] bg-stone-800 rounded-2xl grid grid-rows-[2.5rem_auto] overflow-hidden"
+		>
+			<div class="text-xl font-bold pl-3 content-center bg-stone-700">
+				{$selected_display_ids.length + ' Bildschirme steuern'}
+			</div>
+			<div class="flex flex-col gap-2 p-2">
+				<div class="grid grid-cols-[auto_45%] gap-2">
+					<div class="flex flex-col gap-2">
+						<div class="flex flex-row gap-2">
+							<Button className="px-5"><ArrowBigLeft /></Button>
+							<Button className="px-5"><ArrowBigRight /></Button>
+						</div>
+						<Button className="px-3 flex gap-3"><TextAlignStart /> Text anzeigen</Button>
+						<Button className="px-3 flex gap-3"><Presentation />Blackout</Button>
+						<div class="flex flex-row">
+							<Button className="rounded-r-none pl-3 pr-1 flex gap-3"
+								><TrafficCone /> Fallback-Bild anzeigen</Button
+							>
+							<Button className="rounded-l-none pl-1"><ChevronDown /></Button>
+						</div>
+						<Button className="px-3 flex gap-3"><Keyboard /> Tastatur-Inputs durchgeben</Button>
+					</div>
+					<div class="flex flex-col gap-2 justify-between">
+						<div class="flex flex-col gap-2">
+							<Button className="px-3 flex gap-3 w-full justify-normal"><Power /> PC hochfahren</Button>
+							<Button className="px-3 flex gap-3 w-full justify-normal"><PowerOff /> PC herunterfahren</Button>
+						</div>
+						<Button className="px-3 flex gap-3 w-full justify-normal"><SquareTerminal /> Shell-Befehl ausführen</Button>
+					</div>
+				</div>
+				<div class="bg-stone-750 w-full h-full rounded-xl"></div>
+			</div>
 		</div>
 	</div>
+	<!-- <PopUp title="Test" title_icon={Info}>
+		<div>ok schade</div>
+	</PopUp> -->
 </main>
