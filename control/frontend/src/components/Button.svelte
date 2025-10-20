@@ -10,6 +10,7 @@
 		hover_bg = get_shifted_color(bg, 100),
 		active_bg = get_shifted_color(bg, 200),
 		disabled = false,
+		title = '',
 		click_function = (e: MouseEvent) => {},
 		menu_options = null,
 		children
@@ -19,6 +20,7 @@
 		hover_bg?: string;
 		active_bg?: string;
 		disabled?: boolean;
+		title?: string;
 		click_function?: (e: MouseEvent) => void;
 		menu_options?: MenuOption[] | null;
 		children?: any;
@@ -124,7 +126,7 @@
 	}
 </script>
 
-<div class="relative">
+<div class="relative" {title}>
 	<button
 		bind:this={button_element}
 		class="{className} {menu_shown ? hover_bg : bg} {disabled
