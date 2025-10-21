@@ -2,7 +2,11 @@
 	import {
 		ArrowBigLeft,
 		ArrowBigRight,
+		ArrowUp,
 		ChevronDown,
+		ClipboardPaste,
+		Download,
+		FolderOutput,
 		Info,
 		Keyboard,
 		Menu,
@@ -13,12 +17,16 @@
 		Power,
 		PowerOff,
 		Presentation,
+		RefreshCcw,
+		Scissors,
 		Settings,
 		Square,
 		SquareTerminal,
 		TextAlignStart,
 		TrafficCone,
 		Trash2,
+		TvMinimalPlay,
+		Upload,
 		VideoOff,
 		X
 	} from 'lucide-svelte';
@@ -50,6 +58,7 @@
 	import OnlineState from '../components/OnlineState.svelte';
 	import type { DisplayGroup } from '../ts/types';
 	import PopUp from '../components/PopUp.svelte';
+	import FileObject from '../components/FileObject.svelte';
 
 	let displays_scroll_box: HTMLElement;
 
@@ -137,6 +146,7 @@
 								</Button>
 
 								<Button
+									title="Bildschirm nicht mehr anpinnen"
 									className="aspect-square !p-1"
 									bg="bg-stone-600"
 									click_function={() => {
@@ -163,8 +173,10 @@
 				class="min-h-0 h-full grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl overflow-hidden"
 			>
 				<!-- Normal Heading Left -->
-				<div class="bg-stone-700 flex justify-between w-full p-1">
-					<span class="text-xl font-bold pl-2 content-center"> Bereits verbundene Displays </span>
+				<div class="bg-stone-700 flex justify-between w-full p-1 gap-2 min-w-0">
+					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
+						Bereits verbundene Displays
+					</span>
 					<div class="flex flex-row gap-1">
 						<button
 							class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
@@ -186,6 +198,7 @@
 						</button>
 						<div class="flex flex-ro">
 							<Button
+								title="Bildschirme größer darstellen"
 								className="aspect-square !p-1 rounded-r-none"
 								bg="bg-stone-600"
 								disabled={next_step_possible($display_screen_height, 1)}
@@ -196,6 +209,7 @@
 								<Plus />
 							</Button>
 							<Button
+								title="Bildschirme kleiner darstellen"
 								className="aspect-square !p-1 rounded-l-none"
 								bg="bg-stone-600"
 								disabled={next_step_possible($display_screen_height, -1)}
@@ -242,37 +256,117 @@
 			</div>
 		</div>
 		<div
-			class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] bg-stone-800 rounded-2xl grid grid-rows-[2.5rem_auto] overflow-hidden"
+			class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] rounded-2xl flex flex-col gap-2"
 		>
-			<div class="text-xl font-bold pl-3 content-center bg-stone-700">
-				{$selected_display_ids.length + ' Bildschirme steuern'}
-			</div>
-			<div class="flex flex-col gap-2 p-2">
-				<div class="grid grid-cols-[auto_45%] gap-2">
-					<div class="flex flex-col gap-2">
-						<div class="flex flex-row gap-2">
-							<Button className="px-5"><ArrowBigLeft /></Button>
-							<Button className="px-5"><ArrowBigRight /></Button>
-						</div>
-						<Button className="px-3 flex gap-3"><TextAlignStart /> Text anzeigen</Button>
-						<Button className="px-3 flex gap-3"><Presentation />Blackout</Button>
-						<div class="flex flex-row">
-							<Button className="rounded-r-none pl-3 pr-1 flex gap-3"
-								><TrafficCone /> Fallback-Bild anzeigen</Button
-							>
-							<Button className="rounded-l-none pl-1"><ChevronDown /></Button>
-						</div>
-						<Button className="px-3 flex gap-3"><Keyboard /> Tastatur-Inputs durchgeben</Button>
-					</div>
-					<div class="flex flex-col gap-2 justify-between">
+			<div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
+				<div
+					class="text-xl font-bold pl-3 content-center bg-stone-700 rounded-t-2xl truncate min-w-0"
+				>
+					{'Bildschirme steuern (' + $selected_display_ids.length + ' ausgewählt)'}
+				</div>
+				<div class="flex flex-col gap-2 p-2 overflow-auto">
+					<div class="flex flex-row justify-between gap-2">
 						<div class="flex flex-col gap-2">
-							<Button className="px-3 flex gap-3 w-full justify-normal"><Power /> PC hochfahren</Button>
-							<Button className="px-3 flex gap-3 w-full justify-normal"><PowerOff /> PC herunterfahren</Button>
+							<div class="flex flex-row gap-2 w-70 justify-normal">
+								<Button title="Vorherige Folie (Pfeil nach Links)" className="px-7"
+									><ArrowBigLeft /></Button
+								>
+								<Button title="Nächste Folie (Pfeil nach Rechts)" className="px-7"
+									><ArrowBigRight /></Button
+								>
+							</div>
+							<Button className="px-3 flex gap-3 w-70 justify-normal"
+								><TextAlignStart /> Text anzeigen</Button
+							>
+							<Button className="px-3 flex gap-3 w-70 justify-normal"
+								><Presentation />Blackout</Button
+							>
+							<div class="flex flex-row justify-normal">
+								<Button className="rounded-r-none pl-3 flex gap-3 grow w-60 justify-normal"
+									><TrafficCone /> Fallback-Bild anzeigen</Button
+								>
+								<Button className="rounded-l-none flex grow-0 w-10"><ChevronDown /></Button>
+							</div>
+							<Button className="px-3 flex gap-3 w-70 justify-normal"
+								><Keyboard /> Tastatur-Inputs durchgeben</Button
+							>
 						</div>
-						<Button className="px-3 flex gap-3 w-full justify-normal"><SquareTerminal /> Shell-Befehl ausführen</Button>
+						<div class="flex flex-col gap-2 justify-between">
+							<div class="flex flex-col gap-2">
+								<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
+									><Power /> PC hochfahren</Button
+								>
+								<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
+									><PowerOff /> PC herunterfahren</Button
+								>
+							</div>
+							<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
+								><SquareTerminal /> Shell-Befehl ausführen</Button
+							>
+						</div>
 					</div>
 				</div>
-				<div class="bg-stone-750 w-full h-full rounded-xl"></div>
+			</div>
+			<div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_auto]">
+				<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
+					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
+						Dateien anzeigen und verwalten
+					</span>
+					<div class="flex flex-ro">
+						<Button
+							title="Dateien größer darstellen"
+							className="aspect-square !p-1 rounded-r-none"
+							bg="bg-stone-600"
+							disabled={next_step_possible($display_screen_height, 1)}
+							click_function={() => {
+								change_display_screen_height(1);
+							}}
+						>
+							<Plus />
+						</Button>
+						<Button
+							title="Dateien kleiner darstellen"
+							className="aspect-square !p-1 rounded-l-none"
+							bg="bg-stone-600"
+							disabled={next_step_possible($display_screen_height, -1)}
+							click_function={() => {
+								change_display_screen_height(-1);
+							}}
+						>
+							<Minus />
+						</Button>
+					</div>
+				</div>
+				<div class="flex flex-col gap-2 p-2 overflow-auto">
+					<div class="flex flex-row justify-between gap-6 overflow-x-auto">
+						<div class="flex flex-row gap-2">
+							<Button title="Eine Verzeichnis-Ebene zurück" className="px-3 flex"><FolderOutput /></Button>
+							<Button title="Datei anzeigen" className="px-3 flex gap-3">
+								<TvMinimalPlay class="shrink-0 flex"/>
+								<span class="min-w-0 hidden xl:flex">Anzeigen</span>
+							</Button>
+							<Button
+								title="Dateien zwischen Bildschirmen synchronisieren"
+								className="px-3 flex gap-3"
+								><RefreshCcw />
+								<span class="hidden 2xl:flex">Synchronisieren</span>
+							</Button>
+						</div>
+						<div class="flex flex-row gap-2">
+							<Button title="Datei(en) hochladen" className="px-3 flex"><Upload /></Button>
+							<Button title="Datei(en) herunterladen" className="px-3 flex"><Download /></Button>
+							<div class="border border-stone-700 my-1"></div>
+							<Button title="Datei(en) ausschneiden" className="px-3 flex"><Scissors /></Button>
+							<Button title="Datei(en) einfügen" className="px-3 flex"><ClipboardPaste /></Button>
+							<div class="border border-stone-700 my-1"></div>
+							<Button title="Datei(en) löschen" className="hover:!bg-red-400 px-3 flex"><Trash2 /></Button>
+						</div>
+					</div>
+					<div class="flex flex-col gap-2 p-2 bg-stone-750 h-full rounded-xl">
+						<FileObject />
+					</div>
+				</div>
+
 			</div>
 		</div>
 	</div>

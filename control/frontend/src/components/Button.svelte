@@ -126,7 +126,7 @@
 	}
 </script>
 
-<div class="relative" {title}>
+<div class="relative min-w-0 flex" {title}>
 	<button
 		bind:this={button_element}
 		class="{className} {menu_shown ? hover_bg : bg} {disabled
