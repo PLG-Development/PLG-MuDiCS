@@ -258,7 +258,11 @@ func openFileRoute(ctx echo.Context) error {
 		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
 		sseConnection <- templateBuffer.String()
 	case ".pptx", ".odp":
-		pkg.OpenPresentation(fullPath)
+		err := pkg.OpenPresentation(fullPath)
+		if err != nil {
+			slog.Error("Failed to open presentation", "file", pathParam, "error", err)
+			return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to open presentation"})
+		}
 	default:
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Unsupported file type"})
 	}

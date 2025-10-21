@@ -52,9 +52,13 @@ func GetDeviceMac() (string, error) {
 	return "", fmt.Errorf("no suitable MAC address found")
 }
 
-func OpenPresentation(path string) {
+func OpenPresentation(path string) error {
 	cmd := exec.Command("bash", "-c", "-r", fmt.Sprintf("soffice --show %s -nologo -norestore", path))
-	_ = cmd.Run()
+	result := RunShellCommand(cmd)
+	if result.ExitCode != 0 {
+		return errors.New(result.Stderr)
+	}
+	return nil
 }
 
 func KeyboardInput(key int) error {
