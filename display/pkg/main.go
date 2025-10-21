@@ -117,23 +117,20 @@ func RunShellCommand(cmd *exec.Cmd) CommandResponse {
 }
 
 func OpenBrowserWindow(url string) error {
-	// Detect available Chromium binary name
-	var chromiumBin string
-	for _, b := range []string{"chromium", "chromium-browser"} {
-		if _, err := exec.LookPath(b); err == nil {
-			chromiumBin = b
-			break
+	template := "%s --app='%s' --start-fullscreen --user-data-dir=$(mktemp -d) --autoplay-policy=no-user-gesture-required"
+
+	cmds := []*exec.Cmd{
+		exec.Command("bash", "-c", fmt.Sprintf(template, "chromium", url)),
+		exec.Command("bash", "-c", fmt.Sprintf(template, "chromium-browser", url)),
+	}
+	for _, cmd := range cmds {
+		commandOutput := RunShellCommand(cmd)
+		if commandOutput.ExitCode == 0 {
+			return nil
 		}
 	}
-	if chromiumBin == "" {
-		return errors.New("chromium or chromium-browser not found in PATH")
-	}
 
-	args := fmt.Sprintf("%s --app='%s' --start-fullscreen --user-data-dir=$(mktemp -d) --autoplay-policy=no-user-gesture-required", chromiumBin, url)
-	cmd := exec.Command("bash", "-c", args)
-	_ = cmd.Run()
-
-	return nil
+	return errors.New("chromium not found in PATH")
 }
 
 func GetStoragePath() (string, error) {
