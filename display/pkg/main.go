@@ -81,7 +81,7 @@ func TakeScreenshot() (string, error) {
 	cmds := []*exec.Cmd{
 		exec.Command("gnome-screenshot", "-f", tempFilePath),
 		exec.Command("xfce4-screenshooter", "-f", "-s", tempFilePath),
-		exec.Command("spectacle", "--fullscreen", "--background", "--output", tempFilePath),
+		exec.Command("spectacle", "--fullscreen", "--nonotify", "--background", "--output", tempFilePath),
 	}
 	for _, cmd := range cmds {
 		commandOutput := RunShellCommand(cmd)
