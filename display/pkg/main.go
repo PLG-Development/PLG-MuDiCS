@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"os/exec"
@@ -73,12 +74,19 @@ func KeyboardInput(key int) error {
 func TakeScreenshot() (string, error) {
 	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("screenshot_%d.png", time.Now().Unix()))
 
-	cmd := exec.Command("gnome-screenshot", "-f", tempFilePath)
-	commandOutput := RunShellCommand(cmd)
-	if commandOutput.ExitCode != 0 {
-		return "", errors.New(commandOutput.Stderr)
+	cmds := []*exec.Cmd{
+		exec.Command("gnome-screenshot", "-f", tempFilePath),
+		exec.Command("xfce4-screenshooter", "-f", "-s", tempFilePath),
+		exec.Command("spectacle", "--fullscreen", "--background", "--output", tempFilePath),
 	}
-	return tempFilePath, nil
+	for _, cmd := range cmds {
+		commandOutput := RunShellCommand(cmd)
+		if commandOutput.ExitCode == 0 {
+			return tempFilePath, nil
+		}
+		slog.Warn("Screenshot error", "error", commandOutput.Stderr)
+	}
+	return "", errors.New("no screenshot utility found or all failed")
 }
 
 func RunShellCommand(cmd *exec.Cmd) CommandResponse {
