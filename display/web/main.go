@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -54,6 +57,7 @@ func StartWebServer(v string) {
 	fileGroup.POST("/:path", uploadFileRoute)
 	fileGroup.GET("/:path", downloadFileRoute)
 	fileGroup.PATCH("/:path", openFileRoute)
+	fileGroup.GET("/preview/:path", previewRoute)
 
 	err := e.Start(":1323")
 	if err != nil {
@@ -314,6 +318,44 @@ func takeScreenshotRoute(ctx echo.Context) error {
 	}
 
 	return nil
+}
+
+func previewRoute(ctx echo.Context) error {
+	fullPath := ctx.Get("fullPath").(string)
+	exists := ctx.Get("fileExists").(bool)
+	if !exists {
+		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "File not found"})
+	}
+
+	f, err := os.Open(fullPath)
+	if err != nil {
+		slog.Error("Failed to open file", "file", fullPath, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to open file"})
+	}
+	defer f.Close()
+
+	ext := strings.ToLower(filepath.Ext(fullPath))
+	var imgData image.Image
+	switch ext {
+	case ".jpg", ".jpeg":
+		imgData, err = jpeg.Decode(f)
+	case ".png":
+		imgData, err = png.Decode(f)
+	default:
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Unsupported image format for preview"})
+	}
+	if err != nil {
+		slog.Error("Failed to decode image", "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to decode image"})
+	}
+
+	resized := pkg.ResizeImage(imgData, 100, 100)
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, resized); err != nil {
+		slog.Error("Failed to encode image", "error", err)
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to encode image"})
+	}
+	return ctx.Blob(http.StatusOK, "image/png", buf.Bytes())
 }
 
 // Reset previous file views so they dont collide with the new one
