@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	shared "plg-mudics/shared"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -42,6 +43,9 @@ func StartWebServer(v string) {
 
 	e.GET("/", indexRoute)
 	e.GET("/sse", sseRoute)
+	e.GET("/splash", func(ctx echo.Context) error {
+		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)  
+	})
 
 	apiGroup := e.Group("/api")
 	apiGroup.GET("/ping", pingRoute)

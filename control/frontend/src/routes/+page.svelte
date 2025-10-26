@@ -31,7 +31,7 @@
 		X
 	} from 'lucide-svelte';
 	import Button from '../components/Button.svelte';
-	import SplashScreen from '../components/SplashScreen.svelte';
+	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import {
 		change_display_screen_height,
 		display_screen_height,
@@ -94,7 +94,7 @@
 <svelte:window on:wheel={on_wheel} />
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 p-4 gap-4 grid grid-rows-[3rem_auto]">
-	<!-- <SplashScreen></SplashScreen> -->
+	 <!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center h-full"> PLG MuDiCS </span>
