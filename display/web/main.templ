@@ -55,7 +55,10 @@ templ indexTemplate() {
 				});
 			</script>
 		</head>
-		<body hx-ext="sse" sse-connect="/sse" sse-swap="message"></body>
+		<bod>
+			@animationTemplate()
+			<main hx-ext="sse" sse-connect="/sse" sse-swap="message"></main>
+		</bod>
 	</html>
 }
 
@@ -75,4 +78,280 @@ templ deviceInfoTemplate(ip string, mac string) {
 		<br/>
 		<span style="text-transform: uppercase;">{ mac }</span>
 	</p>
+}
+
+templ animationTemplate() {
+	<div id="splash">
+		<svg id="splash-svg" viewBox="0 0 950 550">
+			<!-- Paths -->
+			<!-- Disabled Paths -->
+			<path class="splash-stroke" d="M 385 350 V 270 H 100 V 112.5"></path>
+			<path class="splash-stroke" d="M 445 350 V 210 H 350 V 112.5"></path>
+			<path class="splash-stroke" d="M 505 350 V 210 H 600 V 112.5"></path>
+			<path class="splash-stroke" d="M 565 350 V 270 H 850 V 112.5"></path>
+			<!-- Masks -->
+			<defs>
+				<mask id="m1" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+					<path class="splash-mask" pathLength="100" d="M 385 350 V 270 H 100 V 112.5"></path>
+				</mask>
+				<mask id="m2" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+					<path class="splash-mask" pathLength="100" d="M 445 350 V 210 H 350 V 112.5"></path>
+				</mask>
+				<mask id="m3" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+					<path class="splash-mask" pathLength="100" d="M 505 350 V 210 H 600 V 112.5"></path>
+				</mask>
+				<mask id="m4" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+					<path class="splash-mask" pathLength="100" d="M 565 350 V 270 H 850 V 112.5"></path>
+				</mask>
+			</defs>
+			<!-- Active Paths -->
+			<path class="splash-stroke-active" mask="url(#m1)" d="M 385 350 V 270 H 100 V 112.5"></path>
+			<path class="splash-stroke-active" mask="url(#m2)" d="M 445 350 V 210 H 350 V 112.5"></path>
+			<path class="splash-stroke-active" mask="url(#m3)" d="M 505 350 V 210 H 600 V 112.5"></path>
+			<path class="splash-stroke-active" mask="url(#m4)" d="M 565 350 V 270 H 850 V 112.5"></path>
+			<!-- Displays -->
+			<rect x="0" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor"></rect>
+			<rect x="250" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor"></rect>
+			<rect x="500" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor"></rect>
+			<rect x="750" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor"></rect>
+			<!-- Text -->
+			<text class="splash-text" x="100" y="66.25" font-size="90">Mu</text>
+			<text class="splash-text" x="350" y="66.25" font-size="90">Di</text>
+			<text class="splash-text" x="600" y="66.25" font-size="90">C</text>
+			<text class="splash-text" x="850" y="66.25" font-size="90">S</text>
+			<!-- Controller -->
+			<rect
+				x="325"
+				y="350"
+				width="300"
+				height="168.75"
+				rx="8"
+				ry="8"
+				class="splash-control-monitor"
+			></rect>
+			<rect x="335" y="390" width="135" height="120" rx="8" ry="8" class="splash-other-button"></rect>
+			<rect x="480" y="390" width="135" height="55" rx="8" ry="8" class="splash-other-button"></rect>
+			<rect x="480" y="455" width="135" height="55" rx="8" ry="8" class="splash-start-button"></rect>
+			<!-- Window Controls -->
+			<path class="window-controls" d="M 600 360 L 615 375"></path>
+			<path class="window-controls" d="M 600 375 L 615 360"></path>
+			<path class="window-controls" fill="none" d="M 575 360 H 590 V 375 H 575 V 360"></path>
+			<path class="window-controls" d="M 550 375 H 565"></path>
+			<svg
+				class="cursor"
+				width="50"
+				height="50"
+				viewBox="0 0 24 24"
+				x="510"
+				y="480"
+				aria-hidden="true"
+			>
+				<g
+					stroke="#ffffff"
+					fill="#000000"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path stroke="#000000" d="M 6.5 10 H 18 V 19 H 6"></path>
+					<path d="M22 14a8 8 0 0 1-8 8"></path>
+					<path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2"></path>
+					<path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1"></path>
+					<path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10"></path>
+					<path
+						d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"
+					></path>
+				</g>
+			</svg>
+		</svg>
+	</div>
+	<style>
+	:root {
+		--base-stroke: #444444;
+		--base-stroke-active: #109e00;
+
+		--splash-bg: oklch(21.6% 0.006 56.043);
+		--monitor-dark: #000000;
+		--monitor-active: #ffffff;
+		--window-controls: #cccccc;
+		--start-button-inactive: #cccccc;
+		--start-button-hover: #77a3b1;
+		--start-button-active: #2c819b;
+		--other-button: oklch(55.3% 0.013 58.071);
+		--splash-control-monitor: oklch(44.4% 0.011 73.639);
+
+		--stroke-strength: 8;
+		--dash: 16;
+		--gap: 20;
+	}
+
+
+	#splash {
+		position: fixed;
+		inset: 0;
+		background: var(--splash-bg);
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 9999;
+		animation: splash-fade 1s ease 4s forwards;
+		height: 100vh;
+		width: 100vw;
+	}
+
+	#splash-svg {
+		max-height: 40vh;
+		max-width: 80vw;
+		opacity: 0;
+		animation: fade-in 1s ease 500ms forwards;
+	}
+
+	.splash-monitor {
+		aspect-ratio: 16/9;
+		rx: 8;
+		ry: 8;
+		width: 200;
+		fill: var(--monitor-dark);
+	}
+
+	.splash-control-monitor {
+		fill: var(--splash-control-monitor);
+	}
+
+	.splash-other-button {
+		fill: var(--other-button);
+	}
+
+	.splash-stroke,
+	.splash-stroke-active {
+		fill: none;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-width: var(--stroke-strength);
+		stroke-dasharray: var(--dash) var(--gap);
+	}
+
+	.window-controls {
+		stroke: var(--window-controls);
+		stroke-width: 3;
+	}
+
+	.splash-stroke {
+		stroke: var(--base-stroke);
+	}
+
+	.splash-stroke-active {
+		stroke: var(--base-stroke-active);
+	}
+
+	.splash-mask {
+		fill: none;
+		stroke: #fff;
+		stroke-linecap: round;
+		stroke-width: var(--stroke-strength);
+		stroke-dasharray: 100;
+		stroke-dashoffset: 100;
+		animation: draw 1s ease-in-out 1.35s forwards;
+	}
+
+	.splash-text {
+		text-anchor: middle;
+		dominant-baseline: middle;
+		fill: var(--monitor-dark);
+		user-select: none;
+	}
+
+	.splash-monitor {
+		fill: var(--monitor-dark);
+		animation: activate-monitor 0ms ease 2.35s forwards;
+	}
+
+	.splash-start-button {
+		fill: var(--start-button-inactive);
+		animation: start-button-hover-press 1s ease-in-out 450ms forwards;
+	}
+
+	.cursor {
+		animation: move-mouse 1s ease-in-out 0ms forwards;
+	}
+
+	@keyframes fade-in {
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes move-mouse {
+		0% {
+			transform: translateX(-100px);
+		}
+
+		50% {
+			transform: translateX(-100px);
+		}
+
+		100% {
+			transform: translateX(0px);
+		}
+	}
+
+	@keyframes start-button-hover-press {
+		0% {
+			fill: var(--start-button-inactive);
+		}
+
+		30% {
+			fill: var(--start-button-inactive);
+		}
+
+		40% {
+			fill: var(--start-button-hover);
+		}
+
+		70% {
+			fill: var(--start-button-hover);
+		}
+
+		80% {
+			fill: var(--start-button-active);
+		}
+
+		90% {
+			fill: var(--start-button-active);
+		}
+
+		100% {
+			fill: var(--start-button-hover);
+		}
+	}
+
+	@keyframes draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@keyframes activate-monitor {
+		to {
+			fill: var(--monitor-active);
+		}
+	}
+
+	@keyframes splash-fade {
+		to {
+			opacity: 0;
+			visibility: hidden;
+		}
+	}
+
+	rect {
+		vector-effect: non-scaling-stroke;
+	}
+
+	/* verhindert, dass die Linien beim Skalieren dicker werden */
+	.cursor * {
+		vector-effect: non-scaling-stroke;
+	}
+</style>
 }
