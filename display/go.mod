@@ -1,4 +1,4 @@
-module plg-mudics-display
+module plg-mudics/display
 
 go 1.24.4
 

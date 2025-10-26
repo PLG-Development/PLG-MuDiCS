@@ -3,7 +3,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
-	"plg-mudics-control/frontend"
+	"plg-mudics/control/frontend"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

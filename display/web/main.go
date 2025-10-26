@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/micmonay/keybd_event"
 
-	"plg-mudics-display/pkg"
+	"plg-mudics/display/pkg"
 )
 
 type ErrorResponse struct {

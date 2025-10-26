@@ -1,4 +1,4 @@
-module plg-mudics-control
+module plg-mudics/control
 
 go 1.24.5
 

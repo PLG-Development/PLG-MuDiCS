@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"os"
 
-	"plg-mudics-display/pkg"
-	"plg-mudics-display/web"
+	"plg-mudics/display/pkg"
+	"plg-mudics/display/web"
 )
 
 const VERSION = "0.1.0"
