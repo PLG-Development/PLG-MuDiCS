@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"log/slog"
 	"net"
 	"os"
@@ -182,29 +179,3 @@ func ResolveStorageFilePath(pathParam string) (string, bool, error) {
 	return fullPath, true, nil
 }
 
-func PreviewFile(fullPath string) (image.Image, error) {
-	var err error
-
-	f, err := os.Open(fullPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	ext := strings.ToLower(filepath.Ext(fullPath))
-	var img image.Image
-	switch ext {
-	case ".jpg", ".jpeg":
-		img, err = jpeg.Decode(f)
-	case ".png":
-		img, err = png.Decode(f)
-	default:
-		return nil, fmt.Errorf("unsupported file type for preview: %s", ext)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	preview := resizeImage(img, 200, 200)
-	return preview, nil
-}

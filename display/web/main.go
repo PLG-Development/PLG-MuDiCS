@@ -3,8 +3,8 @@ package web
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -325,19 +325,19 @@ func previewRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "File not found"})
 	}
 
-	resized, err := pkg.PreviewFile(fullPath)
+	outputFilePath, err := pkg.GenerateFilePreview(fullPath)
 	if err != nil {
 		slog.Error("Failed to generate preview", "file", fullPath, "error", err)
+		if errors.Is(err, pkg.ErrFileTypePreviewNotSupported) {
+			return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "File type not supported for preview"})
+		}
+		if errors.Is(err, pkg.ErrFilePreviewToolsMissing) {
+			return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Required tools for file preview are missing"})
+		}
 		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to generate preview"})
 	}
 
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, resized); err != nil {
-		slog.Error("Failed to encode image", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to encode image"})
-	}
-
-	return ctx.Blob(http.StatusOK, "image/png", buf.Bytes())
+	return ctx.File(outputFilePath)
 }
 
 // Reset previous file views so they dont collide with the new one
