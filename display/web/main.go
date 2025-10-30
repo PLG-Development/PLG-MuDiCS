@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/micmonay/keybd_event"
 
 	"plg-mudics/display/pkg"
@@ -48,6 +49,7 @@ func StartWebServer(v string) {
 	})
 
 	apiGroup := e.Group("/api")
+	apiGroup.Use(middleware.CORS())
 	apiGroup.GET("/ping", pingRoute)
 	apiGroup.PATCH("/shellCommand", shellCommandRoute)
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
