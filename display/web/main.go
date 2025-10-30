@@ -45,7 +45,7 @@ func StartWebServer(v string) {
 	e.GET("/", indexRoute)
 	e.GET("/sse", sseRoute)
 	e.GET("/splash", func(ctx echo.Context) error {
-		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)  
+		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)
 	})
 
 	apiGroup := e.Group("/api")
@@ -147,7 +147,7 @@ func shellCommandRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
 	}
 
-	cmd := exec.Command("bash", "-c", "-r", commandInput.Command)
+	cmd := exec.Command("bash", "-c", commandInput.Command)
 	storagePath, err := pkg.GetStoragePath()
 	if err != nil {
 		slog.Error("Failed to get storage path", "error", err)
