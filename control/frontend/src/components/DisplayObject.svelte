@@ -1,16 +1,15 @@
 <script lang="ts">
 	import Button from './Button.svelte';
-	import { is_selected, select, selected_display_ids } from '../ts/stores/displays';
 	import {
-		display_screen_height,
+	current_height,
 		get_selectable_color_classes,
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
 	import DNDGrip from './DNDGrip.svelte';
 	import { Menu, Pencil, Pin, PinOff, Trash2, VideoOff, X } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
 	import OnlineState from './OnlineState.svelte';
 	import type { Display } from '../ts/types';
+	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 
 	let { display } = $props<{
 		display: Display;
@@ -19,7 +18,7 @@
 	let hovering_unselectable = $state(false);
 
 	function onclick(e: Event) {
-		select(display.id);
+		select(selected_display_ids, display.id);
 		e.stopPropagation();
 	}
 
@@ -45,7 +44,7 @@
 		hover: true,
 		active: !hovering_unselectable,
 		text: true
-	})} rounded-xl flex flex-row justify-between h-{$display_screen_height} transition-colors duration-100 gap-2 cursor-pointer w-full text-stone-200"
+	})} rounded-xl flex flex-row justify-between h-{$current_height.display} transition-colors duration-100 gap-2 cursor-pointer w-full text-stone-200"
 >
 	<div class="flex flex-row gap-4 min-w-0 flex-1">
 		<!-- Left Preview Screen -->

@@ -7,16 +7,14 @@
 	import {
 		add_empty_display_group,
 		all_displays_of_group_selected,
-		is_selected,
 		remove_empty_display_groups,
-		select,
 		select_all_of_group,
-		selected_display_ids,
 		set_new_display_group_data
 	} from '../ts/stores/displays';
 	import DNDGrip from './DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
 	import type { DisplayGroup } from '../ts/types';
+	import { selected_display_ids } from '../ts/stores/select';
 
 	let { display_group } = $props<{
 		display_group: DisplayGroup;

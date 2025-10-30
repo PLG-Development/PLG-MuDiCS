@@ -1,34 +1,49 @@
-import type { NumericRange } from "@sveltejs/kit";
-import { get, writable, type Writable } from "svelte/store";
+import { writable, type Writable } from "svelte/store";
 
-const screen_height_step_size = 5;
 export const dnd_flip_duration_ms = 300;
 
-const min_display_screen_height = 15;
-const max_display_screen_height = 40;
-export const display_screen_height: Writable<number> = writable<number>(25);
+const heights_options: Record<string, { min: number; max: number; step: number }> = {
+    display: {
+        min: 15,
+        max: 40,
+        step: 5,
+    },
+    file: {
+        min: 10,
+        max: 20,
+        step: 5,
+    }
+}
+
+export const current_height: Writable<Record<string, number>> = writable<Record<string, number>>({
+    display: 25,
+    file: 10,
+});
+
 
 export const is_group_drag: Writable<boolean> = writable<boolean>(false);
 export const is_display_drag: Writable<boolean> = writable<boolean>(false);
 
 export const pinned_display_id: Writable<string | null> = writable<string | null>(null);
 
-export function change_display_screen_height(factor: number) {
-    display_screen_height.update((current_height) => {
-        const new_size = current_height + (factor * screen_height_step_size);
-        if (new_size > max_display_screen_height || new_size < min_display_screen_height) {
-            return current_height;
-        } else {
-            return new_size;
-        }
+
+export function change_height(key: 'display' | 'file', factor: number) {
+    current_height.update((height) => {
+        height[key] = next_height_step_size(key, height, factor) || height[key];
+        return height;
     });
 }
 
-
-export function next_step_possible(current_height: number, factor: number) {
-    const new_size = current_height + (factor * screen_height_step_size);
-    return new_size > max_display_screen_height || new_size < min_display_screen_height;
+export function next_height_step_size(key: 'display' | 'file', current_height_array: Record<string, number>, factor: number): number {
+    const new_size = current_height_array[key] + (factor * heights_options[key].step);
+    if (new_size > heights_options[key].max || new_size < heights_options[key].min) {
+        return 0;
+    } else {
+        return new_size;
+    }
 }
+
+
 
 
 export function get_selectable_color_classes(

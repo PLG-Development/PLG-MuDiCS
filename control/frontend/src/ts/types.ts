@@ -1,4 +1,59 @@
-import type { X } from "lucide-svelte";
+import { FileBox, FileImage, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
+
+export type SupportedFileType = {
+    display_name:
+    string; mime_type:
+    string; icon: typeof X;
+};
+
+export const supported_file_types: Record<string, SupportedFileType> = {
+    '.mp4': {
+        display_name: 'MP4',
+        mime_type: 'video/mp4',
+        icon: FileVideoCamera,
+    },
+    '.jpg': {
+        display_name: 'JPG',
+        mime_type: 'image/jpg',
+        icon: FileImage,
+    },
+    '.jpeg': {
+        display_name: 'JPG',
+        mime_type: 'image/jpeg',
+        icon: FileImage,
+    },
+    '.png': {
+        display_name: 'PNG',
+        mime_type: 'image/png',
+        icon: FileImage,
+    },
+    '.gif': {
+        display_name: 'GIF',
+        mime_type: 'image/gif',
+        icon: ImagePlay,
+    },
+    '.pptx': {
+        display_name: 'PPTX',
+        mime_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        icon: FileBox,
+    },
+    '.odp': {
+        display_name: 'ODP',
+        mime_type: 'application/vnd.oasis.opendocument.presentation',
+        icon: FileBox,
+    }
+}
+
+export type FolderElement = {
+    id?: string;
+    hash: string;
+    thumbnail: Blob | null;
+    name: string;
+    type: string;
+    date_created: Date;
+    size: string;
+}
+
 
 export type Display = {
     id: string;
@@ -21,4 +76,3 @@ export type MenuOption = {
     on_select?: () => void;
     disabled?: boolean;
 }
-

@@ -7,10 +7,12 @@
 		ClipboardPaste,
 		Download,
 		FolderOutput,
+		FolderPlus,
 		Info,
 		Keyboard,
 		Menu,
 		Minus,
+		Pen,
 		Pencil,
 		PinOff,
 		Plus,
@@ -33,13 +35,13 @@
 	import Button from '../components/Button.svelte';
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import {
-		change_display_screen_height,
-		display_screen_height,
+		change_height,
+		current_height,
 		dnd_flip_duration_ms,
 		get_selectable_color_classes,
 		is_display_drag,
 		is_group_drag,
-		next_step_possible,
+		next_height_step_size,
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
 	import { dragHandleZone } from 'svelte-dnd-action';
@@ -47,9 +49,7 @@
 		all_displays_of_group_selected,
 		displays,
 		get_display_by_id,
-		is_selected,
-		select_all_of_group,
-		selected_display_ids
+		select_all_of_group
 	} from '../ts/stores/displays';
 	import { cubicOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
@@ -58,7 +58,11 @@
 	import OnlineState from '../components/OnlineState.svelte';
 	import type { DisplayGroup } from '../ts/types';
 	import PopUp from '../components/PopUp.svelte';
-	import FileObject from '../components/FileObject.svelte';
+	import FileObject from '../components/FolderElementObject.svelte';
+	import FolderElementObject from '../components/FolderElementObject.svelte';
+	import PathBar from '../components/PathBar.svelte';
+	import { all_files, current_file_path, get_current_folder_elements } from '../ts/stores/files';
+	import { selected_display_ids, selected_file_ids } from '../ts/stores/select';
 
 	let displays_scroll_box: HTMLElement;
 
@@ -93,17 +97,17 @@
 
 <svelte:window on:wheel={on_wheel} />
 
-<main class="bg-stone-900 h-dvh w-dvw text-stone-200 p-4 gap-4 grid grid-rows-[3rem_auto]">
+<main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
 	 <!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
-		<span class="text-4xl font-bold content-center h-full"> PLG MuDiCS </span>
-		<Button className="aspect-square" bg="bg-stone-800">
+		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
+		<Button className="aspect-square" bg="bg-stone-800" div_class="aspect-square">
 			<Settings></Settings>
 		</Button>
 	</div>
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] grid grid-cols-2 gap-2">
-		<div class="h-[calc(100dvh-3rem-(12*var(--spacing)))] flex flex-col gap-2">
+		<div class="h-[calc(100dvh-3rem-(6*var(--spacing)))] flex flex-col gap-2">
 			{#if $pinned_display_id}
 				<!-- Pinned Item -->
 				<div in:fade={{ duration: 140 }} out:fade={{ duration: 120 }}>
@@ -201,9 +205,9 @@
 								title="Bildschirme größer darstellen"
 								className="aspect-square !p-1 rounded-r-none"
 								bg="bg-stone-600"
-								disabled={next_step_possible($display_screen_height, 1)}
+								disabled={!Boolean(next_height_step_size('display', $current_height, 1))}
 								click_function={() => {
-									change_display_screen_height(1);
+									change_height('display', 1);
 								}}
 							>
 								<Plus />
@@ -212,9 +216,9 @@
 								title="Bildschirme kleiner darstellen"
 								className="aspect-square !p-1 rounded-l-none"
 								bg="bg-stone-600"
-								disabled={next_step_possible($display_screen_height, -1)}
+								disabled={!Boolean(next_height_step_size('display', $current_height, -1))}
 								click_function={() => {
-									change_display_screen_height(-1);
+									change_height('display', -1);
 								}}
 							>
 								<Minus />
@@ -256,7 +260,7 @@
 			</div>
 		</div>
 		<div
-			class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] rounded-2xl flex flex-col gap-2"
+			class="col-start-2 h-[calc(100dvh-3rem-(6*var(--spacing)))] rounded-2xl flex flex-col gap-2"
 		>
 			<div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
 				<div
@@ -307,7 +311,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_auto]">
+			<div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
 				<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
 					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
 						Dateien anzeigen und verwalten
@@ -317,9 +321,9 @@
 							title="Dateien größer darstellen"
 							className="aspect-square !p-1 rounded-r-none"
 							bg="bg-stone-600"
-							disabled={next_step_possible($display_screen_height, 1)}
+							disabled={!Boolean(next_height_step_size('file', $current_height, 1))}
 							click_function={() => {
-								change_display_screen_height(1);
+								change_height('file', 1);
 							}}
 						>
 							<Plus />
@@ -328,9 +332,9 @@
 							title="Dateien kleiner darstellen"
 							className="aspect-square !p-1 rounded-l-none"
 							bg="bg-stone-600"
-							disabled={next_step_possible($display_screen_height, -1)}
+							disabled={!Boolean(next_height_step_size('file', $current_height, -1))}
 							click_function={() => {
-								change_display_screen_height(-1);
+								change_height('file', -1);
 							}}
 						>
 							<Minus />
@@ -338,35 +342,62 @@
 					</div>
 				</div>
 				<div class="flex flex-col gap-2 p-2 overflow-auto">
-					<div class="flex flex-row justify-between gap-6 overflow-x-auto">
-						<div class="flex flex-row gap-2">
-							<Button title="Eine Verzeichnis-Ebene zurück" className="px-3 flex"><FolderOutput /></Button>
-							<Button title="Datei anzeigen" className="px-3 flex gap-3">
-								<TvMinimalPlay class="shrink-0 flex"/>
-								<span class="min-w-0 hidden xl:flex">Anzeigen</span>
-							</Button>
-							<Button
-								title="Dateien zwischen Bildschirmen synchronisieren"
-								className="px-3 flex gap-3"
-								><RefreshCcw />
-								<span class="hidden 2xl:flex">Synchronisieren</span>
-							</Button>
-						</div>
-						<div class="flex flex-row gap-2">
-							<Button title="Datei(en) hochladen" className="px-3 flex"><Upload /></Button>
-							<Button title="Datei(en) herunterladen" className="px-3 flex"><Download /></Button>
-							<div class="border border-stone-700 my-1"></div>
-							<Button title="Datei(en) ausschneiden" className="px-3 flex"><Scissors /></Button>
-							<Button title="Datei(en) einfügen" className="px-3 flex"><ClipboardPaste /></Button>
-							<div class="border border-stone-700 my-1"></div>
-							<Button title="Datei(en) löschen" className="hover:!bg-red-400 px-3 flex"><Trash2 /></Button>
+					<div class="flex flex-col gap-2 p-2 bg-stone-750 rounded-xl">
+						<PathBar />
+						<div class="flex flex-row justify-between gap-6 overflow-x-auto">
+							<div class="flex flex-row gap-2 shrink-0">
+								<Button
+									title="Neuen Ordner erstellen (Neuen Ordner mit ausgewählten Objekten erstellen)"
+									className="px-3 flex"><FolderPlus /></Button
+								>
+								<div class="border border-stone-700 my-1"></div>
+								<Button title="Datei(en) hochladen" className="px-3 flex"><Upload /></Button>
+								<Button
+									title="Ausgewählte Datei(en) herunterladen"
+									className="px-3 flex"
+									disabled={$selected_file_ids.length === 0}><Download /></Button
+								>
+								<div class="border border-stone-700 my-1"></div>
+								<Button
+									title="Aktuellen Ordner / Ausgewählte Datei(en) zwischen Bildschirmen synchronisieren"
+									className="px-3 flex gap-3"
+									><RefreshCcw />
+									<span class="hidden 2xl:flex">Synchronisieren</span>
+								</Button>
+							</div>
+							<div class="flex flex-row gap-2">
+								<Button
+									title="Ausgewählte Datei(en) ausschneiden"
+									className="px-3 flex"
+									disabled={$selected_file_ids.length === 0}><Scissors /></Button
+								>
+								<Button title="Ausgewählte Datei(en) einfügen" className="px-3 flex"
+									><ClipboardPaste /></Button
+								>
+								<div class="border border-stone-700 my-1"></div>
+								<Button
+									title="Ausgewählte Datei umbenennen"
+									className="px-3 flex"
+									disabled={$selected_file_ids.length !== 1}><Pen /></Button
+								>
+								<Button
+									title="Ausgewählte Datei(en) löschen"
+									className="hover:!bg-red-400 px-3 flex"
+									disabled={$selected_file_ids.length === 0}><Trash2 /></Button
+								>
+							</div>
 						</div>
 					</div>
-					<div class="flex flex-col gap-2 p-2 bg-stone-750 h-full rounded-xl">
-						<FileObject />
+					<div class="min-h-0 h-full overflow-y-auto bg-stone-750 rounded-xl">
+						<div class="flex flex-col gap-2 p-2 min-h-0">
+							{#each get_current_folder_elements($all_files, $current_file_path, $selected_display_ids) as folder_element (folder_element.id)}
+								<section in:slide={{ duration: 100 }} class="outline-none">
+									<FolderElementObject file={folder_element} />
+								</section>
+							{/each}
+						</div>
 					</div>
 				</div>
-
 			</div>
 		</div>
 	</div>
