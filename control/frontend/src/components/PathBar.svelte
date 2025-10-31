@@ -117,7 +117,7 @@
 						open_path(0, $current_file_path);
 					}}
 				>
-					<House class="size-full" />
+					<House class="size-full transition-all duration-100" strokeWidth={$current_file_path === '/' ? 2.7 : 2}/>
 				</Button>
 			</div>
 			{#if cut_folders !== 0}

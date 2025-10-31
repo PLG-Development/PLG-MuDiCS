@@ -12,7 +12,7 @@ patch {
 
 body:json {
   {
-    "command": "find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do\n  typ=$(file -b --mime-type -- \"$f\")\n  size=$(stat -c '%s' -- \"$f\")\n  created=$(stat -c '%w' -- \"$f\")\n  [ \"$created\" = \"-\" ] && created=$(stat -c '%y' -- \"$f\")\n  jq -n --arg name \"$f\" --arg type \"$typ\" --arg size \"$size\" --arg created \"$created\" '{name:$name, type:$type, size:($size|tonumber), created:$created}' | tr -d '\\n'\n  echo\n done\n"
+    "command": "find . -maxdepth 1 -mindepth 1 -print0 | xargs -0 -I{} bash -c 'typ=$(file -b --mime-type -- \"{}\"); size=$(stat -c \"%s\" -- \"{}\"); created=$(stat -c \"%w\" -- \"{}\"); [ \"$created\" = \"-\" ] && created=$(stat -c \"%y\" -- \"{}\"); jq -n --arg name \"{}\" --arg type \"$typ\" --arg size \"$size\" --arg created \"$created\" \"{name:\\$name, type:\\$type, size:\\$size, created:\\$created}\"'"
   }
   
 }

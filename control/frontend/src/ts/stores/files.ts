@@ -3,6 +3,7 @@ import type { FolderElement } from "../types";
 import { displays } from "./displays";
 import { selected_display_ids, selected_file_ids } from "./select";
 import { get_file_data } from "../api_handler";
+import { get_uuid } from "../utils";
 
 export const all_files: Writable<Record<string, Record<string, FolderElement[]>>> = writable<Record<string, Record<string, FolderElement[]>>>({});
 // {
@@ -59,17 +60,19 @@ export function updates_files_on_display(display_id: string, new_folder_elements
             files[file_path] = {};
         }
         for (const new_folder_element of new_folder_elements) {
-            new_folder_element.id = crypto.randomUUID();
+            new_folder_element.id = get_uuid();
         }
         files[file_path][display_id] = new_folder_elements;
         return files;
     });
 }
 
-function get_files_on_all_displays() {
+async function get_files_on_all_displays(current_file_path: string) {
     for (const display_group of get(displays)) {
         for (const display of display_group.data) {
-            get_file_data(display.ip)
+            const new_folder_elements = await get_file_data(display.ip, current_file_path);
+            updates_files_on_display(display.id, new_folder_elements, current_file_path)
+            console.log(new_folder_elements)
         }
     }
 }
@@ -77,7 +80,7 @@ function get_files_on_all_displays() {
 
 export function get_current_folder_elements(all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string, selected_display_ids: string[]) {
     if (!all_files.hasOwnProperty(current_file_path)) {
-        get_files_on_all_displays();
+        setTimeout(async () => { await get_files_on_all_displays(current_file_path) }, 0);
         return [];
     }
     const files_on_display_array = all_files[current_file_path];

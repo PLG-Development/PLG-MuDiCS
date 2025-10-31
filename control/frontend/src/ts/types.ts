@@ -46,12 +46,12 @@ export const supported_file_types: Record<string, SupportedFileType> = {
 
 export type FolderElement = {
     id?: string;
-    hash: string;
+    hash: string | null;
     thumbnail: Blob | null;
     name: string;
     type: string;
     date_created: Date;
-    size: string;
+    size: number;
 }
 
 

@@ -1,16 +1,17 @@
 import { get, writable, type Writable } from "svelte/store";
 import type { Display, DisplayGroup } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
+import { get_uuid } from "../utils";
 
 export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
-    id: crypto.randomUUID(),
+    id: get_uuid(),
     data: []
 }]);
 
 
 function add_display(ip: string, mac: string, name: string, status: string) {
     displays.update((displays: DisplayGroup[]) => {
-        displays[0].data.push({ id: crypto.randomUUID(), ip, mac, name, status });
+        displays[0].data.push({ id: get_uuid(), ip, mac, name, status });
         return displays;
     });
 }
@@ -58,7 +59,7 @@ export function get_display_by_id(display_id: string) {
 export function add_empty_display_group() {
     displays.update((displays: DisplayGroup[]) => {
         displays.push({
-            id: crypto.randomUUID(),
+            id: get_uuid(),
             data: [],
         });
         return displays;

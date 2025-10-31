@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Folder, Play, RefreshCcwDot, TriangleAlert } from 'lucide-svelte';
+	import { ArrowRight, Ban, FileIcon, Folder, Play, RefreshCcwDot, TriangleAlert } from 'lucide-svelte';
 	import {
 		current_height,
 		get_selectable_color_classes,
@@ -20,6 +20,7 @@
 		get_display_ids_where_file_is_missing
 	} from '../ts/stores/files';
 	import RefreshPlay from './RefreshPlay.svelte';
+	import { get_file_size_display_string } from '../ts/utils';
 
 	let { file } = $props<{ file: FolderElement }>();
 
@@ -93,12 +94,14 @@
 <div class="flex flex-row h-{$current_height.file} w-full">
 	<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 		<Button
+			disabled={!is_folder && get_file_type(file) === null}
+			title={!is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
 			className="flex rounded-l-lg rounded-r-none {is_folder
 				? 'text-stone-450'
 				: 'text-stone-800'} w-full"
 			div_class="w-full"
 			bg={get_selectable_color_classes(
-				!is_folder,
+				!is_folder && get_file_type(file) !== null,
 				{
 					bg: true
 				},
@@ -127,8 +130,10 @@
 				<ArrowRight class="size-full" strokeWidth="3" />
 			{:else if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[0].length !== 0}
 				<RefreshPlay className="size-full" />
-			{:else}
+			{:else if get_file_type(file) !== null}
 				<Play class="size-full" strokeWidth="3" />
+			{:else}
+				<Ban class="size-full" strokeWidth="3" />
 			{/if}
 		</Button>
 	</div>
@@ -144,7 +149,7 @@
 			hover: true,
 			active: true,
 			text: true
-		})} rounded-r-lg transition-colors duration-200 gap-4 flex flex-row justify-between cursor-pointer group w-full h-full min-w-0"
+		})} rounded-r-lg transition-colors duration-200 gap-4 flex flex-row justify-between cursor-pointer group w-full min-w-0"
 	>
 		<div class="flex flex-row gap-2 min-w-0 w-full">
 			<div class="aspect-square rounded-md flex justify-center items-center p-2">
@@ -155,6 +160,8 @@
 				{:else if get_file_type(file)?.icon}
 					{@const Icon = get_file_type(file)?.icon}
 					<Icon class="size-full" />
+				{:else}
+					<FileIcon />
 				{/if}
 			</div>
 			<div class="content-center truncate select-none w-full" title={file.name}>
@@ -215,8 +222,8 @@
 					is_selected(file.id, $selected_file_ids)
 				)} duration-200 transition-colors"
 			></div>
-			<div class="w-12 content-center text-center select-none text-xs whitespace-nowrap">
-				{file.size}
+			<div class="w-12 content-center text-center select-none text-xs whitespace-nowrap" title={get_file_size_display_string(file.size, 3)}>
+				{get_file_size_display_string(file.size)}
 			</div>
 		</div>
 	</div>
