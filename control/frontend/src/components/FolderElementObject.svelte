@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { ArrowRight, Ban, FileIcon, Folder, Play, RefreshCcwDot, TriangleAlert } from 'lucide-svelte';
+	import {
+		ArrowRight,
+		Ban,
+		FileIcon,
+		Folder,
+		Play,
+		RefreshCcwDot,
+		TriangleAlert
+	} from 'lucide-svelte';
 	import {
 		current_height,
 		get_selectable_color_classes,
@@ -21,6 +29,8 @@
 	} from '../ts/stores/files';
 	import RefreshPlay from './RefreshPlay.svelte';
 	import { get_file_size_display_string } from '../ts/utils';
+	import { open_file } from '../ts/api_handler';
+	import { get_display_by_id, update_screenshot } from '../ts/stores/displays';
 
 	let { file } = $props<{ file: FolderElement }>();
 
@@ -82,11 +92,18 @@
 		e.stopPropagation();
 	}
 
-	function open() {
+	async function open() {
 		if (is_folder) {
 			change_file_path($current_file_path + file.name + '/');
 		} else {
-			// TODO
+			const path_to_file = $current_file_path + file.name;
+			for (const display_id of $selected_display_ids) {
+				const ip = get_display_by_id(display_id)?.ip ?? null;
+				if (ip) {
+					await open_file(ip, path_to_file);
+					await update_screenshot(display_id);
+				}
+			}
 		}
 	}
 </script>
@@ -222,7 +239,10 @@
 					is_selected(file.id, $selected_file_ids)
 				)} duration-200 transition-colors"
 			></div>
-			<div class="w-12 content-center text-center select-none text-xs whitespace-nowrap" title={get_file_size_display_string(file.size, 3)}>
+			<div
+				class="w-12 content-center text-center select-none text-xs whitespace-nowrap"
+				title={get_file_size_display_string(file.size, 3)}
+			>
 				{get_file_size_display_string(file.size)}
 			</div>
 		</div>

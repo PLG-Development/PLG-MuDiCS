@@ -1,7 +1,8 @@
 import { get, writable, type Writable } from "svelte/store";
 import type { Display, DisplayGroup } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
-import { get_uuid } from "../utils";
+import { get_uuid, image_content_hash } from "../utils";
+import { get_screenshot } from "../api_handler";
 
 export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
     id: get_uuid(),
@@ -11,7 +12,7 @@ export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
 
 function add_display(ip: string, mac: string, name: string, status: string) {
     displays.update((displays: DisplayGroup[]) => {
-        displays[0].data.push({ id: get_uuid(), ip, mac, name, status });
+        displays[0].data.push({ id: get_uuid(), ip, preview_url: null, preview_timeout_id: null, mac, name, status });
         return displays;
     });
 }
@@ -78,6 +79,48 @@ export function remove_empty_display_groups() {
     });
 }
 
+export async function update_screenshot(display_id: string, check_type: "first_check" | "last_check_different" | "last_check_same" = "first_check") {
+    const display_ip = get_display_by_id(display_id)?.ip;
+    if (!display_ip) return;
+    const new_blob = await get_screenshot(display_ip);
+    const display = get_display_by_id(display_id);
+
+    let update_needed = check_type === "first_check";
+    if (check_type !== "first_check") {
+        if (display && display.preview_url) {
+            const old_blob = await fetch(display.preview_url).then(r => r.blob());
+            const new_hash = await image_content_hash(new_blob);
+            const old_hash = await image_content_hash(old_blob);
+            console.log(old_hash, new_hash);
+            update_needed = old_hash !== new_hash; // if different -> update
+        }
+    }
+
+    let new_preview_timeout_id: number | null = null;
+    if (update_needed || check_type === "last_check_different") {
+        new_preview_timeout_id = setTimeout(async () => { await update_screenshot(display_id, update_needed ? "last_check_different" : "last_check_same") }, 2 * 1000);
+    }
+    if (display?.preview_timeout_id) {
+        clearInterval(display.preview_timeout_id);
+    }
+
+    if (update_needed) {
+        displays.update((display_groups) =>
+            display_groups.map((group) => ({
+                ...group,
+                data: group.data.map((display) => {
+                    if (display.id !== display_id) return display;
+                    if (display.preview_url) {
+                        URL.revokeObjectURL(display.preview_url);
+                    }
+                    const new_url = URL.createObjectURL(new_blob);
+                    return { ...display, preview_url: new_url, preview_timeout_id: new_preview_timeout_id };
+                }),
+            }))
+        );
+    }
+}
+
 
 
 add_testing_displays();
@@ -87,5 +130,6 @@ function add_testing_displays() {
     //     add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", name, "Offline");
     // }
 
-    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "Test", "Offline")
+    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
+    // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "Online");
 }

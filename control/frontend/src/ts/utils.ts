@@ -15,3 +15,28 @@ export function get_file_size_display_string(size: number, toFixed: number|null 
 
     return size_string.replace('.', ',');
 }
+
+
+export async function image_content_hash(blob: Blob, size = 32): Promise<number> {
+  // Blob → ImageBitmap (GPU-dekodiert, superschnell)
+  const bitmap = await createImageBitmap(blob);
+
+  // OffscreenCanvas ist sehr schnell (kein Layout nötig)
+  const canvas = new OffscreenCanvas(size, size);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, size, size);
+
+  // Pixel-Daten holen
+  const { data } = ctx.getImageData(0, 0, size, size);
+
+  // Einfacher, schneller Integer-Hash (FNV-1a)
+  let hash = 2166136261;
+  for (let i = 0; i < data.length; i++) {
+    hash ^= data[i];
+    hash = Math.imul(hash, 16777619);
+  }
+
+  bitmap.close(); // GPU-Ressourcen freigeben
+  return hash >>> 0; // unsigned int
+}
+

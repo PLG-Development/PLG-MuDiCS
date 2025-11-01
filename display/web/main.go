@@ -186,7 +186,7 @@ func keyboardInputRoute(ctx echo.Context) error {
 	}
 
 	slog.Info("Keyboard input sent", "key", request.Key)
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func uploadFileRoute(ctx echo.Context) error {
@@ -276,7 +276,7 @@ func openFileRoute(ctx echo.Context) error {
 	}
 
 	slog.Info("Successfully run file", "file", pathParam)
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func showHTMLRoute(ctx echo.Context) error {
@@ -297,7 +297,7 @@ func showHTMLRoute(ctx echo.Context) error {
 	sseConnection <- request.HTML
 
 	slog.Info("HTML content sent to client")
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func pingRoute(ctx echo.Context) error {

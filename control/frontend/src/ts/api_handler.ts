@@ -1,19 +1,29 @@
 import type { FolderElement } from "./types";
 import { get_uuid } from "./utils";
 
-interface FileInfo {
-    name: string;
-    type: string;
-    size: string;
-    created: string;
+export async function get_screenshot(ip: string) {
+    const options = { method: 'PATCH' };
+    return await request(ip, '/takeScreenshot', options);
+}
+
+export async function open_file(ip: string, path_to_file: string) {
+    const options = { method: 'PATCH', headers: { 'content-type': 'application/octet-stream' } };
+    const raw_response = await request(ip, `/file${path_to_file}`, options);
 }
 
 export async function get_file_data(ip: string, path: string): Promise<FolderElement[]> {
+    interface FileInfo {
+        name: string;
+        type: string;
+        size: string;
+        created: string;
+    }
+
     const options = {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-            command: `cd .${path} && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
+            command: `cd ".${path}" && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
   typ=$(file -b --mime-type -- "$f")
   size=$(stat -c '%s' -- "$f")
   created=$(stat -c '%w' -- "$f")
@@ -38,7 +48,7 @@ done
             const folder_element: FolderElement = {
                 id: get_uuid(),
                 hash: JSON.stringify(response),
-                thumbnail: null,
+                thumbnail_url: null,
                 name: response_element.name.slice(2), // remove "./"
                 type: response_element.type,
                 date_created: new Date(response_element.created),
@@ -53,13 +63,20 @@ done
 
 
 
-async function request(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<any | null> {
+async function request(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }) {
     try {
-        const url = `http://${ip}:1323/api${api_route}`;
+        const url = `http://${ip}:1323/api${api_route}?t=${Date.now()}`;
         console.log(url)
         const response = await fetch(url, options);
-        const data = await response.json();
-        return data;
+        if (!response.ok) {
+            console.error(`HTTP error! Status: ${response.status}`);
+        }
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+            return await response.blob();
+        } else {
+            return await response.json();
+        }
     } catch (error) {
         console.error(error);
     }

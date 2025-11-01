@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import {
-	current_height,
+		current_height,
 		get_selectable_color_classes,
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
@@ -61,6 +61,8 @@
 					<div class="size-[50%]">
 						<Pin class="size-full" />
 					</div>
+				{:else if display.preview_url}
+					<img src={display.preview_url} alt="API-Bild" class="w-full object-cover" />
 				{:else}
 					<!-- No Signal -->
 					<VideoOff class="size-[30%]" />

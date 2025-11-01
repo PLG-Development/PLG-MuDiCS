@@ -47,7 +47,7 @@ export const supported_file_types: Record<string, SupportedFileType> = {
 export type FolderElement = {
     id?: string;
     hash: string | null;
-    thumbnail: Blob | null;
+    thumbnail_url: string | null;
     name: string;
     type: string;
     date_created: Date;
@@ -58,6 +58,8 @@ export type FolderElement = {
 export type Display = {
     id: string;
     ip: string;
+    preview_url: string | null;
+    preview_timeout_id: number | null;
     mac: string;
     name: string;
     status: string;
