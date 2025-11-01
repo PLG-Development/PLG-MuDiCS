@@ -27,9 +27,9 @@
 	// });
 </script>
 
-<div class="fixed size-full backdrop-blur bg-black/30 flex justify-center items-center">
+<div class="absolute inset-0 backdrop-blur bg-white/10 flex justify-center items-center">
 	<div
-		class="bg-stone-800 rounded-2xl min-w-[30dvw] min-h-[20dvh] max-w-[80dvw] max-h-[80dvh] flex flex-col overflow-hidden shadow-2xl/30"
+		class="bg-stone-800 rounded-2xl min-w-[40%] min-h-[30%] max-w-[80%] max-h-[80%] flex flex-col overflow-hidden shadow-2xl/30"
 	>
 		<div
 			class="text-2xl font-bold bg-stone-700 {title_class} px-4 py-2 flex flex-row justify-between"

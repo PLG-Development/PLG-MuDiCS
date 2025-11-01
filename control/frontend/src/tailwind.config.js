@@ -190,5 +190,8 @@ module.exports = {
 
     'right-0',
     'left-0',
+
+    'hover:bg-red-400',
+    'active:bg-red-500',
   ],
 }

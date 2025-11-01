@@ -49,9 +49,7 @@
 	<div class="flex flex-row gap-4 min-w-0 flex-1">
 		<!-- Left Preview Screen -->
 		<button
-			class="group relative aspect-16/9 {$pinned_display_id === display.id
-				? 'bg-stone-800'
-				: 'bg-black'} h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
+			class="group relative aspect-16/9 bg-stone-800 h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
 			onmouseenter={() => (hovering_unselectable = true)}
 			onmouseleave={() => (hovering_unselectable = false)}
 			onclick={on_preview_click}
@@ -62,10 +60,12 @@
 						<Pin class="size-full" />
 					</div>
 				{:else if display.preview_url}
-					<img src={display.preview_url} alt="API-Bild" class="w-full object-cover" />
+					<img src={display.preview_url} alt="preview" class="w-full object-cover bg-black" />
 				{:else}
 					<!-- No Signal -->
-					<VideoOff class="size-[30%]" />
+					<div class="size-full bg-black flex justify-center items-center">
+						<VideoOff class="size-[30%]" />
+					</div>
 				{/if}
 			</div>
 
@@ -129,7 +129,7 @@
 					{
 						icon: Trash2,
 						name: 'Bildschirm löschen',
-						class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400'
+						class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500'
 					}
 				]}
 			>

@@ -44,8 +44,8 @@ export function set_new_display_group_data(display_group_id: string, new_data: D
     });
 }
 
-export function get_display_by_id(display_id: string) {
-    const displays_array = get(displays);
+export function get_display_by_id(display_id: string, display_group_array: DisplayGroup[]) {
+    const displays_array = display_group_array;
     for (const display_group of displays_array) {
         for (const display of display_group.data) {
             if (display.id === display_id) {
@@ -80,10 +80,10 @@ export function remove_empty_display_groups() {
 }
 
 export async function update_screenshot(display_id: string, check_type: "first_check" | "last_check_different" | "last_check_same" = "first_check") {
-    const display_ip = get_display_by_id(display_id)?.ip;
+    const display_ip = get_display_by_id(display_id, get(displays))?.ip;
     if (!display_ip) return;
     const new_blob = await get_screenshot(display_ip);
-    const display = get_display_by_id(display_id);
+    const display = get_display_by_id(display_id, get(displays));
 
     let update_needed = check_type === "first_check";
     if (check_type !== "first_check") {
