@@ -60,7 +60,7 @@ export type Display = {
     ip: string;
     preview_url: string | null;
     preview_timeout_id: number | null;
-    mac: string;
+    mac: string|null;
     name: string;
     status: string;
 }
@@ -77,4 +77,13 @@ export type MenuOption = {
     class?: string;
     on_select?: () => void;
     disabled?: boolean;
+}
+
+export type PopupContent = {
+    open: boolean;
+    snippet: any;
+    title: string;
+    title_class?: string;
+    title_icon?: typeof X | null;
+    closable?: boolean;
 }

@@ -10,7 +10,14 @@ export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
 }]);
 
 
-function add_display(ip: string, mac: string, name: string, status: string) {
+export function is_display_name_taken(name: string): boolean {
+  const display_groups = get(displays);
+  return display_groups.some(group =>
+    group.data.some(display => display.name.trim().toLowerCase() === name.trim().toLowerCase())
+  );
+}
+
+export function add_display(ip: string, mac: string|null, name: string, status: string) {
     displays.update((displays: DisplayGroup[]) => {
         displays[0].data.push({ id: get_uuid(), ip, preview_url: null, preview_timeout_id: null, mac, name, status });
         return displays;
@@ -123,6 +130,8 @@ export async function update_screenshot(display_id: string, check_type: "first_c
 
 
 
+
+
 add_testing_displays();
 function add_testing_displays() {
     // const names = ["Vorne Rechts", "Vorne Links", "Vorne Mitte", "Fernseher Rechts", "Fernseher Bühne", "UIUIUIUIUIUIUISEHRLANGERTEXT DER IST WIRKLICH LANG, DER TEXT, so lang, dass er wirklich nirgendswo hinpasst, nichtmal da oben /\\"];
@@ -130,6 +139,6 @@ function add_testing_displays() {
     //     add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", name, "Offline");
     // }
 
-    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
+    // add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
     // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "Online");
 }
