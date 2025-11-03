@@ -19,7 +19,6 @@
   time.timeZone = "Europe/Berlin";
 
   i18n.defaultLocale = "en_US.UTF-8";
-
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "de_DE.UTF-8";
     LC_IDENTIFICATION = "de_DE.UTF-8";
@@ -53,9 +52,9 @@
     pulse.enable = true;
   };
 
-  users.users.tag = {
+  users.users.mudics = {
     isNormalUser = true;
-    description = "tag";
+    description = "mudics";
     extraGroups = ["networkmanager" "wheel"];
   };
 
@@ -75,18 +74,29 @@
 
   services.displayManager.autoLogin = {
     enable = true;
-    user = "tag";
+    user = "mudics";
   };
-
-  programs.chromium.enable = true;
 
   networking.hostName = "plg-mudics";
 
   environment.systemPackages = with pkgs; [
     libreoffice
-    rustdesk
+    #rustdesk
+    ungoogled-chromium
     xfce.thunar-archive-plugin
     git
-    ghostty
+    nushell
   ];
+
+  systemd.services.update-nixos = {
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.nushell ];
+    script = "nu ${./update-nixos.sh}";
+  };
+
+  systemd.services.update-mudics = {
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.nushell ];
+    script = "nu ${./update-mudics.sh}";
+  };
 }
