@@ -2,16 +2,21 @@ name: Build
 
 on:
   push:
-    paths:
-      - go.mod
-      - go.sum
-      - "**/*.go"
-      - "**/*.tmpl"
+    paths-ignore:
+      - "**/*.md"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        block:
+          - control
+          - display
+    defaults:
+      run:
+        working-directory: ${{ matrix.block }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -20,21 +25,25 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "^1.24"
-          cache-dependency-path: display/go.sum
+          cache-dependency-path: go.sum
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        if: matrix.block == 'control'
+        with:
+          deno-version: v2.x
 
       - name: Install Dependencies
-        working-directory: display
         run: go mod download
 
-      - name: Generate Templates
-        working-directory: display
-        run: go tool templ generate
+      - name: Generate
+        run: go generate ./...
 
       - name: Build
-        working-directory: display
-        run: go build -o plg-mudics-display .
+        run: go build -o plg-mudics-${{ matrix.block }} .
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          path: display/plg-mudics-display
+          name: plg-mudics-${{ matrix.block }}
+          path: plg-mudics-${{ matrix.block }}
