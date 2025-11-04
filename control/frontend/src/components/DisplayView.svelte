@@ -20,14 +20,16 @@
 	import Button from './Button.svelte';
 	import OnlineState from './OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
-	import { Menu, Minus, Pencil, PinOff, Plus, Trash2, VideoOff } from 'lucide-svelte';
+	import { Menu, Minus, Pencil, PinOff, Plus, Settings, Trash2, VideoOff } from 'lucide-svelte';
 	import { selected_display_ids } from '../ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
 
 	let displays_scroll_box: HTMLElement;
-	let pinned_display: Display | null = $derived(get_display_by_id($pinned_display_id || '', $displays));
+	let pinned_display: Display | null = $derived(
+		get_display_by_id($pinned_display_id || '', $displays)
+	);
 
 	function select_all(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
 		const new_value = !all_selected(current_displays, current_selected_display_ids);
@@ -136,7 +138,7 @@
 		<!-- Normal Heading Left -->
 		<div class="bg-stone-700 flex justify-between w-full p-1 gap-2 min-w-0">
 			<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
-				Bereits verbundene Displays
+				Verbundene Bildschirme
 			</span>
 			<div class="flex flex-row gap-1">
 				<button
@@ -202,16 +204,23 @@
 					$is_group_drag = false;
 				}}
 			>
-				{#each $displays as display_group (display_group.id)}
-					<!-- Each Group -->
-					<section
-						out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-						animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-						class="outline-none"
-					>
-						<DisplayGroupObject {display_group} />
-					</section>
-				{/each}
+				{#if $displays.length === 1 && $displays[0].data.length === 0}
+					<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
+						Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings class="inline pb-1"/> und "Neuen
+						Bildschirm hinzufügen".
+					</div>
+				{:else}
+					{#each $displays as display_group (display_group.id)}
+						<!-- Each Group -->
+						<section
+							out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
+							animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
+							class="outline-none"
+						>
+							<DisplayGroupObject {display_group} />
+						</section>
+					{/each}
+				{/if}
 			</div>
 		</div>
 	</div>

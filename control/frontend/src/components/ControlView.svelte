@@ -8,7 +8,7 @@
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
 	<div class="text-xl font-bold pl-3 content-center bg-stone-700 rounded-t-2xl truncate min-w-0">
-		{'Bildschirme steuern (' + $selected_display_ids.length + ' ausgewählt)'}
+		Bildschirme steuern
 	</div>
 	<div class="flex flex-col gap-2 p-2 overflow-auto">
 		<div class="flex flex-row justify-between gap-2">
