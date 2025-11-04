@@ -38,7 +38,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="bg-stone-800 rounded-2xl min-w-[30%] min-h-[30%] max-w-[80%] max-h-[80%] flex flex-col shadow-2xl/60 overflow-hidden"
+			class="bg-stone-800 rounded-2xl min-w-[30%] max-w-[80%] max-h-[80%] flex flex-col shadow-2xl/60 overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<div
@@ -62,7 +62,7 @@
 				</div>
 			</div>
 			<div class="p-2 min-h-0 overflow-auto flex flex-col gap-2">
-				{@render content.snippet()}
+				{@render content.snippet(content.snippet_arg)}
 			</div>
 		</div>
 	</div>

@@ -16,7 +16,7 @@
 		next_height_step_size,
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
-	import { type Display, type DisplayGroup } from '../ts/types';
+	import { type Display, type DisplayGroup, type MenuOption } from '../ts/types';
 	import Button from './Button.svelte';
 	import OnlineState from './OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
@@ -26,10 +26,32 @@
 	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
 
+	let { handle_display_deletion, handle_display_editing } = $props<{
+		handle_display_deletion: (display_id: string) => void;
+		handle_display_editing: (display_id: string) => void;
+	}>();
+
 	let displays_scroll_box: HTMLElement;
 	let pinned_display: Display | null = $derived(
 		get_display_by_id($pinned_display_id || '', $displays)
 	);
+
+
+	function get_display_menu_options(display_id: string): MenuOption[] {
+		return [
+		{
+			icon: Pencil,
+			name: 'Bildschirm bearbeiten',
+			on_select: () => {handle_display_editing(display_id)},
+		},
+		{
+			icon: Trash2,
+			name: 'Bildschirm löschen',
+			class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500',
+			on_select: () => {handle_display_deletion(display_id)},
+		}
+	];
+	}
 
 	function select_all(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
 		const new_value = !all_selected(current_displays, current_selected_display_ids);
@@ -89,17 +111,7 @@
 							click_function={(e) => {
 								e.stopPropagation();
 							}}
-							menu_options={[
-								{
-									icon: Pencil,
-									name: 'Bildschirm bearbeiten'
-								},
-								{
-									icon: Trash2,
-									name: 'Bildschirm löschen',
-									class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500'
-								}
-							]}
+							menu_options={get_display_menu_options($pinned_display_id)}
 						>
 							<Menu />
 						</Button>
@@ -159,7 +171,7 @@
 							: 'Alle auswählen'}</span
 					>
 				</button>
-				<div class="flex flex-ro">
+				<div class="flex flex-row">
 					<Button
 						title="Bildschirme größer darstellen"
 						className="aspect-square !p-1 rounded-r-none"
@@ -206,8 +218,9 @@
 			>
 				{#if $displays.length === 1 && $displays[0].data.length === 0}
 					<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
-						Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings class="inline pb-1"/> und "Neuen
-						Bildschirm hinzufügen".
+						Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings
+							class="inline pb-1"
+						/> und "Neuen Bildschirm hinzufügen".
 					</div>
 				{:else}
 					{#each $displays as display_group (display_group.id)}
@@ -217,7 +230,7 @@
 							animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
 							class="outline-none"
 						>
-							<DisplayGroupObject {display_group} />
+							<DisplayGroupObject {display_group} {get_display_menu_options} />
 						</section>
 					{/each}
 				{/if}

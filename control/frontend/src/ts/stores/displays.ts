@@ -11,17 +11,42 @@ export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
 
 
 export function is_display_name_taken(name: string): boolean {
-  const display_groups = get(displays);
-  return display_groups.some(group =>
-    group.data.some(display => display.name.trim().toLowerCase() === name.trim().toLowerCase())
-  );
+    const display_groups = get(displays);
+    return display_groups.some(group =>
+        group.data.some(display => display.name.trim().toLowerCase() === name.trim().toLowerCase())
+    );
 }
 
-export function add_display(ip: string, mac: string|null, name: string, status: string) {
+export function add_display(ip: string, mac: string | null, name: string, status: string) {
     displays.update((displays: DisplayGroup[]) => {
         displays[0].data.push({ id: get_uuid(), ip, preview_url: null, preview_timeout_id: null, mac, name, status });
         return displays;
     });
+}
+
+export function edit_display_data(display_id: string, ip: string, mac: string | null, name: string) {
+    displays.update((display_groups) =>
+        display_groups.map((group) => ({
+            ...group,
+            data: group.data.map((display) => {
+                if (display.id !== display_id) return display;
+                return { ...display, ip: ip, mac: mac, name: name };
+            }),
+        }))
+    );
+}
+
+export function remove_display(display_id: string) {
+    console.log(display_id);
+    displays.update((displays: DisplayGroup[]) => {
+        displays = displays.map(display_group => ({
+            ...display_group,
+            data: display_group.data.filter(display => display.id !== display_id)
+        }));
+        return displays;
+    });
+
+    // TODO remove ID from Files usw.
 }
 
 export function all_displays_of_group_selected(display_group: DisplayGroup, current_selected_displays: string[]) {
@@ -139,6 +164,6 @@ function add_testing_displays() {
     //     add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", name, "Offline");
     // }
 
-    // add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
+    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
     // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "Online");
 }

@@ -1,4 +1,5 @@
 import { FileBox, FileImage, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
+import type { Snippet } from "svelte";
 
 export type SupportedFileType = {
     display_name:
@@ -60,7 +61,7 @@ export type Display = {
     ip: string;
     preview_url: string | null;
     preview_timeout_id: number | null;
-    mac: string|null;
+    mac: string | null;
     name: string;
     status: string;
 }
@@ -81,7 +82,8 @@ export type MenuOption = {
 
 export type PopupContent = {
     open: boolean;
-    snippet: any;
+    snippet: Snippet<[string]> | null;
+    snippet_arg?: string;
     title: string;
     title_class?: string;
     title_icon?: typeof X | null;

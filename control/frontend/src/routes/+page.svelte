@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Monitor, Plus, Radio, Settings, X } from 'lucide-svelte';
+	import { Monitor, Plus, Radio, Settings, Trash2, X } from 'lucide-svelte';
 	import Button from '../components/Button.svelte';
 	import FileView from '../components/FileView.svelte';
 	import ControlView from '../components/ControlView.svelte';
@@ -8,7 +8,14 @@
 	import PopUp from '../components/PopUp.svelte';
 	import type { PopupContent } from '../ts/types';
 	import TextInput from '../components/TextInput.svelte';
-	import { add_display, is_display_name_taken } from '../ts/stores/displays';
+	import {
+		add_display,
+		displays,
+		edit_display_data,
+		get_display_by_id,
+		is_display_name_taken,
+		remove_display
+	} from '../ts/stores/displays';
 	import { text } from '@sveltejs/kit';
 
 	const ip_regex =
@@ -22,11 +29,12 @@
 		closable: true
 	});
 
-	let text_inputs_valid = $state({
+	const text_inputs_valid_null_values = {
 		name: { valid: false, value: '' },
 		ip: { valid: false, value: '' },
 		mac: { valid: false, value: '' }
-	});
+	};
+	let text_inputs_valid = $state(text_inputs_valid_null_values);
 
 	function all_text_inputs_valid(): boolean {
 		for (const entry of Object.values(text_inputs_valid)) {
@@ -37,17 +45,16 @@
 		return true;
 	}
 
-	function finalize_add_new_display() {
+	function finalize_add_edit_display(existing_display_id: string|null) {
 		const ip = text_inputs_valid.ip.value;
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
-		add_display(ip, mac, name, 'Online');
+		if (!!existing_display_id) {
+			edit_display_data(existing_display_id, ip, mac, name);
+		} else {
+			add_display(ip, mac, name, 'Online');
+		}
 		popup_close_function();
-		text_inputs_valid = {
-			name: { valid: false, value: '' },
-			ip: { valid: false, value: '' },
-			mac: { valid: false, value: '' }
-		};
 	}
 
 	function popup_close_function() {
@@ -55,28 +62,81 @@
 	}
 
 	const show_new_display_popup = () => {
+		text_inputs_valid = text_inputs_valid_null_values;
 		popup_content = {
 			open: true,
-			snippet: add_new_display,
+			snippet: add_new_display_popup,
 			title: 'Neuen Bildschirm hinzufügen',
+			title_icon: Monitor,
+			closable: true
+		};
+	};
+
+	const show_remove_display_popup = (display_id: string) => {
+		popup_content = {
+			open: true,
+			snippet: remove_display_popup,
+			snippet_arg: display_id,
+			title: 'Bildschirm wirklich löschen?',
+			title_class: 'text-red-400',
+			title_icon: Trash2,
+			closable: true
+		};
+	};
+
+	const show_edit_display_popup = (display_id: string) => {
+		const display = get_display_by_id(display_id, $displays);
+		if (!display) return;
+		// insert existing values in text_inputs_valid
+		for (const key of Object.keys(text_inputs_valid) as (keyof typeof text_inputs_valid)[]) {
+			text_inputs_valid[key].valid = true;
+			text_inputs_valid[key].value = display[key] || '';
+		}
+		popup_content = {
+			open: true,
+			snippet: add_new_display_popup,
+			snippet_arg: display_id,
+			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
 			closable: true
 		};
 	};
 </script>
 
-{#snippet add_new_display()}
+{#snippet remove_display_popup(display_id: string)}
+	<div class="max-w-prose px-2">
+		Soll der Bildschirm "{get_display_by_id(display_id, $displays)?.name || '?'}" wirklich gelöscht
+		werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation auf dem
+		Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
+	</div>
+	<div class="flex flex-row justify-end gap-2">
+		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
+		<Button
+			hover_bg="bg-red-400"
+			active_bg="bg-red-500"
+			className="px-4 flex text-red-400 hover:text-stone-100"
+			click_function={() => {
+				remove_display(display_id);
+				popup_close_function();
+			}}>Löschen</Button
+		>
+	</div>
+{/snippet}
+
+{#snippet add_new_display_popup(existing_display_id: string | null = null)}
 	<TextInput
 		bind:current_value={text_inputs_valid.name.value}
 		bind:current_valid={text_inputs_valid.name.valid}
 		title="Anzeigename"
 		placeholder="z.B. Beamer vorne links"
 		is_valid_function={(input: string) => {
-			return input.length === 0 || input.length > 50
-				? [false, 'Ungültige Länge']
-				: is_display_name_taken(input)
-					? [false, 'Name bereits verwendet']
-					: [true, 'Gültiger Name'];
+			if (!!existing_display_id) {
+				if (input === get_display_by_id(existing_display_id, $displays)?.name)
+					return [true, 'Gültiger Name'];
+			}
+			if (input.length === 0 || input.length > 50) return [false, 'Ungültige Länge'];
+			if (is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
+			return [true, 'Gültiger Name'];
 		}}
 	/>
 	<div class="flex flex-row gap-2">
@@ -111,18 +171,29 @@
 					: [false, 'Ungültige MAC-Adresse'];
 		}}
 	/>
-	<div class="flex justify-end pt-2">
+	<div class="flex flex-row gap-2 justify-end pt-2">
+		{#if !!existing_display_id}
+			<!-- TODO: Ping mit existing_display_id -->
+			<Button className="px-4" click_function={popup_close_function}>Abbrechen</Button>
+		{/if}
 		<Button
 			disabled={!all_text_inputs_valid()}
-			className="pl-3 pr-4 gap-2 font-bold"
+			className="{!!existing_display_id ? 'px-4' : 'pl-3 pr-4 gap-2'} font-bold"
 			bg="bg-stone-650"
-			click_function={finalize_add_new_display}><Plus /> Bildschirm hinzufügen</Button
-		>
+			click_function={() => {
+				finalize_add_edit_display(existing_display_id);
+			}}
+			>{#if !!existing_display_id}
+				Speichern
+			{:else}
+				<Plus /> Bildschirm hinzufügen
+			{/if}
+		</Button>
 	</div>
 {/snippet}
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
-	{@html SplashScreen}
+	<!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
@@ -146,7 +217,10 @@
 		</Button>
 	</div>
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] grid grid-cols-2 gap-2">
-		<DisplayView />
+		<DisplayView
+			handle_display_deletion={show_remove_display_popup}
+			handle_display_editing={show_edit_display_popup}
+		/>
 		<div
 			class="col-start-2 h-[calc(100dvh-3rem-(6*var(--spacing)))] rounded-2xl flex flex-col gap-2"
 		>

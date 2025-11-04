@@ -8,11 +8,12 @@
 	import DNDGrip from './DNDGrip.svelte';
 	import { Menu, Pencil, Pin, PinOff, Trash2, VideoOff, X } from 'lucide-svelte';
 	import OnlineState from './OnlineState.svelte';
-	import type { Display } from '../ts/types';
+	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 
-	let { display } = $props<{
+	let { display, get_display_menu_options } = $props<{
 		display: Display;
+		get_display_menu_options: (display_id: string) => MenuOption[];
 	}>();
 
 	let hovering_unselectable = $state(false);
@@ -121,17 +122,7 @@
 				click_function={(e) => {
 					e.stopPropagation();
 				}}
-				menu_options={[
-					{
-						icon: Pencil,
-						name: 'Bildschirm bearbeiten'
-					},
-					{
-						icon: Trash2,
-						name: 'Bildschirm löschen',
-						class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500'
-					}
-				]}
+				menu_options={get_display_menu_options(display.id)}
 			>
 				<Menu />
 			</Button>

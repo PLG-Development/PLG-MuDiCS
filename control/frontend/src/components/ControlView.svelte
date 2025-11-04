@@ -1,9 +1,17 @@
 <script lang="ts">
-	import { ArrowBigLeft, ArrowBigRight, ChevronDown, Keyboard, Power, PowerOff, Presentation, SquareTerminal, TextAlignStart, TrafficCone } from "lucide-svelte";
-	import { selected_display_ids } from "../ts/stores/select";
-	import Button from "./Button.svelte";
-
-    
+	import {
+		ArrowBigLeft,
+		ArrowBigRight,
+		ChevronDown,
+		Keyboard,
+		Power,
+		PowerOff,
+		Presentation,
+		SquareTerminal,
+		TextAlignStart,
+		TrafficCone
+	} from 'lucide-svelte';
+	import Button from './Button.svelte';
 </script>
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
