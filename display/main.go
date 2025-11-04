@@ -23,10 +23,10 @@ func main() {
 		os.Exit(1)
 		return
 	}
+	port := "1323"
+	go web.StartWebServer(VERSION, port)
 
-	go web.StartWebServer(VERSION)
-
-	err = shared.OpenBrowserWindow("https://example.com", true, true)
+	err = shared.OpenBrowserWindow("http://localhost:"+port, true, true)
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
 		os.Exit(1)

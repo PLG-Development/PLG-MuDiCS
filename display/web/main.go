@@ -37,7 +37,7 @@ var supportedExtensions = map[string]bool{
 	".odp":  true,
 }
 
-func StartWebServer(v string) {
+func StartWebServer(v string, port string) {
 	version = v
 
 	e := echo.New()
@@ -63,7 +63,7 @@ func StartWebServer(v string) {
 	fileGroup.PATCH("/:path", openFileRoute)
 	fileGroup.GET("/preview/:path", previewRoute)
 
-	err := e.Start(":1323")
+	err := e.Start(":" + port)
 	if err != nil {
 		slog.Error("Failed to start server", "error", err)
 	}
