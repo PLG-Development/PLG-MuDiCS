@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"plg-mudics/control/frontend"
+	"plg-mudics/shared"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -24,8 +25,12 @@ func main() {
 		return ctx.String(http.StatusOK, "pong")
 	})
 
-	err := e.Start(":1323")
-	if err != nil {
-		slog.Error("Failed to start Echo Webserver", "error", err)
-	}
+	go func() {
+		err := e.Start(":1323")
+		if err != nil {
+			slog.Error("Failed to start Echo Webserver", "error", err)
+		}
+	}()
+
+	shared.OpenBrowserWindow("http://localhost:1323", false, false)
 }
