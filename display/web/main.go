@@ -155,7 +155,7 @@ func shellCommandRoute(ctx echo.Context) error {
 	}
 	cmd.Dir = storagePath
 
-	commandOutput := pkg.RunShellCommand(cmd)
+	commandOutput := shared.RunShellCommand(cmd)
 	if commandOutput.ExitCode != 0 {
 		slog.Error("Shell command execution error", "error", commandOutput.Stderr)
 	}

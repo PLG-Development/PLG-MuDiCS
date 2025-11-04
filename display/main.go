@@ -6,6 +6,7 @@ import (
 
 	"plg-mudics/display/pkg"
 	"plg-mudics/display/web"
+	"plg-mudics/shared"
 )
 
 const VERSION = "0.1.0"
@@ -25,7 +26,7 @@ func main() {
 
 	go web.StartWebServer(VERSION)
 
-	err = pkg.OpenBrowserWindow("http://127.0.0.1:1323")
+	err = shared.OpenBrowserWindow("https://example.com", true, true)
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
 		os.Exit(1)
