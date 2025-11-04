@@ -25,12 +25,14 @@ func main() {
 		return ctx.String(http.StatusOK, "pong")
 	})
 
+	port := "8080"
+
 	go func() {
-		err := e.Start(":1323")
+		err := e.Start(":" + port)
 		if err != nil {
 			slog.Error("Failed to start Echo Webserver", "error", err)
 		}
 	}()
 
-	shared.OpenBrowserWindow("http://localhost:1323", false, false)
+	shared.OpenBrowserWindow("http://localhost:"+port, false, false)
 }
