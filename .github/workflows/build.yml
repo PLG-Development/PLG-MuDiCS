@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plg-mudics-${{ matrix.block }}
-          path: plg-mudics-${{ matrix.block }}
+          path: ${{matrix.block}}/plg-mudics-${{ matrix.block }}
