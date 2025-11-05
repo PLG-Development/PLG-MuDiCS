@@ -1,4 +1,4 @@
-# PLG-MuDICS Display
+# PLG-MuDiCS Display
 
 ## Runtime Requirements
 

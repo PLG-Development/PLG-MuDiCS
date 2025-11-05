@@ -1,1 +1,1 @@
-# PLG-MuDICS
+# PLG-MuDiCS
