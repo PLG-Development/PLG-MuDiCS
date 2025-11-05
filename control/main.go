@@ -27,12 +27,10 @@ func main() {
 
 	port := "8080"
 
-	go func() {
-		err := e.Start(":" + port)
-		if err != nil {
-			slog.Error("Failed to start Echo Webserver", "error", err)
-		}
-	}()
+	go shared.OpenBrowserWindow("http://localhost:"+port, false, false)
 
-	shared.OpenBrowserWindow("http://localhost:"+port, false, false)
+	err := e.Start(":" + port)
+	if err != nil {
+		slog.Error("Failed to start Echo Webserver", "error", err)
+	}
 }
