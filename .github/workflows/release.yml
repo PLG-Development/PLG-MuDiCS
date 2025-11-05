@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   release:
+    name: Create Release
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +24,7 @@ jobs:
           body_path: CHANGELOG.md
 
   build:
+    name: Build and Upload Assets
     needs: release
     runs-on: ubuntu-latest
     strategy:
@@ -63,5 +65,5 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: plg-mudics-${{ matrix.block }}
+          file: ${{ matrix.block }}/plg-mudics-${{ matrix.block }}
           tag: ${{ github.ref_name }}
