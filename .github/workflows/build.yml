@@ -4,6 +4,7 @@ on:
   push:
     paths-ignore:
       - "**/*.md"
+      - "**/*.yml"
   workflow_dispatch:
 
 jobs:
