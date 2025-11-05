@@ -7,7 +7,6 @@ import (
 	"os/exec"
 )
 
-
 func OpenBrowserWindow(url string, fullscreen bool, temp bool) error {
 	bins := []string{"chromium", "chromium-browser"}
 
@@ -26,7 +25,6 @@ func OpenBrowserWindow(url string, fullscreen bool, temp bool) error {
 
 	for _, bin := range bins {
 		cmd := exec.Command(bin, args...)
-		fmt.Println(cmd)
 		commandOutput := RunShellCommand(cmd)
 		if commandOutput.ExitCode == 0 {
 			return nil
