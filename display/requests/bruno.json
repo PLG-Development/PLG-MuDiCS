@@ -1,6 +1,9 @@
 {
   "version": "1",
-  "name": "PLG-MuDICS",
+  "name": "PLG-MuDICS Display",
   "type": "collection",
-  "ignore": ["node_modules", ".git"]
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
 }
