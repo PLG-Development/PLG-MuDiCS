@@ -67,7 +67,6 @@ done
 
 export async function ping_ip(ip: string): Promise<DisplayStatus> {
     const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
-    console.log(raw_request);
     if (!raw_response) return null;
     return raw_response.status ? to_display_status(raw_response.status) : null;
 }
@@ -93,6 +92,7 @@ async function raw_request(url: string, options: { method: string, headers?: Rec
         const response = await fetch(url + cache_buster, options);
         if (!response.ok) {
             console.error(`HTTP error! Status: ${response.status}`);
+            notifications.push("error", `HTTP-Fehler bei API-Anfrage`, `${url}\nHTTP-Status: ${response.status}`);
         }
         const contentType = response.headers.get("content-type") || "";
         if (!contentType.includes("application/json")) {
@@ -100,12 +100,18 @@ async function raw_request(url: string, options: { method: string, headers?: Rec
         } else {
             const json = await response.json();
             if (json.error && json.error !== '') {
-                notifications.push("error", `Fehler bei Anfrage '${url}'`, json.error);
+                notifications.push("error", `Interner Fehler bei API-Anfrage`, `${url}\nJSON: ${JSON.stringify(json)}`);
             }
             return json;
         }
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
+            console.log("Request failed - Is the targeted device online?")
+        } else {
+            console.log(typeof error, error instanceof TypeError, error.message);
+            console.error(error);
+            notifications.push("error", `Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
+        }
         return null;
     }
 }
