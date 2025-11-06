@@ -89,14 +89,28 @@
   ];
 
   systemd.services.update-nixos = {
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.nushell ];
+    wantedBy = ["multi-user.target"];
+    after = ["network-online.target"];
+    path = [pkgs.nushell];
     script = "nu ${./update-nixos.sh}";
   };
 
   systemd.services.update-mudics = {
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.nushell ];
+    wantedBy = ["multi-user.target"];
+    path = [pkgs.nushell];
     script = "nu ${./update-mudics.sh}";
+    serviceConfig = {
+      User = "mudics";
+      Group = "mudics";
+    };
+  };
+
+  systemd.services.start-mudics = {
+    after = ["update-mudics.service" "graphical.target"];
+    script = "./plg-mudics-display";
+    serviceConfig = {
+      User = "mudics";
+      Group = "mudics";
+    };
   };
 }
