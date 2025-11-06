@@ -1,14 +1,16 @@
-import type { FolderElement } from "./types";
+import { notifications } from "./stores/notification";
+import { to_display_status, type DisplayStatus, type FolderElement } from "./types";
 import { get_uuid } from "./utils";
 
 export async function get_screenshot(ip: string) {
     const options = { method: 'PATCH' };
-    return await request(ip, '/takeScreenshot', options);
+    return await request_display(ip, '/takeScreenshot', options);
 }
 
-export async function open_file(ip: string, path_to_file: string) {
+export async function open_file(ip: string, path_to_file: string): Promise<boolean> {
     const options = { method: 'PATCH', headers: { 'content-type': 'application/octet-stream' } };
-    const raw_response = await request(ip, `/file${path_to_file}`, options);
+    const raw_response = await request_display(ip, `/file${path_to_file}`, options);
+    return !!raw_response;
 }
 
 export async function get_file_data(ip: string, path: string): Promise<FolderElement[]> {
@@ -34,7 +36,8 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
 done
 ` })
     };
-    const raw_response = await request(ip, '/shellCommand', options);
+    const raw_response = await request_display(ip, '/shellCommand', options);
+    if (!raw_response) return [];
     const response: FileInfo[] = raw_response.stdout.trim()
         .split("\n")
         .filter(Boolean)
@@ -62,12 +65,32 @@ done
 
 
 
+export async function ping_ip(ip: string): Promise<DisplayStatus> {
+    const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
+    console.log(raw_request);
+    if (!raw_response) return null;
+    return raw_response.status ? to_display_status(raw_response.status) : null;
+}
 
-async function request(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }) {
+
+
+
+async function request_display(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
+    const url = `http://${ip}:1323/api${api_route}`;
+    return await raw_request(url, options);
+}
+
+async function request_control(api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
+    const url = `${window.location.origin}/api${api_route}`;
+    return await raw_request(url, options);
+}
+
+
+async function raw_request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
     try {
-        const url = `http://${ip}:1323/api${api_route}?t=${Date.now()}`;
-        console.log(url)
-        const response = await fetch(url, options);
+        const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
+        console.log(url + cache_buster)
+        const response = await fetch(url + cache_buster, options);
         if (!response.ok) {
             console.error(`HTTP error! Status: ${response.status}`);
         }
@@ -75,9 +98,14 @@ async function request(ip: string, api_route: string, options: { method: string,
         if (!contentType.includes("application/json")) {
             return await response.blob();
         } else {
-            return await response.json();
+            const json = await response.json();
+            if (json.error && json.error !== '') {
+                notifications.push("error", `Fehler bei Anfrage '${url}'`, json.error);
+            }
+            return json;
         }
     } catch (error) {
         console.error(error);
+        return null;
     }
 }

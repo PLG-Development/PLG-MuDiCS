@@ -63,7 +63,7 @@ export type Display = {
     preview_timeout_id: number | null;
     mac: string | null;
     name: string;
-    status: string;
+    status: DisplayStatus;
 }
 
 export type DisplayGroup = {
@@ -88,4 +88,25 @@ export type PopupContent = {
     title_class?: string;
     title_icon?: typeof X | null;
     closable?: boolean;
+}
+
+export type DisplayStatus = "host_offline" | "app_offline" | "app_online" | null;
+
+export function to_display_status(value: string): DisplayStatus {
+    return ["host_offline", "app_offline", "app_online"].includes(value)
+        ? (value as DisplayStatus)
+        : null;
+}
+
+export function display_status_to_info(status: DisplayStatus): string {
+    switch (status) {
+        case 'app_online':
+            return 'Online';
+        case 'app_offline':
+            return 'Lädt';
+        case 'host_offline':
+            return 'Offline';
+        case null:
+            return '???';
+    }
 }

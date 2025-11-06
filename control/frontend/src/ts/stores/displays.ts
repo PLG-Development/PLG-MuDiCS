@@ -1,5 +1,5 @@
 import { get, writable, type Writable } from "svelte/store";
-import type { Display, DisplayGroup } from "../types";
+import type { Display, DisplayGroup, DisplayStatus } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
 import { get_uuid, image_content_hash } from "../utils";
 import { get_screenshot } from "../api_handler";
@@ -17,7 +17,7 @@ export function is_display_name_taken(name: string): boolean {
     );
 }
 
-export function add_display(ip: string, mac: string | null, name: string, status: string) {
+export function add_display(ip: string, mac: string | null, name: string, status: DisplayStatus) {
     displays.update((displays: DisplayGroup[]) => {
         displays[0].data.push({ id: get_uuid(), ip, preview_url: null, preview_timeout_id: null, mac, name, status });
         return displays;
@@ -164,6 +164,6 @@ function add_testing_displays() {
     //     add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", name, "Offline");
     // }
 
-    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "Offline");
+    add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "host_offline");
     // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "Online");
 }

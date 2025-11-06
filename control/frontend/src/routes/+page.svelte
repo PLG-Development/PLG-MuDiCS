@@ -6,7 +6,7 @@
 	import DisplayView from '../components/DisplayView.svelte';
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import PopUp from '../components/PopUp.svelte';
-	import type { PopupContent } from '../ts/types';
+	import { display_status_to_info, type PopupContent } from '../ts/types';
 	import TextInput from '../components/TextInput.svelte';
 	import {
 		add_display,
@@ -17,6 +17,8 @@
 		remove_display
 	} from '../ts/stores/displays';
 	import { text } from '@sveltejs/kit';
+	import { notifications } from '../ts/stores/notification';
+	import { ping_ip } from '../ts/api_handler';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -45,14 +47,15 @@
 		return true;
 	}
 
-	function finalize_add_edit_display(existing_display_id: string|null) {
+	async function finalize_add_edit_display(existing_display_id: string | null) {
 		const ip = text_inputs_valid.ip.value;
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
 		if (!!existing_display_id) {
 			edit_display_data(existing_display_id, ip, mac, name);
 		} else {
-			add_display(ip, mac, name, 'Online');
+			const status = await ping_ip(text_inputs_valid.ip.value);
+			add_display(ip, mac, name, status);
 		}
 		popup_close_function();
 	}
@@ -153,8 +156,14 @@
 			className="grow"
 		/>
 		<div class="flex items-end shrink-0">
-			<Button disabled={!text_inputs_valid.ip.valid} className="px-4 gap-2" bg="bg-stone-750"
-				><Radio /> Ping</Button
+			<Button
+				disabled={!text_inputs_valid.ip.valid}
+				className="px-4 gap-2"
+				bg="bg-stone-750"
+				click_function={async () => {
+					const status = await ping_ip(text_inputs_valid.ip.value);
+					notifications.push('info', `Ping '${text_inputs_valid.ip.value}'`, `Aktueller Zustand: ${display_status_to_info(status)}`);
+				}}><Radio /> Ping</Button
 			>
 		</div>
 	</div>
