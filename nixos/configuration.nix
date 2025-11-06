@@ -86,31 +86,30 @@
     xfce.thunar-archive-plugin
     git
     nushell
+    unzip
   ];
-
-  systemd.services.update-nixos = {
-    wantedBy = ["multi-user.target"];
-    after = ["network-online.target"];
-    path = [pkgs.nushell];
-    script = "nu ${./update-nixos.sh}";
-  };
 
   systemd.services.update-mudics = {
     wantedBy = ["multi-user.target"];
-    path = [pkgs.nushell];
-    script = "nu ${./update-mudics.sh}";
+    after = ["network-online.target"];
+    script = "nu ${./update.sh}";
     serviceConfig = {
       User = "mudics";
       Group = "mudics";
     };
   };
 
-  systemd.services.start-mudics = {
+  systemd.services.run-mudics = {
     after = ["update-mudics.service" "graphical.target"];
     script = "./plg-mudics-display";
     serviceConfig = {
       User = "mudics";
       Group = "mudics";
     };
+  };
+
+  systemd.services.build-system = {
+    after = ["update-mudics.service"];
+    script = "nixos-rebuild switch --flake /home/mudics/Code/PLG-MuDICS#plg-mudics";
   };
 }
