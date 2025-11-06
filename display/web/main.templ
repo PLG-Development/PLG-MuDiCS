@@ -55,7 +55,10 @@ templ indexTemplate() {
 				});
 			</script>
 		</head>
-		<body hx-ext="sse" sse-connect="/sse" sse-swap="message"></body>
+		<bod>
+			<div hx-get="/splash" hx-trigger="load"></div>
+			<main hx-ext="sse" sse-connect="/sse" sse-swap="message"></main>
+		</bod>
 	</html>
 }
 

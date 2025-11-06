@@ -11,12 +11,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	shared "plg-mudics/shared"
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/micmonay/keybd_event"
 
-	"plg-mudics-display/pkg"
+	"plg-mudics/display/pkg"
 )
 
 type ErrorResponse struct {
@@ -35,15 +37,19 @@ var supportedExtensions = map[string]bool{
 	".odp":  true,
 }
 
-func StartWebServer(v string) {
+func StartWebServer(v string, port string) {
 	version = v
 
 	e := echo.New()
 
 	e.GET("/", indexRoute)
 	e.GET("/sse", sseRoute)
+	e.GET("/splash", func(ctx echo.Context) error {
+		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)
+	})
 
 	apiGroup := e.Group("/api")
+	apiGroup.Use(middleware.CORS())
 	apiGroup.GET("/ping", pingRoute)
 	apiGroup.PATCH("/shellCommand", shellCommandRoute)
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
@@ -57,7 +63,7 @@ func StartWebServer(v string) {
 	fileGroup.PATCH("/:path", openFileRoute)
 	fileGroup.GET("/preview/:path", previewRoute)
 
-	err := e.Start(":1323")
+	err := e.Start(":" + port)
 	if err != nil {
 		slog.Error("Failed to start server", "error", err)
 	}
@@ -141,7 +147,7 @@ func shellCommandRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
 	}
 
-	cmd := exec.Command("bash", "-c", "-r", commandInput.Command)
+	cmd := exec.Command("bash", "-c", commandInput.Command)
 	storagePath, err := pkg.GetStoragePath()
 	if err != nil {
 		slog.Error("Failed to get storage path", "error", err)
@@ -149,7 +155,7 @@ func shellCommandRoute(ctx echo.Context) error {
 	}
 	cmd.Dir = storagePath
 
-	commandOutput := pkg.RunShellCommand(cmd)
+	commandOutput := shared.RunShellCommand(cmd)
 	if commandOutput.ExitCode != 0 {
 		slog.Error("Shell command execution error", "error", commandOutput.Stderr)
 	}
@@ -180,7 +186,7 @@ func keyboardInputRoute(ctx echo.Context) error {
 	}
 
 	slog.Info("Keyboard input sent", "key", request.Key)
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func uploadFileRoute(ctx echo.Context) error {
@@ -270,7 +276,7 @@ func openFileRoute(ctx echo.Context) error {
 	}
 
 	slog.Info("Successfully run file", "file", pathParam)
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func showHTMLRoute(ctx echo.Context) error {
@@ -291,7 +297,7 @@ func showHTMLRoute(ctx echo.Context) error {
 	sseConnection <- request.HTML
 
 	slog.Info("HTML content sent to client")
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusCreated, struct{ Message string }{Message: "Success"})
 }
 
 func pingRoute(ctx echo.Context) error {

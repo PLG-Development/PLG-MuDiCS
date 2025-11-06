@@ -7,19 +7,18 @@
 	import {
 		add_empty_display_group,
 		all_displays_of_group_selected,
-		is_selected,
 		remove_empty_display_groups,
-		select,
 		select_all_of_group,
-		selected_display_ids,
 		set_new_display_group_data
 	} from '../ts/stores/displays';
 	import DNDGrip from './DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
-	import type { DisplayGroup } from '../ts/types';
+	import type { DisplayGroup, MenuOption } from '../ts/types';
+	import { selected_display_ids } from '../ts/stores/select';
 
-	let { display_group } = $props<{
+	let { display_group, get_display_menu_options } = $props<{
 		display_group: DisplayGroup;
+		get_display_menu_options: (display_id: string) => MenuOption[]
 	}>();
 
 	let hovering_selectable = $state(false);
@@ -78,7 +77,7 @@
 				class="outline-none"
 				role="figure"
 			>
-				<DisplayObject {display} />
+				<DisplayObject {display} {get_display_menu_options} />
 			</section>
 		{/each}
 

@@ -12,10 +12,12 @@ patch {
 
 body:json {
   {
-    "command": "ls"
+    "command": "find . -maxdepth 1 -mindepth 1 -print0 | xargs -0 -I{} bash -c 'typ=$(file -b --mime-type -- \"{}\"); size=$(stat -c \"%s\" -- \"{}\"); created=$(stat -c \"%w\" -- \"{}\"); [ \"$created\" = \"-\" ] && created=$(stat -c \"%y\" -- \"{}\"); jq -n --arg name \"{}\" --arg type \"$typ\" --arg size \"$size\" --arg created \"$created\" \"{name:\\$name, type:\\$type, size:\\$size, created:\\$created}\"'"
   }
+  
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

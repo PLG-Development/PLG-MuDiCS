@@ -13,6 +13,8 @@
 		title = '',
 		click_function = (e: MouseEvent) => {},
 		menu_options = null,
+		menu_class = 'right-0',
+		div_class = '',
 		children
 	} = $props<{
 		className?: string;
@@ -23,6 +25,8 @@
 		title?: string;
 		click_function?: (e: MouseEvent) => void;
 		menu_options?: MenuOption[] | null;
+		menu_class?: string;
+		div_class?: string,
 		children?: any;
 	}>();
 
@@ -126,7 +130,7 @@
 	}
 </script>
 
-<div class="relative min-w-0 flex" {title}>
+<div class="relative min-w-0 flex {div_class}" {title}>
 	<button
 		bind:this={button_element}
 		class="{className} {menu_shown ? hover_bg : bg} {disabled
@@ -150,7 +154,7 @@
 			transition:fade={{ duration: 50 }}
 			class="absolute {position_bottom
 				? 'top-full'
-				: 'bottom-full'} right-0 z-100 my-1.5 min-w-64 rounded-xl backdrop-blur bg-stone-600/30 border border-stone-400/10 shadow-xl/20 p-2 flex flex-col gap-2 text-stone-200 cursor-auto"
+				: 'bottom-full'} {menu_class} z-100 my-1.5 min-w-64 rounded-xl backdrop-blur bg-black/20 border border-stone-400/10 shadow-xl/20 p-2 flex flex-col gap-2 text-stone-200 cursor-auto"
 			onclick={(e) => {
 				e.stopPropagation();
 			}}
@@ -158,9 +162,9 @@
 			{#each menu_options as option}
 				<button
 					disabled={option.disabled ?? false}
-					class="bg-stone-400/20 {option.disabled
+					class="bg-white/15 {option.disabled
 						? 'text-stone-500 cursor-not-allowed'
-						: 'hover:bg-stone-300/35 active:bg-stone-300/60 cursor-pointer ' +
+						: 'hover:bg-white/35 active:bg-white/60 cursor-pointer ' +
 							option.class} rounded-lg p-2 transition-colors duration-200 select-none flex flex-row gap-2 items-center"
 					onclick={(e) => {
 						if (option.on_select) option.on_select();
@@ -175,7 +179,7 @@
 							{/if}
 						</div>
 					{/if}
-					<div class="pr-2">
+					<div class="truncate min-w-0" title={option.name}>
 						{option.name}
 					</div>
 				</button>

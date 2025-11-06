@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,14 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"plg-mudics/shared"
+
 	"github.com/micmonay/keybd_event"
 )
 
-type CommandResponse struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	ExitCode int    `json:"exitCode"`
-}
+
 
 func GetDeviceIp() (string, error) {
 	addrs, err := net.InterfaceAddrs()
@@ -54,7 +51,7 @@ func GetDeviceMac() (string, error) {
 
 func OpenPresentation(path string) error {
 	cmd := exec.Command("bash", "-c", "-r", fmt.Sprintf("soffice --show %s -nologo -norestore", path))
-	result := RunShellCommand(cmd)
+	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		return errors.New(result.Stderr)
 	}
@@ -84,7 +81,7 @@ func TakeScreenshot() (string, error) {
 		exec.Command("spectacle", "--fullscreen", "--nonotify", "--background", "--output", tempFilePath),
 	}
 	for _, cmd := range cmds {
-		commandOutput := RunShellCommand(cmd)
+		commandOutput := shared.RunShellCommand(cmd)
 		if commandOutput.ExitCode == 0 {
 			return tempFilePath, nil
 		}
@@ -93,45 +90,6 @@ func TakeScreenshot() (string, error) {
 	return "", errors.New("no screenshot utility found or all failed")
 }
 
-func RunShellCommand(cmd *exec.Cmd) CommandResponse {
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	commandOutput := CommandResponse{
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
-		ExitCode: cmd.ProcessState.ExitCode(),
-	}
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			commandOutput.ExitCode = exitErr.ExitCode()
-		} else {
-			commandOutput.Stderr = err.Error()
-		}
-	}
-
-	return commandOutput
-}
-
-func OpenBrowserWindow(url string) error {
-	template := "%s --app='%s' --start-fullscreen --user-data-dir=$(mktemp -d) --autoplay-policy=no-user-gesture-required"
-
-	cmds := []*exec.Cmd{
-		exec.Command("bash", "-c", fmt.Sprintf(template, "chromium", url)),
-		exec.Command("bash", "-c", fmt.Sprintf(template, "chromium-browser", url)),
-	}
-	for _, cmd := range cmds {
-		commandOutput := RunShellCommand(cmd)
-		if commandOutput.ExitCode == 0 {
-			return nil
-		}
-	}
-
-	return errors.New("chromium not found in PATH")
-}
 
 func GetStoragePath() (string, error) {
 	var storagePath string

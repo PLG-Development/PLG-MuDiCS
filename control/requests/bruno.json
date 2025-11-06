@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "PLG-MuDiCS Display",
+  "name": "PLG-MuDiCS Control",
   "type": "collection",
   "ignore": [
     "node_modules",

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"plg-mudics/shared"
 	"strings"
 	"time"
 )
@@ -36,7 +37,7 @@ func GenerateFilePreview(inputPath string) (string, error) {
 
 func generateImagePreview(inputPath string, outputPath string) error {
 	cmd := exec.Command("magick", inputPath, "-thumbnail", "100x100", "-quality", "50", outputPath)
-	result := RunShellCommand(cmd)
+	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		if result.ExitCode == 127 {
 			return ErrFilePreviewToolsMissing
@@ -48,12 +49,12 @@ func generateImagePreview(inputPath string, outputPath string) error {
 
 func generatePDFPreview(inputPath string, outputPath string) error {
 	testCmd := exec.Command("which", "gs")
-	if result := RunShellCommand(testCmd); result.ExitCode != 0 {
+	if result := shared.RunShellCommand(testCmd); result.ExitCode != 0 {
 		return ErrFilePreviewToolsMissing
 	}
 
 	cmd := exec.Command("magick", fmt.Sprintf("%s[0]", inputPath), "-thumbnail", "100x100", "-quality", "50", outputPath)
-	result := RunShellCommand(cmd)
+	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		if result.ExitCode == 127 {
 			return ErrFilePreviewToolsMissing
@@ -67,7 +68,7 @@ func generateVideoPreview(inputPath string, outputPath string) error {
 	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("preview_temp_%d.webp", time.Now().Unix()))
 
 	ffmpegCmd := exec.Command("ffmpeg", "-i", inputPath, "-ss", "00:00:01.000", "-vframes", "1", tempFilePath)
-	result := RunShellCommand(ffmpegCmd)
+	result := shared.RunShellCommand(ffmpegCmd)
 	if result.ExitCode != 0 {
 		if result.ExitCode == 127 {
 			return ErrFilePreviewToolsMissing

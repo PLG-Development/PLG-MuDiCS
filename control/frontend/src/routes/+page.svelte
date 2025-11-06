@@ -1,376 +1,251 @@
 <script lang="ts">
-	import {
-		ArrowBigLeft,
-		ArrowBigRight,
-		ArrowUp,
-		ChevronDown,
-		ClipboardPaste,
-		Download,
-		FolderOutput,
-		Info,
-		Keyboard,
-		Menu,
-		Minus,
-		Pencil,
-		PinOff,
-		Plus,
-		Power,
-		PowerOff,
-		Presentation,
-		RefreshCcw,
-		Scissors,
-		Settings,
-		Square,
-		SquareTerminal,
-		TextAlignStart,
-		TrafficCone,
-		Trash2,
-		TvMinimalPlay,
-		Upload,
-		VideoOff,
-		X
-	} from 'lucide-svelte';
+	import { Monitor, Plus, Radio, Settings, Trash2, X } from 'lucide-svelte';
 	import Button from '../components/Button.svelte';
-	import SplashScreen from '../components/SplashScreen.svelte';
-	import {
-		change_display_screen_height,
-		display_screen_height,
-		dnd_flip_duration_ms,
-		get_selectable_color_classes,
-		is_display_drag,
-		is_group_drag,
-		next_step_possible,
-		pinned_display_id
-	} from '../ts/stores/ui_behavior';
-	import { dragHandleZone } from 'svelte-dnd-action';
-	import {
-		all_displays_of_group_selected,
-		displays,
-		get_display_by_id,
-		is_selected,
-		select_all_of_group,
-		selected_display_ids
-	} from '../ts/stores/displays';
-	import { cubicOut } from 'svelte/easing';
-	import { flip } from 'svelte/animate';
-	import DisplayGroupObject from '../components/DisplayGroupObject.svelte';
-	import { blur, draw, fade, fly, scale, slide } from 'svelte/transition';
-	import OnlineState from '../components/OnlineState.svelte';
-	import type { DisplayGroup } from '../ts/types';
+	import FileView from '../components/FileView.svelte';
+	import ControlView from '../components/ControlView.svelte';
+	import DisplayView from '../components/DisplayView.svelte';
+	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import PopUp from '../components/PopUp.svelte';
-	import FileObject from '../components/FileObject.svelte';
+	import { display_status_to_info, type PopupContent } from '../ts/types';
+	import TextInput from '../components/TextInput.svelte';
+	import {
+		add_display,
+		displays,
+		edit_display_data,
+		get_display_by_id,
+		is_display_name_taken,
+		remove_display
+	} from '../ts/stores/displays';
+	import { text } from '@sveltejs/kit';
+	import { notifications } from '../ts/stores/notification';
+	import { ping_ip } from '../ts/api_handler';
+	import { onMount } from 'svelte';
+	import { on_start } from '../ts/main';
 
-	let displays_scroll_box: HTMLElement;
+	const ip_regex =
+		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
+	const mac_regex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 
-	function select_all(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
-		const new_value = !all_selected(current_displays, current_selected_display_ids);
-		for (const display_group of current_displays) {
-			select_all_of_group(display_group, new_value);
-		}
-	}
+	let popup_content: PopupContent = $state({
+		open: false,
+		snippet: null,
+		title: '',
+		closable: true
+	});
 
-	function all_selected(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
-		for (const display_group of current_displays) {
-			if (!all_displays_of_group_selected(display_group, current_selected_display_ids)) {
+	const text_inputs_valid_null_values = {
+		name: { valid: false, value: '' },
+		ip: { valid: false, value: '' },
+		mac: { valid: false, value: '' }
+	};
+	let text_inputs_valid = $state(text_inputs_valid_null_values);
+
+	function all_text_inputs_valid(): boolean {
+		for (const entry of Object.values(text_inputs_valid)) {
+			if (!entry.valid) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	function on_wheel(e: WheelEvent) {
-		if (!$is_group_drag && !$is_display_drag) return;
-		if (!displays_scroll_box) return;
-
-		// apply custom scroll feature
-		e.preventDefault();
-		(displays_scroll_box as HTMLElement).scrollBy?.({
-			top: e.deltaY,
-			behavior: 'auto'
-		});
+	async function finalize_add_edit_display(existing_display_id: string | null) {
+		const ip = text_inputs_valid.ip.value;
+		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
+		const name = text_inputs_valid.name.value;
+		if (!!existing_display_id) {
+			edit_display_data(existing_display_id, ip, mac, name);
+		} else {
+			const status = await ping_ip(text_inputs_valid.ip.value);
+			add_display(ip, mac, name, status);
+		}
+		popup_close_function();
 	}
+
+	function popup_close_function() {
+		popup_content.open = false;
+	}
+
+	const show_new_display_popup = () => {
+		text_inputs_valid = text_inputs_valid_null_values;
+		popup_content = {
+			open: true,
+			snippet: add_new_display_popup,
+			title: 'Neuen Bildschirm hinzufügen',
+			title_icon: Monitor,
+			closable: true
+		};
+	};
+
+	const show_remove_display_popup = (display_id: string) => {
+		popup_content = {
+			open: true,
+			snippet: remove_display_popup,
+			snippet_arg: display_id,
+			title: 'Bildschirm wirklich löschen?',
+			title_class: 'text-red-400',
+			title_icon: Trash2,
+			closable: true
+		};
+	};
+
+	const show_edit_display_popup = (display_id: string) => {
+		const display = get_display_by_id(display_id, $displays);
+		if (!display) return;
+		// insert existing values in text_inputs_valid
+		for (const key of Object.keys(text_inputs_valid) as (keyof typeof text_inputs_valid)[]) {
+			text_inputs_valid[key].valid = true;
+			text_inputs_valid[key].value = display[key] || '';
+		}
+		popup_content = {
+			open: true,
+			snippet: add_new_display_popup,
+			snippet_arg: display_id,
+			title: 'Bildschirm bearbeiten',
+			title_icon: Monitor,
+			closable: true
+		};
+	};
+
+	onMount(() => {
+		on_start();
+	});
 </script>
 
-<svelte:window on:wheel={on_wheel} />
+{#snippet remove_display_popup(display_id: string)}
+	<div class="max-w-prose px-2">
+		Soll der Bildschirm "{get_display_by_id(display_id, $displays)?.name || '?'}" wirklich gelöscht
+		werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation auf dem
+		Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
+	</div>
+	<div class="flex flex-row justify-end gap-2">
+		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
+		<Button
+			hover_bg="bg-red-400"
+			active_bg="bg-red-500"
+			className="px-4 flex text-red-400 hover:text-stone-100"
+			click_function={() => {
+				remove_display(display_id);
+				popup_close_function();
+			}}>Löschen</Button
+		>
+	</div>
+{/snippet}
 
-<main class="bg-stone-900 h-dvh w-dvw text-stone-200 p-4 gap-4 grid grid-rows-[3rem_auto]">
-	<!-- <SplashScreen></SplashScreen> -->
+{#snippet add_new_display_popup(existing_display_id: string | null = null)}
+	<TextInput
+		bind:current_value={text_inputs_valid.name.value}
+		bind:current_valid={text_inputs_valid.name.valid}
+		title="Anzeigename"
+		placeholder="z.B. Beamer vorne links"
+		is_valid_function={(input: string) => {
+			if (!!existing_display_id) {
+				if (input === get_display_by_id(existing_display_id, $displays)?.name)
+					return [true, 'Gültiger Name'];
+			}
+			if (input.length === 0 || input.length > 50) return [false, 'Ungültige Länge'];
+			if (is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
+			return [true, 'Gültiger Name'];
+		}}
+	/>
+	<div class="flex flex-row gap-2">
+		<TextInput
+			bind:current_value={text_inputs_valid.ip.value}
+			bind:current_valid={text_inputs_valid.ip.valid}
+			title="IP-Adresse"
+			placeholder="z.B. 192.168.176.111"
+			is_valid_function={(input: string) => {
+				return ip_regex.test(input)
+					? [true, 'Gültige IP-Adresse']
+					: [false, 'Ungültige IP-Adresse'];
+			}}
+			className="grow"
+		/>
+		<div class="flex items-end shrink-0">
+			<Button
+				disabled={!text_inputs_valid.ip.valid}
+				className="px-4 gap-2"
+				bg="bg-stone-750"
+				click_function={async () => {
+					const status = await ping_ip(text_inputs_valid.ip.value);
+					notifications.push(
+						'info',
+						`Ping '${text_inputs_valid.ip.value}'`,
+						`Aktueller Zustand: ${display_status_to_info(status)}`
+					);
+				}}><Radio /> Ping</Button
+			>
+		</div>
+	</div>
+	<TextInput
+		bind:current_value={text_inputs_valid.mac.value}
+		bind:current_valid={text_inputs_valid.mac.valid}
+		title="MAC-Adresse (optional)"
+		placeholder="z.B. D4:81:A6:C4:BF:3F"
+		is_valid_function={(input: string) => {
+			return input === ''
+				? [true, 'Keine MAC-Adresse (WOL deaktiviert)']
+				: mac_regex.test(input)
+					? [true, 'Gültige MAC-Adresse']
+					: [false, 'Ungültige MAC-Adresse'];
+		}}
+	/>
+	<div class="flex flex-row gap-2 justify-end pt-2">
+		{#if !!existing_display_id}
+			<!-- TODO: Ping mit existing_display_id -->
+			<Button className="px-4" click_function={popup_close_function}>Abbrechen</Button>
+		{/if}
+		<Button
+			disabled={!all_text_inputs_valid()}
+			className="{!!existing_display_id ? 'px-4' : 'pl-3 pr-4 gap-2'} font-bold"
+			bg="bg-stone-650"
+			click_function={() => {
+				finalize_add_edit_display(existing_display_id);
+			}}
+			>{#if !!existing_display_id}
+				Speichern
+			{:else}
+				<Plus /> Bildschirm hinzufügen
+			{/if}
+		</Button>
+	</div>
+{/snippet}
+
+<main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
+	<!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
-		<span class="text-4xl font-bold content-center h-full"> PLG MuDiCS </span>
-		<Button className="aspect-square" bg="bg-stone-800">
+		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
+		<Button
+			className="aspect-square"
+			bg="bg-stone-800"
+			div_class="aspect-square"
+			menu_options={[
+				{
+					icon: Plus,
+					name: 'Neuen Bildschirm hinzufügen',
+					on_select: show_new_display_popup
+				},
+				{
+					icon: Settings,
+					name: 'Weitere Einstellungen'
+				}
+			]}
+		>
 			<Settings></Settings>
 		</Button>
 	</div>
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] grid grid-cols-2 gap-2">
-		<div class="h-[calc(100dvh-3rem-(12*var(--spacing)))] flex flex-col gap-2">
-			{#if $pinned_display_id}
-				<!-- Pinned Item -->
-				<div in:fade={{ duration: 140 }} out:fade={{ duration: 120 }}>
-					<div
-						class="grid grid-rows-[2.5rem_auto] will-change-[height,opacity] overflow-hidden rounded-2xl"
-						transition:slide={{ duration: 260, easing: cubicOut }}
-					>
-						<div class="bg-stone-700 flex justify-between w-full p-1 min-w-0 basis-0 flex-1">
-							<span
-								class="text-xl font-bold pl-2 content-center truncate min-w-0"
-								title={get_display_by_id($pinned_display_id)?.name}
-							>
-								{get_display_by_id($pinned_display_id)?.name}
-							</span>
-							<div class="flex flex-row gap-1">
-								<OnlineState
-									selected={false}
-									status={get_display_by_id($pinned_display_id)?.status ?? ''}
-									className="flex items-center px-2"
-								/>
-								<Button
-									className="aspect-square !p-1"
-									bg="bg-stone-600"
-									click_function={(e) => {
-										e.stopPropagation();
-									}}
-									menu_options={[
-										{
-											icon: Pencil,
-											name: 'Bildschirm bearbeiten'
-										},
-										{
-											icon: Trash2,
-											name: 'Bildschirm löschen',
-											class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400'
-										}
-									]}
-								>
-									<Menu />
-								</Button>
-
-								<Button
-									title="Bildschirm nicht mehr anpinnen"
-									className="aspect-square !p-1"
-									bg="bg-stone-600"
-									click_function={() => {
-										$pinned_display_id = null;
-									}}
-								>
-									<PinOff />
-								</Button>
-							</div>
-						</div>
-
-						<div
-							class="w-full max-h-[30dvh] aspect-16/9 bg-stone-800 flex justify-center items-center"
-						>
-							<div class="aspect-16/9 h-full bg-black flex justify-center items-center">
-								<VideoOff class="size-[20%]" />
-							</div>
-						</div>
-					</div>
-				</div>
-			{/if}
-
-			<div
-				class="min-h-0 h-full grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl overflow-hidden"
-			>
-				<!-- Normal Heading Left -->
-				<div class="bg-stone-700 flex justify-between w-full p-1 gap-2 min-w-0">
-					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
-						Bereits verbundene Displays
-					</span>
-					<div class="flex flex-row gap-1">
-						<button
-							class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
-								all_selected($displays, $selected_display_ids),
-								{
-									bg: true,
-									hover: true,
-									active: true,
-									text: true
-								}
-							)}"
-							onclick={() => select_all($displays, $selected_display_ids)}
-						>
-							<span
-								>{all_selected($displays, $selected_display_ids)
-									? 'Alle abwählen'
-									: 'Alle auswählen'}</span
-							>
-						</button>
-						<div class="flex flex-ro">
-							<Button
-								title="Bildschirme größer darstellen"
-								className="aspect-square !p-1 rounded-r-none"
-								bg="bg-stone-600"
-								disabled={next_step_possible($display_screen_height, 1)}
-								click_function={() => {
-									change_display_screen_height(1);
-								}}
-							>
-								<Plus />
-							</Button>
-							<Button
-								title="Bildschirme kleiner darstellen"
-								className="aspect-square !p-1 rounded-l-none"
-								bg="bg-stone-600"
-								disabled={next_step_possible($display_screen_height, -1)}
-								click_function={() => {
-									change_display_screen_height(-1);
-								}}
-							>
-								<Minus />
-							</Button>
-						</div>
-					</div>
-				</div>
-				<div class="min-h-0 overflow-y-auto" bind:this={displays_scroll_box}>
-					<div
-						class="min-h-full p-2 flex flex-col gap-4"
-						use:dragHandleZone={{
-							items: $displays,
-							type: 'group',
-							flipDurationMs: dnd_flip_duration_ms,
-							dropFromOthersDisabled: true,
-							dropTargetStyle: { outline: 'none' }
-						}}
-						onconsider={(e: CustomEvent) => {
-							$is_group_drag = true;
-							$displays = e.detail.items;
-						}}
-						onfinalize={(e: CustomEvent) => {
-							$displays = e.detail.items;
-							$is_group_drag = false;
-						}}
-					>
-						{#each $displays as display_group (display_group.id)}
-							<!-- Each Group -->
-							<section
-								out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-								animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-								class="outline-none"
-							>
-								<DisplayGroupObject {display_group} />
-							</section>
-						{/each}
-					</div>
-				</div>
-			</div>
-		</div>
+		<DisplayView
+			handle_display_deletion={show_remove_display_popup}
+			handle_display_editing={show_edit_display_popup}
+		/>
 		<div
-			class="col-start-2 h-[calc(100dvh-3rem-(12*var(--spacing)))] rounded-2xl flex flex-col gap-2"
+			class="col-start-2 h-[calc(100dvh-3rem-(6*var(--spacing)))] rounded-2xl flex flex-col gap-2"
 		>
-			<div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
-				<div
-					class="text-xl font-bold pl-3 content-center bg-stone-700 rounded-t-2xl truncate min-w-0"
-				>
-					{'Bildschirme steuern (' + $selected_display_ids.length + ' ausgewählt)'}
-				</div>
-				<div class="flex flex-col gap-2 p-2 overflow-auto">
-					<div class="flex flex-row justify-between gap-2">
-						<div class="flex flex-col gap-2">
-							<div class="flex flex-row gap-2 w-70 justify-normal">
-								<Button title="Vorherige Folie (Pfeil nach Links)" className="px-7"
-									><ArrowBigLeft /></Button
-								>
-								<Button title="Nächste Folie (Pfeil nach Rechts)" className="px-7"
-									><ArrowBigRight /></Button
-								>
-							</div>
-							<Button className="px-3 flex gap-3 w-70 justify-normal"
-								><TextAlignStart /> Text anzeigen</Button
-							>
-							<Button className="px-3 flex gap-3 w-70 justify-normal"
-								><Presentation />Blackout</Button
-							>
-							<div class="flex flex-row justify-normal">
-								<Button className="rounded-r-none pl-3 flex gap-3 grow w-60 justify-normal"
-									><TrafficCone /> Fallback-Bild anzeigen</Button
-								>
-								<Button className="rounded-l-none flex grow-0 w-10"><ChevronDown /></Button>
-							</div>
-							<Button className="px-3 flex gap-3 w-70 justify-normal"
-								><Keyboard /> Tastatur-Inputs durchgeben</Button
-							>
-						</div>
-						<div class="flex flex-col gap-2 justify-between">
-							<div class="flex flex-col gap-2">
-								<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
-									><Power /> PC hochfahren</Button
-								>
-								<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
-									><PowerOff /> PC herunterfahren</Button
-								>
-							</div>
-							<Button className="px-3 flex gap-3 w-full xl:w-70 justify-normal"
-								><SquareTerminal /> Shell-Befehl ausführen</Button
-							>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_auto]">
-				<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
-					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
-						Dateien anzeigen und verwalten
-					</span>
-					<div class="flex flex-ro">
-						<Button
-							title="Dateien größer darstellen"
-							className="aspect-square !p-1 rounded-r-none"
-							bg="bg-stone-600"
-							disabled={next_step_possible($display_screen_height, 1)}
-							click_function={() => {
-								change_display_screen_height(1);
-							}}
-						>
-							<Plus />
-						</Button>
-						<Button
-							title="Dateien kleiner darstellen"
-							className="aspect-square !p-1 rounded-l-none"
-							bg="bg-stone-600"
-							disabled={next_step_possible($display_screen_height, -1)}
-							click_function={() => {
-								change_display_screen_height(-1);
-							}}
-						>
-							<Minus />
-						</Button>
-					</div>
-				</div>
-				<div class="flex flex-col gap-2 p-2 overflow-auto">
-					<div class="flex flex-row justify-between gap-6 overflow-x-auto">
-						<div class="flex flex-row gap-2">
-							<Button title="Eine Verzeichnis-Ebene zurück" className="px-3 flex"><FolderOutput /></Button>
-							<Button title="Datei anzeigen" className="px-3 flex gap-3">
-								<TvMinimalPlay class="shrink-0 flex"/>
-								<span class="min-w-0 hidden xl:flex">Anzeigen</span>
-							</Button>
-							<Button
-								title="Dateien zwischen Bildschirmen synchronisieren"
-								className="px-3 flex gap-3"
-								><RefreshCcw />
-								<span class="hidden 2xl:flex">Synchronisieren</span>
-							</Button>
-						</div>
-						<div class="flex flex-row gap-2">
-							<Button title="Datei(en) hochladen" className="px-3 flex"><Upload /></Button>
-							<Button title="Datei(en) herunterladen" className="px-3 flex"><Download /></Button>
-							<div class="border border-stone-700 my-1"></div>
-							<Button title="Datei(en) ausschneiden" className="px-3 flex"><Scissors /></Button>
-							<Button title="Datei(en) einfügen" className="px-3 flex"><ClipboardPaste /></Button>
-							<div class="border border-stone-700 my-1"></div>
-							<Button title="Datei(en) löschen" className="hover:!bg-red-400 px-3 flex"><Trash2 /></Button>
-						</div>
-					</div>
-					<div class="flex flex-col gap-2 p-2 bg-stone-750 h-full rounded-xl">
-						<FileObject />
-					</div>
-				</div>
-
-			</div>
+			<ControlView />
+			<FileView />
 		</div>
 	</div>
-	<!-- <PopUp title="Test" title_icon={Info}>
-		<div>ok schade</div>
-	</PopUp> -->
+	<PopUp content={popup_content} close_function={popup_close_function} />
 </main>

@@ -1,25 +1,25 @@
 <script lang="ts">
 	import Button from './Button.svelte';
-	import { is_selected, select, selected_display_ids } from '../ts/stores/displays';
 	import {
-		display_screen_height,
+		current_height,
 		get_selectable_color_classes,
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
 	import DNDGrip from './DNDGrip.svelte';
 	import { Menu, Pencil, Pin, PinOff, Trash2, VideoOff, X } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
 	import OnlineState from './OnlineState.svelte';
-	import type { Display } from '../ts/types';
+	import type { Display, MenuOption } from '../ts/types';
+	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 
-	let { display } = $props<{
+	let { display, get_display_menu_options } = $props<{
 		display: Display;
+		get_display_menu_options: (display_id: string) => MenuOption[];
 	}>();
 
 	let hovering_unselectable = $state(false);
 
 	function onclick(e: Event) {
-		select(display.id);
+		select(selected_display_ids, display.id);
 		e.stopPropagation();
 	}
 
@@ -45,14 +45,12 @@
 		hover: true,
 		active: !hovering_unselectable,
 		text: true
-	})} rounded-xl flex flex-row justify-between h-{$display_screen_height} transition-colors duration-100 gap-2 cursor-pointer w-full text-stone-200"
+	})} rounded-xl flex flex-row justify-between h-{$current_height.display} transition-colors duration-100 gap-2 cursor-pointer w-full text-stone-200"
 >
 	<div class="flex flex-row gap-4 min-w-0 flex-1">
 		<!-- Left Preview Screen -->
 		<button
-			class="group relative aspect-16/9 {$pinned_display_id === display.id
-				? 'bg-stone-800'
-				: 'bg-black'} h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
+			class="group relative aspect-16/9 bg-stone-800 h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
 			onmouseenter={() => (hovering_unselectable = true)}
 			onmouseleave={() => (hovering_unselectable = false)}
 			onclick={on_preview_click}
@@ -62,9 +60,13 @@
 					<div class="size-[50%]">
 						<Pin class="size-full" />
 					</div>
+				{:else if display.preview_url}
+					<img src={display.preview_url} alt="preview" class="w-full object-cover bg-black" />
 				{:else}
 					<!-- No Signal -->
-					<VideoOff class="size-[30%]" />
+					<div class="size-full bg-black flex justify-center items-center">
+						<VideoOff class="size-[30%]" />
+					</div>
 				{/if}
 			</div>
 
@@ -120,17 +122,7 @@
 				click_function={(e) => {
 					e.stopPropagation();
 				}}
-				menu_options={[
-					{
-						icon: Pencil,
-						name: 'Bildschirm bearbeiten'
-					},
-					{
-						icon: Trash2,
-						name: 'Bildschirm löschen',
-						class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400'
-					}
-				]}
+				menu_options={get_display_menu_options(display.id)}
 			>
 				<Menu />
 			</Button>

@@ -1,4 +1,4 @@
-# PLG-MuDICS Display
+# PLG-MuDiCS Display
 
 ## Runtime Requirements
 
@@ -11,6 +11,6 @@
 
 ## Development Setup
 
-- install Go (at least version v1.24)
-- build template: `go tool templ generate`
+- install Go (at least version v1.25)
+- build template: `go generate ./..`
 - run code: `go run .`
