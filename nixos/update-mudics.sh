@@ -1,36 +1,38 @@
 #!/usr/bin/env nu
 
-let file_path = "version.json"
-if not ($file_path | path exists) {
-    { "version": ""} | to json | save version.json
+print "Checking for new version of PLG-MuDiCS Display..."
+if (new_version_available) {
+    print "New version available. Trying to update ..."
+
+    try {
+        let temp_file_path = get_new_file
+        chmod +x $temp_file_path
+        mv $temp_file_path plg-mudics-display
+    } catch {
+        print "Failed to update PLG-MuDiCS Display. Starting old version."
+    }
 }
 
-let current_version = open $file_path | get version
-
-let new_version = http get https://api.github.com/repos/PLG-Development/PLG-MuDICS/releases/latest | get tag_name
-# { "version": $new_version} | to json | save version.json -f
-
-if $current_version == $new_version {
-    exit 0
+def get_new_file [] {
+    let temp_file_path = (mktemp "plg-mudics-display-XXXXXX")
+    http get https://github.com/PLG-Development/PLG-MuDiCS/releases/latest/download/plg-mudics-display | save -p -f $temp_file_path
+    $temp_file_path
 }
 
-let new_major_version = get_major_version $new_version
-let current_major_version = get_major_version $current_version
+def new_version_available [] {
+    let file_path = "version.json"
+    if not ($file_path | path exists) {
+        { "version": ""} | to json | save version.json
+    }
 
-if $new_major_version != $current_major_version {
-    direct_update
-} else {
-    minor_update
-}
+    let current_version = open $file_path | get version
 
-def get_major_version [version: string] {
-    $version | str trim --left --char "v" | split row "." | first
-}
+    let new_version = http get https://api.github.com/repos/PLG-Development/PLG-MuDICS/releases/latest | get tag_name
+    { "version": $new_version} | to json | save version.json -f
 
-def direct_update [] {
-    print "Direct update"
-}
-
-def minor_update [] {
-    print "Minor update"
+    if $current_version == $new_version {
+        false
+    } else {
+        true
+    }
 }
