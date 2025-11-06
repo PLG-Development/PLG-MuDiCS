@@ -213,5 +213,8 @@ module.exports = {
 
     'hover:bg-red-400',
     'active:bg-red-500',
+
+    'hover:bg-stone-600/70',
+    'active:bg-stone-500/80',
   ],
 }
