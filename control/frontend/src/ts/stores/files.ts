@@ -1,9 +1,11 @@
 import { get, writable, type Writable } from "svelte/store";
-import type { FolderElement } from "../types";
-import { displays } from "./displays";
+import type { Display, FolderElement } from "../types";
+import { displays, update_displays_with_map } from "./displays";
 import { selected_display_ids, selected_file_ids } from "./select";
 import { get_file_data } from "../api_handler";
 import { get_uuid } from "../utils";
+import type { Folder } from "lucide-svelte";
+import { notifications } from "./notification";
 
 export const all_files: Writable<Record<string, Record<string, FolderElement[]>>> = writable<Record<string, Record<string, FolderElement[]>>>({});
 // {
@@ -28,6 +30,7 @@ export function change_file_path(new_path: string) {
     selected_file_ids.update(() => {
         return [];
     })
+    setTimeout(async () => { await update_all_display_files(new_path) }, 0);
 }
 
 export function get_display_ids_where_file_is_missing(path: string, file: FolderElement, selected_display_ids: string[], all_files: Record<string, Record<string, FolderElement[]>>): string[][] {
@@ -53,36 +56,111 @@ export function get_display_ids_where_file_is_missing(path: string, file: Folder
     return [missing, colliding];
 }
 
+export async function update_all_display_files(path: string) {
+    for (const display_group of get(displays)) {
+        for (const display of display_group.data) {
+            await update_folder_elements_recursively(display, path);
+        }
+    }
+}
 
-export function updates_files_on_display(display_id: string, new_folder_elements: FolderElement[], file_path: string) {
-    all_files.update((files) => {
+async function update_folder_elements_recursively(display: Display, file_path: string = '/'): Promise<number> {
+    const new_folder_elements = await get_file_data(display.ip, file_path);
+    all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
         if (!files.hasOwnProperty(file_path)) {
             files[file_path] = {};
         }
-        for (const new_folder_element of new_folder_elements) {
-            new_folder_element.id = get_uuid();
+        if (!files[file_path].hasOwnProperty(display.id)) {
+            files[file_path][display.id] = [];
         }
-        files[file_path][display_id] = new_folder_elements;
-        return files;
-    });
-}
 
-async function get_files_on_all_displays(current_file_path: string) {
-    for (const display_group of get(displays)) {
-        for (const display of display_group.data) {
-            const new_folder_elements = await get_file_data(display.ip, current_file_path);
-            updates_files_on_display(display.id, new_folder_elements, current_file_path)
-            console.log(new_folder_elements)
+        const existing_folder_elements = files[file_path].hasOwnProperty(display.id) ? files[file_path][display.id] : [];
+
+        const diff = get_folder_elements_difference(existing_folder_elements, new_folder_elements);
+        files[file_path][display.id].push(...diff.new);
+        return remove_folder_elements_recursively(files, display, diff.deleted, file_path);
+    })
+
+    let folder_size = 0;
+    for (const element of new_folder_elements) {
+        if (element.type === 'inode/directory') {
+            const folder_content_size = await update_folder_elements_recursively(display, file_path + element.name + '/');
+            folder_size += folder_content_size;
+            // Update foldersize
+            all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
+                for (const current_folder_element of files[file_path][display.id]) {
+                    if (current_folder_element.id === element.id) {
+                        current_folder_element.size = folder_content_size;
+                    }
+                }
+                return files;
+            })
+        } else {
+            folder_size += element.size;
         }
     }
+    return folder_size;
 }
+
+function remove_folder_elements_recursively(files: Record<string, Record<string, FolderElement[]>>, display: Display, folder_elements: FolderElement[], file_path: string): Record<string, Record<string, FolderElement[]>> {
+    if (!files.hasOwnProperty(file_path) || !files[file_path].hasOwnProperty(display.id)) {
+        console.error("File remove path does not exist:", files, display, folder_elements, file_path);
+        notifications.push("error", "Fehler beim Aktualisieren der Dateien", `File remove path does not exist: ${file_path} display_ip: ${display.ip}`);
+        return {};
+    }
+    for (const folder_element of folder_elements) {
+        files[file_path][display.id] = files[file_path][display.id].filter((f) => f.id !== folder_element.id);
+
+        if (folder_element.type === 'inode/directory') {
+            const new_file_path = file_path + folder_element.name + '/';
+            if (!files.hasOwnProperty(new_file_path) || !files[new_file_path].hasOwnProperty(display.id)) {
+                console.error("File remove path does not exist (recursion):", files, display, folder_elements, file_path, new_file_path);
+                notifications.push("error", "Fehler beim Aktualisieren der Dateien", `File remove path does not exist (recursion): ${new_file_path} display_ip: ${display.ip}`);
+                return {};
+            }
+            const sub_folder = files[new_file_path][display.id];
+            remove_folder_elements_recursively(files, display, sub_folder, new_file_path);
+        }
+    }
+
+    return files;
+}
+
+function get_folder_elements_difference(old_elements: FolderElement[], new_elements: FolderElement[]): { deleted: FolderElement[], new: FolderElement[] } {
+    const old_hashes = new Set(old_elements.map(e => e.hash));
+    const new_hashes = new Set(new_elements.map(e => e.hash));
+
+    const only_in_old = old_elements.filter(e => !new_hashes.has(e.hash));
+    const only_in_new = new_elements.filter(e => !old_hashes.has(e.hash));
+    return { deleted: only_in_old, new: only_in_new };
+}
+
+
+
+// export function updates_files_on_display(display_id: string, new_folder_elements: FolderElement[], file_path: string) {
+//     all_files.update((files) => {
+//         if (!files.hasOwnProperty(file_path)) {
+//             files[file_path] = {};
+//         }
+//         files[file_path][display_id] = new_folder_elements;
+//         return files;
+//     });
+// }
+
+// async function get_files_on_all_displays(current_file_path: string) {
+//     for (const display_group of get(displays)) {
+//         for (const display of display_group.data) {
+//             const new_folder_elements = await get_file_data(display.ip, current_file_path);
+//             updates_files_on_display(display.id, new_folder_elements, current_file_path)
+//             console.log(new_folder_elements)
+//         }
+//     }
+// }
 
 
 export function get_current_folder_elements(all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string, selected_display_ids: string[]) {
-    if (!all_files.hasOwnProperty(current_file_path)) {
-        setTimeout(async () => { await get_files_on_all_displays(current_file_path) }, 0);
-        return [];
-    }
+    if (!all_files.hasOwnProperty(current_file_path)) return [];
+
     const files_on_display_array = all_files[current_file_path];
     const files: FolderElement[] = [];
     for (const key of Object.keys(files_on_display_array)) {
@@ -123,120 +201,3 @@ function sort_files(files: FolderElement[]) {
     return files;
 }
 
-
-
-
-
-
-add_test_files();
-export function add_test_files() {
-    // updates_files_on_display(get(displays)[0].data[0].id, [
-    //     {
-    //         hash: "ok",
-    //         thumbnail: null,
-    //         name: "ok.png",
-    //         type: "image/png",
-    //         date_created: new Date("2022-09-10"),
-    //         size: "32 KB"
-    //     },
-    //     {
-    //         hash: "schön",
-    //         thumbnail: null,
-    //         name: "schön.png",
-    //         type: "image/png",
-    //         date_created: new Date("2023-09-10"),
-    //         size: "2 GB"
-    //     },
-    //     {
-    //         hash: "lang",
-    //         thumbnail: null,
-    //         name: "langer Bildname der wirklich gar nicht mehr aufhört, sodass man mal gut testen kann, wie die UI darauf reagiert.odp",
-    //         type: "application/vnd.oasis.opendocument.presentation",
-    //         date_created: new Date("2028-09-10"),
-    //         size: "324 KB"
-    //     },
-    //     {
-    //         hash: "Schön hier aber waren Sie mal in Baden Würtemberg?",
-    //         thumbnail: null,
-    //         name: "Schön hier aber waren Sie mal in Baden Würtemberg?.mp4",
-    //         type: "video/mp4",
-    //         date_created: new Date("2024-09-10"),
-    //         size: "32 KB"
-    //     },
-    //     {
-    //         hash: "lan4234g",
-    //         thumbnail: null,
-    //         name: "Ein schöner Ordner",
-    //         type: 'inode/directory',
-    //         date_created: new Date("2025-01-02"),
-    //         size: "324 TB"
-    //     },
-    //     {
-    //         hash: "Schön hi23424er aber waren Sie mal in Baden Würtemberg?",
-    //         thumbnail: null,
-    //         name: "Ein hässlicher Ordner",
-    //         type: 'inode/directory',
-    //         date_created: new Date("2025-10-22"),
-    //         size: "1 B"
-    //     },
-    // ], '/');
-
-
-    // updates_files_on_display(get(displays)[0].data[0].id, [
-    //     {
-    //         hash: "ok",
-    //         thumbnail: null,
-    //         name: "ok.png",
-    //         type: "image/png",
-    //         date_created: new Date("2022-09-10"),
-    //         size: "32 KB"
-    //     },
-    //     {
-    //         hash: "schön",
-    //         thumbnail: null,
-    //         name: "schön.png",
-    //         type: "image/png",
-    //         date_created: new Date("2023-09-10"),
-    //         size: "2 GB"
-    //     },
-    // ], '/Ein hässlicher Ordner/');
-
-    // updates_files_on_display(get(displays)[0].data[0].id, [
-    //     {
-    //         hash: "nö",
-    //         thumbnail: null,
-    //         name: "nö.png",
-    //         type: "image/png",
-    //         date_created: new Date("2022-09-10"),
-    //         size: "32 KB"
-    //     },
-    //     {
-    //         hash: "na gut",
-    //         thumbnail: null,
-    //         name: "na gut.png",
-    //         type: "image/png",
-    //         date_created: new Date("2023-09-10"),
-    //         size: "2 GB"
-    //     },
-    // ], '/Ein schöner Ordner/');
-
-
-
-    // updates_files_on_display(get(displays)[0].data[1].id, [
-    //     {
-    //         hash: "okk",
-    //         thumbnail: null,
-    //         name: "ok.png",
-    //         type: "image/png",
-    //         date_created: new Date("2022-09-10"),
-    //         size: "32 KB"
-    //     },
-    //     {
-    //         hash: "schön",
-    //         thumbnail: null,
-    //         name: "schön.png",
-    //         type: "image/png",
-    //         date_created: new Date("2023-09-10"),
-    //         size: "2 GB"
-    //     },], '/');
-}
