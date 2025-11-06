@@ -94,6 +94,7 @@
     after = ["network-online.target"];
     script = "nu ${./update.sh}";
     serviceConfig = {
+      WorkingDirectory = "/home/mudics/plg-mudics";
       User = "mudics";
       Group = "mudics";
     };
@@ -103,6 +104,7 @@
     after = ["update-mudics.service" "graphical.target"];
     script = "./plg-mudics-display";
     serviceConfig = {
+      WorkingDirectory = "/home/mudics/plg-mudics";
       User = "mudics";
       Group = "mudics";
     };
@@ -110,6 +112,13 @@
 
   systemd.services.build-system = {
     after = ["update-mudics.service"];
-    script = "nixos-rebuild switch --flake /home/mudics/Code/PLG-MuDICS#plg-mudics";
+    script = "nixos-rebuild switch --flake .#plg-mudics";
+    serviceConfig = {
+      WorkingDirectory = "/home/mudics/plg-mudics";
+    };
   };
+
+  systemd.tmpfiles.rules = [
+    "d /home/mudics/plg-mudics/ 0755 -"
+  ];
 }
