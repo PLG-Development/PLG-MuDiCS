@@ -19,6 +19,8 @@
 	import { text } from '@sveltejs/kit';
 	import { notifications } from '../ts/stores/notification';
 	import { ping_ip } from '../ts/api_handler';
+	import { onMount } from 'svelte';
+	import { on_start } from '../ts/main';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -104,6 +106,10 @@
 			closable: true
 		};
 	};
+
+	onMount(() => {
+		on_start();
+	});
 </script>
 
 {#snippet remove_display_popup(display_id: string)}
@@ -162,7 +168,11 @@
 				bg="bg-stone-750"
 				click_function={async () => {
 					const status = await ping_ip(text_inputs_valid.ip.value);
-					notifications.push('info', `Ping '${text_inputs_valid.ip.value}'`, `Aktueller Zustand: ${display_status_to_info(status)}`);
+					notifications.push(
+						'info',
+						`Ping '${text_inputs_valid.ip.value}'`,
+						`Aktueller Zustand: ${display_status_to_info(status)}`
+					);
 				}}><Radio /> Ping</Button
 			>
 		</div>

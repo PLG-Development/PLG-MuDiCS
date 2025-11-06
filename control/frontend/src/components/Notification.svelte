@@ -21,7 +21,7 @@
                 <Button click_function={() => notifications.remove(n.id)} className="p-2" bg="bg-stone-900/50" hover_bg="bg-stone-600/70" active_bg="bg-stone-500/80"><X/></Button>
             </div>
 
-            <span>{n.message}</span>
+            <span class="whitespace-break-spaces">{n.message}</span>
 
             <div class="absolute inset-x-0 bottom-0 h-1 bg-white/25">
                 <div

@@ -3,6 +3,7 @@ import type { Display, DisplayGroup, DisplayStatus } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
 import { get_uuid, image_content_hash } from "../utils";
 import { get_screenshot } from "../api_handler";
+import DisplayGroupObject from "../../components/DisplayGroupObject.svelte";
 
 export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
     id: get_uuid(),
@@ -25,15 +26,10 @@ export function add_display(ip: string, mac: string | null, name: string, status
 }
 
 export function edit_display_data(display_id: string, ip: string, mac: string | null, name: string) {
-    displays.update((display_groups) =>
-        display_groups.map((group) => ({
-            ...group,
-            data: group.data.map((display) => {
-                if (display.id !== display_id) return display;
-                return { ...display, ip: ip, mac: mac, name: name };
-            }),
-        }))
-    );
+    update_displays_with_map((display: Display) => {
+        if (display.id !== display_id) return display;
+        return { ...display, ip: ip, mac: mac, name: name };
+    })
 }
 
 export function remove_display(display_id: string) {
@@ -137,22 +133,28 @@ export async function update_screenshot(display_id: string, check_type: "first_c
     }
 
     if (update_needed) {
-        displays.update((display_groups) =>
-            display_groups.map((group) => ({
-                ...group,
-                data: group.data.map((display) => {
-                    if (display.id !== display_id) return display;
-                    if (display.preview_url) {
-                        URL.revokeObjectURL(display.preview_url);
-                    }
-                    const new_url = URL.createObjectURL(new_blob);
-                    return { ...display, preview_url: new_url, preview_timeout_id: new_preview_timeout_id };
-                }),
-            }))
-        );
+        update_displays_with_map((display: Display) => {
+            if (display.id !== display_id) return display;
+            if (display.preview_url) {
+                URL.revokeObjectURL(display.preview_url);
+            }
+            const new_url = URL.createObjectURL(new_blob);
+            return { ...display, preview_url: new_url, preview_timeout_id: new_preview_timeout_id };
+        })
     }
 }
 
+
+export async function update_displays_with_map(update_function: (display: Display) => Display | Promise<Display>) {
+    const display_groups = get(displays);
+    const updated_groups = await Promise.all(
+        display_groups.map(async (group: DisplayGroup) => ({
+            ...group,
+            data: await Promise.all(group.data.map(update_function)),
+        }))
+    );
+    displays.set(updated_groups);
+}
 
 
 
@@ -165,5 +167,5 @@ function add_testing_displays() {
     // }
 
     add_display("127.0.0.1", "00:1A:2B:3C:4D:5E", "PC", "host_offline");
-    // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "Online");
+    // add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "host_offline");
 }
