@@ -16,8 +16,6 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
-
-
 func GetDeviceIp() (string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -90,7 +88,6 @@ func TakeScreenshot() (string, error) {
 	return "", errors.New("no screenshot utility found or all failed")
 }
 
-
 func GetStoragePath() (string, error) {
 	var storagePath string
 
@@ -98,7 +95,7 @@ func GetStoragePath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to determine user home directory: %w", err)
 	}
-	storagePath = filepath.Join(home, ".local", "share", "plg-connect-display")
+	storagePath = filepath.Join(home, ".local", "share", "plg-mudics")
 	if err := os.MkdirAll(storagePath, os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create local config directory: %w", err)
 	}
@@ -136,4 +133,3 @@ func ResolveStorageFilePath(pathParam string) (string, bool, error) {
 
 	return fullPath, true, nil
 }
-
