@@ -87,7 +87,6 @@
     xfce.thunar-archive-plugin
     git
     nushell
-    unzip
 
     # Libraries
     imagemagick
@@ -98,33 +97,44 @@
   systemd.services.update-mudics = {
     wantedBy = ["multi-user.target"];
     after = ["network-online.target"];
+    wants = ["network-online.target"];
+    path = with pkgs; [nushell unzip];
     script = "nu ${./update.sh}";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/plg-mudics";
       User = "mudics";
-      Group = "mudics";
+      Type = "oneshot";
     };
   };
 
   systemd.services.run-mudics = {
+    wantedBy = ["default.target"];
     after = ["update-mudics.service" "graphical.target"];
+    wants = ["graphical.target"];
+    path = with pkgs; [ungoogled-chromium];
     script = "./plg-mudics-display";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/plg-mudics";
       User = "mudics";
-      Group = "mudics";
+      Type = "simple";
+    };
+    environment = {
+      DISPLAY = ":0";
+      XDG_RUNTIME_DIR = "/run/user/1000";
     };
   };
 
-  systemd.services.build-system = {
+  systemd.services.build-mudics-system = {
+    wantedBy = ["default.target"];
     after = ["update-mudics.service"];
-    script = "nixos-rebuild switch --flake .#plg-mudics";
+    path = with pkgs; [nixos-rebuild];
+    script = "nixos-rebuild boot --flake .#plg-mudics";
     serviceConfig = {
-      WorkingDirectory = "/home/mudics/plg-mudics";
+      WorkingDirectory = "/home/mudics/plg-mudics/nixos";
     };
   };
 
   systemd.tmpfiles.rules = [
-    "d /home/mudics/plg-mudics/ 0755 -"
+    "d /home/mudics/plg-mudics 0755 mudics - -"
   ];
 }

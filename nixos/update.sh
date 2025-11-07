@@ -4,13 +4,8 @@ print "Checking for new version of PLG-MuDiCS ..."
 if (new_version_available) {
     print "New version available. Trying to update ..."
 
-    try {
-        get_new_display_file
-        get_new_nixos_config
-    } catch { |err|
-        print "Failed to check or update PLG-MuDiCS"
-        print $err.msg
-    }
+    get_new_display_file
+    get_new_nixos_config
 }
 
 print "Done"
@@ -28,7 +23,7 @@ def get_new_nixos_config [] {
 
     rm $temp_file_path
 
-    cp /etc/nixos/hardware-configuration.nix $nixos_config_path/hardware-configuration.nix
+    cp /etc/nixos/hardware-configuration.nix $"($nixos_config_path)/hardware-configuration.nix"
 }
 
 def get_new_display_file [] {
