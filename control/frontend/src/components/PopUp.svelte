@@ -5,9 +5,11 @@
 	import type { PopupContent } from '../ts/types';
 	import { fade } from 'svelte/transition';
 
-	let { content, close_function } = $props<{
+	let { content, close_function, className = '', snippet_container_class = '' } = $props<{
 		content: PopupContent;
 		close_function: () => void;
+		className?: string;
+		snippet_container_class?: string;
 	}>();
 
 	function try_to_close() {
@@ -31,7 +33,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="absolute inset-0 backdrop-blur bg-white/10 flex justify-center items-center"
+		class="absolute inset-0 backdrop-blur flex justify-center items-center {className}"
 		onclick={try_to_close}
 		transition:fade={{ duration: 100 }}
 	>
@@ -42,12 +44,12 @@
 			onclick={(e) => e.stopPropagation()}
 		>
 			<div
-				class="text-2xl font-bold bg-stone-700 p-1.5 flex flex-row justify-between gap-6 w-full"
+				class="font-bold bg-stone-700 p-1.5 flex flex-row justify-between gap-8 w-full"
 			>
-				<div class="flex flex-row flex-1 gap-4 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 flex-shrink-0 {content.title_class ?? ''}">
+				<div class="flex flex-row flex-1 gap-3 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 flex-shrink-0 text-lg {content.title_class ?? ''}">
 					{#if content.title_icon}
 						{@const Icon = content.title_icon}
-						<Icon strokeWidth="2.8" class="flex-shrink-0" />
+						<Icon strokeWidth="2" class="flex-shrink-0" />
 					{/if}
 					<div class="flex-shrink-0">
 						{content.title}
@@ -61,7 +63,7 @@
 					{/if}
 				</div>
 			</div>
-			<div class="p-2 min-h-0 overflow-auto flex flex-col gap-2">
+			<div class="p-2 min-h-0 overflow-auto flex flex-col gap-2 {snippet_container_class}">
 				{@render content.snippet(content.snippet_arg)}
 			</div>
 		</div>

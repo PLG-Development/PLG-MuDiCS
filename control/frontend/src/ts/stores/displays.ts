@@ -156,6 +156,18 @@ export async function update_displays_with_map(update_function: (display: Displa
     displays.set(updated_groups);
 }
 
+export async function run_on_all_selected_displays(run_function: ((ip: string, ...args: any[]) => void | Promise<void>), update_screenshot_afterwards: boolean, ...args: any[]) {
+    for (const display_id of get(selected_display_ids)) {
+        const display_ip = get_display_by_id(display_id, get(displays))?.ip;
+        if (display_ip) {
+            await run_function(display_ip, ...args)
+            if (update_screenshot_afterwards) {
+                await update_screenshot(display_id);
+            }
+        }
+    }
+}
+
 
 
 

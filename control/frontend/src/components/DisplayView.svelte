@@ -102,7 +102,7 @@
 					<div class="flex flex-row gap-1">
 						<OnlineState
 							selected={false}
-							status={pinned_display?.status ?? ''}
+							status={pinned_display?.status ?? null}
 							className="flex items-center px-2"
 						/>
 						<Button

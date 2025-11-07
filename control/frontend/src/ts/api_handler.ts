@@ -7,10 +7,21 @@ export async function get_screenshot(ip: string) {
     return await request_display(ip, '/takeScreenshot', options);
 }
 
-export async function open_file(ip: string, path_to_file: string): Promise<boolean> {
+export async function open_file(ip: string, path_to_file: string): Promise<void> {
     const options = { method: 'PATCH', headers: { 'content-type': 'application/octet-stream' } };
-    const raw_response = await request_display(ip, `/file${path_to_file}`, options);
-    return !!raw_response;
+    await request_display(ip, `/file${path_to_file}`, options);
+}
+
+export async function send_keyboard_input(ip: string, key: string): Promise<void> {
+    const options = {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            key: key,
+        }),
+    };
+    console.log(options)
+    await request_display(ip, '/keyboardInput', options);
 }
 
 export async function get_file_data(ip: string, path: string): Promise<FolderElement[]> {

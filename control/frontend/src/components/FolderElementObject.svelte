@@ -30,7 +30,12 @@
 	import RefreshPlay from './RefreshPlay.svelte';
 	import { get_file_size_display_string } from '../ts/utils';
 	import { open_file } from '../ts/api_handler';
-	import { displays, get_display_by_id, update_screenshot } from '../ts/stores/displays';
+	import {
+		displays,
+		get_display_by_id,
+		run_on_all_selected_displays,
+		update_screenshot
+	} from '../ts/stores/displays';
 
 	let { file } = $props<{ file: FolderElement }>();
 
@@ -97,13 +102,7 @@
 			change_file_path($current_file_path + file.name + '/');
 		} else {
 			const path_to_file = $current_file_path + file.name;
-			for (const display_id of $selected_display_ids) {
-				const ip = get_display_by_id(display_id, $displays)?.ip ?? null;
-				if (ip) {
-					await open_file(ip, path_to_file);
-					await update_screenshot(display_id);
-				}
-			}
+			await run_on_all_selected_displays(open_file, true, path_to_file);
 		}
 	}
 </script>

@@ -30,6 +30,7 @@
 		open: false,
 		snippet: null,
 		title: '',
+		title_class: '!text-xl',
 		closable: true
 	});
 
@@ -73,6 +74,7 @@
 			snippet: add_new_display_popup,
 			title: 'Neuen Bildschirm hinzufügen',
 			title_icon: Monitor,
+			title_class: '!text-xl',
 			closable: true
 		};
 	};
@@ -83,7 +85,7 @@
 			snippet: remove_display_popup,
 			snippet_arg: display_id,
 			title: 'Bildschirm wirklich löschen?',
-			title_class: 'text-red-400',
+			title_class: 'text-red-400 !text-xl',
 			title_icon: Trash2,
 			closable: true
 		};
@@ -103,6 +105,7 @@
 			snippet_arg: display_id,
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
+			title_class: '!text-xl',
 			closable: true
 		};
 	};
@@ -247,5 +250,5 @@
 			<FileView />
 		</div>
 	</div>
-	<PopUp content={popup_content} close_function={popup_close_function} />
+	<PopUp content={popup_content} close_function={popup_close_function} className="bg-white/10" />
 </main>

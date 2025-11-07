@@ -14,7 +14,7 @@ function createNotifications() {
 
   function push(type: "error" | "success" | "info", title: string, message: string = "", className: string = "") {
     const id = Date.now();
-    const duration = type === "error" ? 8000 : 4000;
+    const duration = type === "error" ? 16000 : 4000;
     update((n) => [...n, { id, title, message, duration, className, type }]);
     setTimeout(() => {
       update((n) => n.filter((x) => x.id !== id));

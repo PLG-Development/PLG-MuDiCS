@@ -10,6 +10,7 @@
 	import OnlineState from './OnlineState.svelte';
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
+	import { update_screenshot } from '../ts/stores/displays';
 
 	let { display, get_display_menu_options } = $props<{
 		display: Display;
@@ -29,6 +30,7 @@
 		} else {
 			$pinned_display_id = display.id;
 		}
+		update_screenshot(display.id);
 		e.stopPropagation();
 	}
 </script>
