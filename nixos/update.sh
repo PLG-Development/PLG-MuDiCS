@@ -27,6 +27,8 @@ def get_new_nixos_config [] {
     mv $temp_folder_path $nixos_config_path
 
     rm $temp_file_path
+
+    cp /etc/nixos/hardware-configuration.nix $nixos_config_path/hardware-configuration.nix
 }
 
 def get_new_display_file [] {
