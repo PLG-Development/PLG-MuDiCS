@@ -80,6 +80,7 @@
   networking.hostName = "plg-mudics";
 
   environment.systemPackages = with pkgs; [
+    # Programs
     libreoffice
     #rustdesk
     ungoogled-chromium
@@ -87,6 +88,11 @@
     git
     nushell
     unzip
+
+    # Libraries
+    imagemagick
+    ffmpeg
+    ghostscript
   ];
 
   systemd.services.update-mudics = {
