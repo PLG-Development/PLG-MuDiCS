@@ -43,7 +43,8 @@ def new_version_available [] {
 
     let current_version = open $file_path | get version
 
-    let new_version = http get https://api.github.com/repos/PLG-Development/PLG-MuDICS/releases/latest --max-time 5sec | get tag_name
+    let new_version = http get https://api.github.com/repos/PLG-Development/PLG-MuDiCS/releases/latest --max-time 5sec | get tag_name
+    # TODO: only write when all operations were successful
     { "version": $new_version} | to json | save version.json -f
 
     if $current_version == $new_version {
