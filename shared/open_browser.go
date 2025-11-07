@@ -23,13 +23,15 @@ func OpenBrowserWindow(url string, fullscreen bool, temp bool) error {
 		args = append(args, arg)
 	}
 
+	errs := []string{}
 	for _, bin := range bins {
 		cmd := exec.Command(bin, args...)
 		commandOutput := RunShellCommand(cmd)
 		if commandOutput.ExitCode == 0 {
 			return nil
 		}
+		errs = append(errs, commandOutput.Stderr)
 	}
 
-	return errors.New("chromium not found in PATH")
+	return errors.New("failed to open browser window: " + fmt.Sprint(errs))
 }
