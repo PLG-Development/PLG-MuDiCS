@@ -137,4 +137,12 @@
   systemd.tmpfiles.rules = [
     "d /home/mudics/plg-mudics 0755 mudics - -"
   ];
+
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [
+      1323 # display
+      8080 # control
+    ];
+  };
 }
