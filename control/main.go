@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"plg-mudics/control/frontend"
 	"plg-mudics/shared"
@@ -28,11 +29,19 @@ func main() {
 
 	port := "8080"
 
-	go shared.OpenBrowserWindow("http://localhost:"+port, false, false)
-
-	err := e.Start(":" + port)
+	// the order is important, the open browser command exitsts as soon as the winodw is closed
+	// and since its the last action in the main go func all other goroutines (e.g. the webserver) are killed
+	go func() {
+		err := e.Start(":" + port)
+		if err != nil {
+			slog.Error("Failed to start Echo Webserver", "error", err)
+			os.Exit(1)
+		}
+	}()
+	err := shared.OpenBrowserWindow("http://localhost:"+port, false, false)
 	if err != nil {
-		slog.Error("Failed to start Echo Webserver", "error", err)
+		slog.Error("Failed to open browser window", "error", err)
+		os.Exit(1)
 	}
 }
 

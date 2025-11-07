@@ -24,8 +24,10 @@ func main() {
 		return
 	}
 	port := "1323"
-	go web.StartWebServer(VERSION, port)
 
+	// the order is important, the open browser command exitsts as soon as the winodw is closed
+	// and since its the last action in the main go func all other goroutines (e.g. the webserver) are killed
+	go web.StartWebServer(VERSION, port)
 	err = shared.OpenBrowserWindow("http://localhost:"+port, true, true)
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
