@@ -17,11 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Zip NixOS Config
+        run: zip -rj nixos.zip nixos/
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           name: PLG-MuDiCS ${{ github.ref_name }}
           body_path: CHANGELOG.md
+          files: nixos.zip
 
   build:
     name: Build and Upload Assets
