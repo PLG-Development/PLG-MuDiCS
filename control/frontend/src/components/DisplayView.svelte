@@ -36,21 +36,24 @@
 		get_display_by_id($pinned_display_id || '', $displays)
 	);
 
-
 	function get_display_menu_options(display_id: string): MenuOption[] {
 		return [
-		{
-			icon: Pencil,
-			name: 'Bildschirm bearbeiten',
-			on_select: () => {handle_display_editing(display_id)},
-		},
-		{
-			icon: Trash2,
-			name: 'Bildschirm löschen',
-			class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500',
-			on_select: () => {handle_display_deletion(display_id)},
-		}
-	];
+			{
+				icon: Pencil,
+				name: 'Bildschirm bearbeiten',
+				on_select: () => {
+					handle_display_editing(display_id);
+				}
+			},
+			{
+				icon: Trash2,
+				name: 'Bildschirm löschen',
+				class: 'text-red-400 hover:text-stone-200 hover:!bg-red-400 active:!bg-red-500',
+				on_select: () => {
+					handle_display_deletion(display_id);
+				}
+			}
+		];
 	}
 
 	function select_all(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
@@ -100,11 +103,14 @@
 						{pinned_display?.name}
 					</span>
 					<div class="flex flex-row gap-1">
-						<OnlineState
-							selected={false}
-							status={pinned_display?.status ?? null}
-							className="flex items-center px-2"
-						/>
+						<div class="flex flex-row items-center mr-1">
+							<span class="text-stone-400"> Aktueller Status: </span>
+							<OnlineState
+								selected={false}
+								status={pinned_display?.status ?? null}
+								className="flex items-center px-2"
+							/>
+						</div>
 						<Button
 							className="aspect-square !p-1"
 							bg="bg-stone-600"
