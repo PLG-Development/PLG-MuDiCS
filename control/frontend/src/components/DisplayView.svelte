@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, scale, slide } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import {
 		all_displays_of_group_selected,
 		displays,
@@ -25,6 +25,7 @@
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
+	import { Pane, Splitpanes } from 'svelte-splitpanes';
 
 	let { handle_display_deletion, handle_display_editing } = $props<{
 		handle_display_deletion: (display_id: string) => void;
@@ -35,6 +36,14 @@
 	let pinned_display: Display | null = $derived(
 		get_display_by_id($pinned_display_id || '', $displays)
 	);
+
+	let last_pinned_pane_size: number = 45;
+	let pinned_pane_size: number = $state(last_pinned_pane_size);
+
+	function close_pinned_display() {
+		last_pinned_pane_size = pinned_pane_size;
+		pinned_pane_size = 0;
+	}
 
 	function get_display_menu_options(display_id: string): MenuOption[] {
 		return [
@@ -72,6 +81,13 @@
 		return true;
 	}
 
+	function handle_splitpane_resize(e: any) {
+		if (e.detail[0].size === 0) {
+			$pinned_display_id = null;
+			pinned_pane_size = last_pinned_pane_size;
+		}
+	}
+
 	function on_wheel(e: WheelEvent) {
 		if (!$is_group_drag && !$is_display_drag) return;
 		if (!displays_scroll_box) return;
@@ -88,159 +104,166 @@
 <svelte:window on:wheel={on_wheel} />
 
 <div class="h-[calc(100dvh-3rem-(6*var(--spacing)))] flex flex-col gap-2">
-	{#if $pinned_display_id}
-		<!-- Pinned Item -->
-		<div in:fade={{ duration: 140 }} out:fade={{ duration: 120 }}>
+	<Splitpanes horizontal theme="mudics-stone-theme" on:resized={handle_splitpane_resize}>
+		{#if $pinned_display_id}
+			<!-- Pinned Item -->
+			<Pane maxSize={60} snapSize={20} bind:size={pinned_pane_size}>
+				<div class="h-full" transition:fade>
+					<div class="grid grid-rows-[2.5rem_auto] will-change-[height,opacity] h-full">
+						<div
+							class="bg-stone-700 rounded-t-2xl flex justify-between w-full p-1 min-w-0 basis-0 flex-1"
+						>
+							<span
+								class="text-xl font-bold pl-2 content-center truncate min-w-0"
+								title={pinned_display?.name}
+							>
+								{pinned_display?.name}
+							</span>
+							<div class="flex flex-row gap-1">
+								<div class="flex flex-row items-center mr-1">
+									<span class="text-stone-400"> Aktueller Status: </span>
+									<OnlineState
+										selected={false}
+										status={pinned_display?.status ?? null}
+										className="flex items-center px-2"
+									/>
+								</div>
+								<Button
+									className="aspect-square !p-1"
+									bg="bg-stone-600"
+									click_function={(e) => {
+										e.stopPropagation();
+									}}
+									menu_options={get_display_menu_options($pinned_display_id)}
+								>
+									<Menu />
+								</Button>
+
+								<Button
+									title="Bildschirm nicht mehr anpinnen"
+									className="aspect-square !p-1"
+									bg="bg-stone-600"
+									click_function={close_pinned_display}
+								>
+									<PinOff />
+								</Button>
+							</div>
+						</div>
+
+						<div
+							class="h-full bg-stone-800 rounded-b-2xl overflow-hidden flex justify-center items-center"
+						>
+							{#if pinned_display?.preview_url}
+								<img
+									src={pinned_display.preview_url}
+									alt="preview"
+									class="max-h-full max-w-full object-cover bg-black"
+								/>
+							{:else}
+								<div class="size-full bg-black flex justify-center items-center">
+									<VideoOff class="size-[20%]" />
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</Pane>
+		{/if}
+
+		<Pane>
 			<div
-				class="grid grid-rows-[2.5rem_auto] will-change-[height,opacity] overflow-hidden rounded-2xl"
-				transition:slide={{ duration: 260, easing: cubicOut }}
+				class="min-h-0 h-full grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl overflow-hidden"
 			>
-				<div class="bg-stone-700 flex justify-between w-full p-1 min-w-0 basis-0 flex-1">
-					<span
-						class="text-xl font-bold pl-2 content-center truncate min-w-0"
-						title={pinned_display?.name}
-					>
-						{pinned_display?.name}
+				<!-- Normal Heading Left -->
+				<div class="bg-stone-700 flex justify-between w-full p-1 gap-2 min-w-0">
+					<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
+						Verbundene Bildschirme
 					</span>
 					<div class="flex flex-row gap-1">
-						<div class="flex flex-row items-center mr-1">
-							<span class="text-stone-400"> Aktueller Status: </span>
-							<OnlineState
-								selected={false}
-								status={pinned_display?.status ?? null}
-								className="flex items-center px-2"
-							/>
+						<button
+							class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
+								all_selected($displays, $selected_display_ids),
+								{
+									bg: true,
+									hover: true,
+									active: true,
+									text: true
+								}
+							)}"
+							onclick={() => select_all($displays, $selected_display_ids)}
+						>
+							<span
+								>{all_selected($displays, $selected_display_ids)
+									? 'Alle abwählen'
+									: 'Alle auswählen'}</span
+							>
+						</button>
+						<div class="flex flex-row">
+							<Button
+								title="Bildschirme größer darstellen"
+								className="aspect-square !p-1 rounded-r-none"
+								bg="bg-stone-600"
+								disabled={!Boolean(next_height_step_size('display', $current_height, 1))}
+								click_function={() => {
+									change_height('display', 1);
+								}}
+							>
+								<Plus />
+							</Button>
+							<Button
+								title="Bildschirme kleiner darstellen"
+								className="aspect-square !p-1 rounded-l-none"
+								bg="bg-stone-600"
+								disabled={!Boolean(next_height_step_size('display', $current_height, -1))}
+								click_function={() => {
+									change_height('display', -1);
+								}}
+							>
+								<Minus />
+							</Button>
 						</div>
-						<Button
-							className="aspect-square !p-1"
-							bg="bg-stone-600"
-							click_function={(e) => {
-								e.stopPropagation();
-							}}
-							menu_options={get_display_menu_options($pinned_display_id)}
-						>
-							<Menu />
-						</Button>
-
-						<Button
-							title="Bildschirm nicht mehr anpinnen"
-							className="aspect-square !p-1"
-							bg="bg-stone-600"
-							click_function={() => {
-								$pinned_display_id = null;
-							}}
-						>
-							<PinOff />
-						</Button>
 					</div>
 				</div>
-
-				<div class="w-full h-[30dvh] bg-stone-800 flex justify-center items-center">
-					{#if pinned_display?.preview_url}
-						<img
-							src={pinned_display.preview_url}
-							alt="preview"
-							class="max-h-full max-w-full object-cover bg-black"
-						/>
-					{:else}
-						<div class="size-full bg-black flex justify-center items-center">
-							<VideoOff class="size-[20%]" />
-						</div>
-					{/if}
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<div class="min-h-0 h-full grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl overflow-hidden">
-		<!-- Normal Heading Left -->
-		<div class="bg-stone-700 flex justify-between w-full p-1 gap-2 min-w-0">
-			<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
-				Verbundene Bildschirme
-			</span>
-			<div class="flex flex-row gap-1">
-				<button
-					class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
-						all_selected($displays, $selected_display_ids),
-						{
-							bg: true,
-							hover: true,
-							active: true,
-							text: true
-						}
-					)}"
-					onclick={() => select_all($displays, $selected_display_ids)}
-				>
-					<span
-						>{all_selected($displays, $selected_display_ids)
-							? 'Alle abwählen'
-							: 'Alle auswählen'}</span
-					>
-				</button>
-				<div class="flex flex-row">
-					<Button
-						title="Bildschirme größer darstellen"
-						className="aspect-square !p-1 rounded-r-none"
-						bg="bg-stone-600"
-						disabled={!Boolean(next_height_step_size('display', $current_height, 1))}
-						click_function={() => {
-							change_height('display', 1);
+				<div class="min-h-0 overflow-y-auto" bind:this={displays_scroll_box}>
+					<div
+						class="min-h-full p-2 flex flex-col gap-4"
+						use:dragHandleZone={{
+							items: $displays,
+							type: 'group',
+							flipDurationMs: dnd_flip_duration_ms,
+							dropFromOthersDisabled: true,
+							dropTargetStyle: { outline: 'none' }
+						}}
+						onconsider={(e: CustomEvent) => {
+							$is_group_drag = true;
+							$displays = e.detail.items;
+						}}
+						onfinalize={(e: CustomEvent) => {
+							$displays = e.detail.items;
+							$is_group_drag = false;
 						}}
 					>
-						<Plus />
-					</Button>
-					<Button
-						title="Bildschirme kleiner darstellen"
-						className="aspect-square !p-1 rounded-l-none"
-						bg="bg-stone-600"
-						disabled={!Boolean(next_height_step_size('display', $current_height, -1))}
-						click_function={() => {
-							change_height('display', -1);
-						}}
-					>
-						<Minus />
-					</Button>
-				</div>
-			</div>
-		</div>
-		<div class="min-h-0 overflow-y-auto" bind:this={displays_scroll_box}>
-			<div
-				class="min-h-full p-2 flex flex-col gap-4"
-				use:dragHandleZone={{
-					items: $displays,
-					type: 'group',
-					flipDurationMs: dnd_flip_duration_ms,
-					dropFromOthersDisabled: true,
-					dropTargetStyle: { outline: 'none' }
-				}}
-				onconsider={(e: CustomEvent) => {
-					$is_group_drag = true;
-					$displays = e.detail.items;
-				}}
-				onfinalize={(e: CustomEvent) => {
-					$displays = e.detail.items;
-					$is_group_drag = false;
-				}}
-			>
-				{#if $displays.length === 1 && $displays[0].data.length === 0}
-					<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
-						Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings
-							class="inline pb-1"
-						/> und "Neuen Bildschirm hinzufügen".
+						{#if $displays.length === 1 && $displays[0].data.length === 0}
+							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
+								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings
+									class="inline pb-1"
+								/> und "Neuen Bildschirm hinzufügen".
+							</div>
+						{:else}
+							{#each $displays as display_group (display_group.id)}
+								<!-- Each Group -->
+								<section
+									out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
+									animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
+									class="outline-none"
+								>
+									<DisplayGroupObject {display_group} {get_display_menu_options} {close_pinned_display} />
+								</section>
+							{/each}
+						{/if}
 					</div>
-				{:else}
-					{#each $displays as display_group (display_group.id)}
-						<!-- Each Group -->
-						<section
-							out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-							animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-							class="outline-none"
-						>
-							<DisplayGroupObject {display_group} {get_display_menu_options} />
-						</section>
-					{/each}
-				{/if}
+				</div>
 			</div>
-		</div>
-	</div>
+		</Pane>
+	</Splitpanes>
 </div>

@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { dragHandleZone, TRIGGERS } from 'svelte-dnd-action';
-	import { dnd_flip_duration_ms, get_selectable_color_classes, is_display_drag, is_group_drag } from '../ts/stores/ui_behavior';
+	import {
+		dnd_flip_duration_ms,
+		get_selectable_color_classes,
+		is_display_drag,
+		is_group_drag
+	} from '../ts/stores/ui_behavior';
 	import { cubicOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
 	import DisplayObject from './DisplayObject.svelte';
@@ -16,9 +21,10 @@
 	import type { DisplayGroup, MenuOption } from '../ts/types';
 	import { selected_display_ids } from '../ts/stores/select';
 
-	let { display_group, get_display_menu_options } = $props<{
+	let { display_group, get_display_menu_options, close_pinned_display } = $props<{
 		display_group: DisplayGroup;
-		get_display_menu_options: (display_id: string) => MenuOption[]
+		get_display_menu_options: (display_id: string) => MenuOption[];
+		close_pinned_display: () => void;
 	}>();
 
 	let hovering_selectable = $state(false);
@@ -32,7 +38,7 @@
 		const { items, info } = e.detail;
 
 		if (items.length !== 1 && info.trigger === TRIGGERS.DRAG_STARTED) {
-      $is_display_drag = true;
+			$is_display_drag = true;
 			add_empty_display_group();
 		}
 		set_new_display_group_data(display_group.id, items);
@@ -40,7 +46,7 @@
 
 	function handle_finalize(e: CustomEvent) {
 		remove_empty_display_groups();
-    $is_display_drag = false;
+		$is_display_drag = false;
 		set_new_display_group_data(display_group.id, e.detail.items);
 	}
 </script>
@@ -65,7 +71,7 @@
 			items: display_group.data,
 			type: 'item',
 			flipDurationMs: dnd_flip_duration_ms,
-			dropTargetStyle: { outline: 'none' },
+			dropTargetStyle: { outline: 'none' }
 		}}
 		onconsider={handle_consider}
 		onfinalize={handle_finalize}
@@ -77,7 +83,7 @@
 				class="outline-none"
 				role="figure"
 			>
-				<DisplayObject {display} {get_display_menu_options} />
+				<DisplayObject {display} {get_display_menu_options} {close_pinned_display} />
 			</section>
 		{/each}
 

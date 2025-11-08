@@ -12,9 +12,10 @@
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 	import { update_screenshot } from '../ts/stores/displays';
 
-	let { display, get_display_menu_options } = $props<{
+	let { display, get_display_menu_options, close_pinned_display } = $props<{
 		display: Display;
 		get_display_menu_options: (display_id: string) => MenuOption[];
+		close_pinned_display: () => void;
 	}>();
 
 	let hovering_unselectable = $state(false);
@@ -26,11 +27,11 @@
 
 	function on_preview_click(e: MouseEvent) {
 		if ($pinned_display_id === display.id) {
-			$pinned_display_id = null;
+			close_pinned_display();
 		} else {
 			$pinned_display_id = display.id;
 		}
-		update_screenshot(display.id);
+		// update_screenshot(display.id); DEBUG
 		e.stopPropagation();
 	}
 </script>
