@@ -17,6 +17,7 @@
 	import KeyInput from './KeyInput.svelte';
 	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
+	import { selected_display_ids } from '../ts/stores/select';
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -60,6 +61,7 @@
 					<Button
 						title="Vorherige Folie (Pfeil nach Links)"
 						className="px-9"
+						disabled={$selected_display_ids.length === 0}
 						click_function={() => {
 							run_on_all_selected_displays(
 								() => {
@@ -73,6 +75,7 @@
 					<Button
 						title="Nächste Folie (Pfeil nach Rechts)"
 						className="px-9"
+						disabled={$selected_display_ids.length === 0}
 						click_function={() => {
 							run_on_all_selected_displays(
 								() => {
@@ -84,36 +87,45 @@
 						}}><ArrowBigRight /></Button
 					>
 				</div>
-				<Button className="px-3 flex gap-3 w-75 justify-normal"
-					><TextAlignStart /> Text anzeigen</Button
+				<Button
+					className="px-3 flex gap-3 w-75 justify-normal"
+					disabled={$selected_display_ids.length === 0}><TextAlignStart /> Text anzeigen</Button
 				>
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
+					disabled={$selected_display_ids.length === 0}
 					click_function={() => {
 						run_on_all_selected_displays(show_blackscreen, true);
 					}}><Presentation />Blackout</Button
 				>
 				<div class="flex flex-row justify-normal">
-					<Button className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal"
+					<Button
+						className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal"
+						disabled={$selected_display_ids.length === 0}
 						><TrafficCone /> Fallback-Bild anzeigen</Button
 					>
 					<Button className="rounded-l-none flex grow-0 w-10"><ChevronDown /></Button>
 				</div>
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
+					disabled={$selected_display_ids.length === 0}
 					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben durchgeben</Button
 				>
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
 				<div class="flex flex-col gap-2">
-					<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						><Power /> PC hochfahren</Button
+					<Button
+						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+						disabled={$selected_display_ids.length === 0}><Power /> PC hochfahren</Button
 					>
-					<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						><PowerOff /> PC herunterfahren</Button
+					<Button
+						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+						disabled={$selected_display_ids.length === 0}><PowerOff /> PC herunterfahren</Button
 					>
 				</div>
-				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+				<Button
+					className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+					disabled={$selected_display_ids.length === 0}
 					><SquareTerminal /> Shell-Befehl ausführen</Button
 				>
 			</div>

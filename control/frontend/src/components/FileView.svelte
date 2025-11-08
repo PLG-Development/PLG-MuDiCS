@@ -1,14 +1,25 @@
 <script lang="ts">
-	import { ClipboardPaste, Download, FolderPlus, Info, Minus, Pen, Plus, RefreshCcw, Scissors, Trash2, Upload } from "lucide-svelte";
-	import { change_height, current_height, next_height_step_size } from "../ts/stores/ui_behavior";
-	import Button from "./Button.svelte";
-	import PathBar from "./PathBar.svelte";
-	import { selected_display_ids, selected_file_ids } from "../ts/stores/select";
-	import { all_files, current_file_path, get_current_folder_elements } from "../ts/stores/files";
-	import { slide } from "svelte/transition";
-	import FolderElementObject from "./FolderElementObject.svelte";
-	import PopUp from "./PopUp.svelte";
-
+	import {
+		ClipboardPaste,
+		Download,
+		FolderPlus,
+		Info,
+		Minus,
+		Pen,
+		Plus,
+		RefreshCcw,
+		Scissors,
+		Trash2,
+		Upload
+	} from 'lucide-svelte';
+	import { change_height, current_height, next_height_step_size } from '../ts/stores/ui_behavior';
+	import Button from './Button.svelte';
+	import PathBar from './PathBar.svelte';
+	import { selected_display_ids, selected_file_ids } from '../ts/stores/select';
+	import { all_files, current_file_path, get_current_folder_elements } from '../ts/stores/files';
+	import { slide } from 'svelte/transition';
+	import FolderElementObject from './FolderElementObject.svelte';
+	import PopUp from './PopUp.svelte';
 </script>
 
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
@@ -92,11 +103,26 @@
 		</div>
 		<div class="min-h-0 h-full overflow-y-auto bg-stone-750 rounded-xl">
 			<div class="flex flex-col gap-2 p-2 min-h-0">
-				{#each get_current_folder_elements($all_files, $current_file_path, $selected_display_ids) as folder_element (folder_element.id)}
-					<section in:slide={{ duration: 100 }} class="outline-none">
-						<FolderElementObject file={folder_element} />
-					</section>
-				{/each}
+				{#if $selected_display_ids.length === 0}
+					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
+						Es wurden keine Bildschirme ausgewählt.
+					</span>
+				{:else}
+					{#each get_current_folder_elements($all_files, $current_file_path, $selected_display_ids) as folder_element (folder_element.id)}
+						<section in:slide={{ duration: 100 }} class="outline-none">
+							<FolderElementObject file={folder_element} />
+						</section>
+					{/each}
+					{#if get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).length === 0}
+						<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
+							Es sind keine Dateien auf {$selected_display_ids.length === 1
+								? 'dem ausgewähltem Bildchirm'
+								: 'den ausgewählten Bildschirmen'} vorhanden. Klicke auf <Upload
+								class="inline pb-1"
+							/> um Datei(en) hochzuladen.
+						</span>
+					{/if}
+				{/if}
 			</div>
 		</div>
 		<!-- <PopUp title="Test" title_icon={Info}>
