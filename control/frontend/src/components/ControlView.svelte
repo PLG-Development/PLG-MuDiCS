@@ -15,6 +15,8 @@
 	import PopUp from './PopUp.svelte';
 	import type { PopupContent } from '../ts/types';
 	import KeyInput from './KeyInput.svelte';
+	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
+	import { run_on_all_selected_displays } from '../ts/stores/displays';
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -55,17 +57,42 @@
 		<div class="flex flex-row justify-between gap-2">
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-row gap-2 w-75 justify-normal">
-					<Button title="Vorherige Folie (Pfeil nach Links)" className="px-9"
-						><ArrowBigLeft /></Button
+					<Button
+						title="Vorherige Folie (Pfeil nach Links)"
+						className="px-9"
+						click_function={() => {
+							run_on_all_selected_displays(
+								() => {
+									send_keyboard_input;
+								},
+								true,
+								'VK_LEFT'
+							);
+						}}><ArrowBigLeft /></Button
 					>
-					<Button title="Nächste Folie (Pfeil nach Rechts)" className="px-9"
-						><ArrowBigRight /></Button
+					<Button
+						title="Nächste Folie (Pfeil nach Rechts)"
+						className="px-9"
+						click_function={() => {
+							run_on_all_selected_displays(
+								() => {
+									send_keyboard_input;
+								},
+								true,
+								'VK_RIGHT'
+							);
+						}}><ArrowBigRight /></Button
 					>
 				</div>
 				<Button className="px-3 flex gap-3 w-75 justify-normal"
 					><TextAlignStart /> Text anzeigen</Button
 				>
-				<Button className="px-3 flex gap-3 w-75 justify-normal"><Presentation />Blackout</Button>
+				<Button
+					className="px-3 flex gap-3 w-75 justify-normal"
+					click_function={() => {
+						run_on_all_selected_displays(show_blackscreen, true);
+					}}><Presentation />Blackout</Button
+				>
 				<div class="flex flex-row justify-normal">
 					<Button className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal"
 						><TrafficCone /> Fallback-Bild anzeigen</Button

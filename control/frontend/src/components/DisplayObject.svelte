@@ -31,7 +31,7 @@
 		} else {
 			$pinned_display_id = display.id;
 		}
-		// update_screenshot(display.id); DEBUG
+		update_screenshot(display.id);
 		e.stopPropagation();
 	}
 </script>

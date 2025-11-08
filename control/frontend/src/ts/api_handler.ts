@@ -74,7 +74,7 @@ done
     return folder_element_list;
 }
 
-export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[]|null> {
+export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[] | null> {
     const options = {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -84,10 +84,21 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
     };
     const raw_response = await request_display(ip, '/shellCommand', options);
     if (!raw_response) return null;
-    const tree_structure: TreeElement[]|null = (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
+    const tree_structure: TreeElement[] | null = (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
     return tree_structure;
 }
 
+
+export async function show_blackscreen(ip: string) {
+    const options = {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            html: `<div style="width:100dvw; height:100dvh; background-color:black;"></div>`
+        })
+    };
+    await request_display(ip, '/showHTML', options);
+}
 
 
 export async function ping_ip(ip: string): Promise<DisplayStatus> {
