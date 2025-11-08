@@ -20,7 +20,6 @@ export async function send_keyboard_input(ip: string, key: string): Promise<void
             key: key,
         }),
     };
-    console.log(options)
     await request_display(ip, '/keyboardInput', options);
 }
 
@@ -48,7 +47,10 @@ done
 ` })
     };
     const raw_response = await request_display(ip, '/shellCommand', options);
-    if (!raw_response) return [];
+    if (is_cd_directory_error(ip, raw_response)) {
+        return [];
+    }
+
     const response: FileInfo[] = raw_response.stdout.trim()
         .split("\n")
         .filter(Boolean)
@@ -83,9 +85,11 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
         })
     };
     const raw_response = await request_display(ip, '/shellCommand', options);
-    if (!raw_response) return null;
-    const tree_structure: TreeElement[] | null = (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
-    return tree_structure;
+    if (is_cd_directory_error(ip, raw_response)) {
+        return null;
+    }
+
+    return (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
 }
 
 
@@ -144,10 +148,24 @@ async function raw_request(url: string, options: { method: string, headers?: Rec
         if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
             console.log("Request failed - Is the targeted device online?")
         } else {
-            console.log(typeof error, error instanceof TypeError, error.message);
             console.error(error);
             notifications.push("error", `Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
         }
         return null;
     }
+}
+
+function is_cd_directory_error(ip: string, raw_response: any): boolean {
+    if (!raw_response) return true;
+    if (raw_response.exitCode !== 0) {
+        if (raw_response.stderr && /bash: line \d+: cd: .+: No such file or directory/.test(raw_response.stderr)) {
+            console.log("current file_path does not exist on display:", ip);
+            return true;
+        }
+        console.error(raw_response);
+        notifications.push("error", "Fehler in ShellCommand", `Fehlercode: ${raw_response.exitCode}\nFehler: ${raw_response.stderr ?? ''}`)
+        return true;
+    }
+    if (raw_response.stdout.trim() === '') return true;
+    return false;
 }

@@ -67,7 +67,7 @@ export function get_display_ids_where_file_is_missing(path: string, file: Folder
 
 async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
     const current_folder = await get_file_tree_data(display.ip, file_path);
-    if (current_folder === null) return null;
+    if (current_folder === null) return [file_path];
     const directory_strings = get_recursive_changed_directory_paths(display, file_path, current_folder, get(all_files));
     if (directory_strings.size === 0) return null;
     const directory_strings_array = [...directory_strings];
