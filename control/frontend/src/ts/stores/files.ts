@@ -33,11 +33,10 @@ export async function change_file_path(new_path: string) {
     for (const display_group of get(displays)) {
         for (const display of display_group.data) {
             const changed_paths = await get_changed_directory_paths(display, new_path);
-            console.log(changed_paths)
             if (!changed_paths) continue;
+            console.log("Update file system from", display.name, ":", changed_paths);
             for (const path of changed_paths) {
                 update_folder_elements_recursively(display, path);
-                console.log(path, "updated")
             }
         }
     }
@@ -70,7 +69,6 @@ async function get_changed_directory_paths(display: Display, file_path: string):
     const current_folder = await get_file_tree_data(display.ip, file_path);
     if (current_folder === null) return null;
     const directory_strings = get_recursive_changed_directory_paths(display, file_path, current_folder, get(all_files));
-    console.log(directory_strings);
     if (directory_strings.size === 0) return null;
     const directory_strings_array = [...directory_strings];
     return directory_strings_array.filter((e) => (!directory_strings_array.some((f) => (f !== e && f.startsWith(e)))));

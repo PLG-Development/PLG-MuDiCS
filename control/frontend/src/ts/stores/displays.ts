@@ -32,7 +32,6 @@ export async function edit_display_data(display_id: string, ip: string, mac: str
 }
 
 export function remove_display(display_id: string) {
-    console.log(display_id);
     displays.update((displays: DisplayGroup[]) => {
         displays = displays.map(display_group => ({
             ...display_group,
@@ -118,7 +117,6 @@ export async function update_screenshot(display_id: string, check_type: "first_c
             const old_blob = await fetch(display.preview_url).then(r => r.blob());
             const new_hash = await image_content_hash(new_blob);
             const old_hash = await image_content_hash(old_blob);
-            console.log(old_hash, new_hash);
             update_needed = old_hash !== new_hash; // if different -> update
         }
     }
