@@ -21,3 +21,14 @@ The _Control Block_ controls multiple Display Blocks via a user interface. One D
 - **TailwindCSS** for styling the frontend of the Control Block.
 - **Chromium** browser for handling most media display in the Display Block and serving the frontend of the Control Block.
 - **LibreOffice** for handling more complex documents in the Display Block.
+
+### Requirements
+
+- Go v1.25 or higher
+- Deno v2
+
+### Running
+
+1. open the wanted folder of the block inside a terminal
+2. run `go generate ./..` to generate files required at build time
+3. run `go run *.go` to compile and run the block

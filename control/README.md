@@ -1,3 +1,0 @@
-# PLG-MuDiCS Control
-
-## Development
