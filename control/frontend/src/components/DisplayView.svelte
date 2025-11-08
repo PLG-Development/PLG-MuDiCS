@@ -104,7 +104,7 @@
 <svelte:window on:wheel={on_wheel} />
 
 <div class="h-[calc(100dvh-3rem-(6*var(--spacing)))] flex flex-col gap-2">
-	<Splitpanes horizontal theme="mudics-stone-theme" on:resized={handle_splitpane_resize}>
+	<Splitpanes horizontal theme="mudics-stone-theme" on:resized={handle_splitpane_resize} dblClickSplitter={false}>
 		{#if $pinned_display_id}
 			<!-- Pinned Item -->
 			<Pane maxSize={60} snapSize={20} bind:size={pinned_pane_size}>

@@ -29,7 +29,7 @@
     }
 
     .splitpanes__splitter {
-        @apply bg-transparent hover:bg-stone-600 transition-colors duration-200 shrink-0 relative box-border rounded mx-5;
+        @apply bg-transparent hover:bg-stone-700 active:bg-stone-600 transition-colors duration-200 shrink-0 relative box-border rounded mx-5;
         /* box-sizing: border-box;
         position: relative;
         flex-shrink: 0; */
@@ -41,6 +41,11 @@
 
         &:hover:before,
         &:hover:after {
+            @apply bg-stone-400;
+        }
+
+        &:active:before,
+        &:active:after {
             @apply bg-stone-300;
         }
 
@@ -55,7 +60,7 @@
         @apply z-10;
     }
 
-    &.splitpanes--vertical>.splitpanes__splitter,
+    /* &.splitpanes--vertical>.splitpanes__splitter,
     .splitpanes--vertical>.splitpanes__splitter {
         @apply w-2.5 cursor-col-resize;
 
@@ -71,7 +76,7 @@
         &:after {
             @apply ml-[calc(0.25*var(--spacing))];
         }
-    }
+    } */
 
     &.splitpanes--horizontal>.splitpanes__splitter,
     .splitpanes--horizontal>.splitpanes__splitter {
