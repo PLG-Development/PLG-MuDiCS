@@ -1,11 +1,10 @@
 import { get, writable, type Writable } from "svelte/store";
-import type { Display, FolderElement } from "../types";
-import { displays, update_displays_with_map } from "./displays";
-import { selected_display_ids, selected_file_ids } from "./select";
-import { get_file_data } from "../api_handler";
-import { get_uuid } from "../utils";
-import type { Folder } from "lucide-svelte";
+import type { Display, FolderElement, TreeElement } from "../types";
+import { displays } from "./displays";
+import { selected_file_ids } from "./select";
+import { get_file_data, get_file_tree_data } from "../api_handler";
 import { notifications } from "./notification";
+import { CirclePoundSterling } from "lucide-svelte";
 
 export const all_files: Writable<Record<string, Record<string, FolderElement[]>>> = writable<Record<string, Record<string, FolderElement[]>>>({});
 // {
@@ -23,14 +22,25 @@ export const all_files: Writable<Record<string, Record<string, FolderElement[]>>
 export const current_file_path: Writable<string> = writable<string>('/');
 
 
-export function change_file_path(new_path: string) {
+export async function change_file_path(new_path: string) {
     current_file_path.update(() => {
         return new_path;
     });
     selected_file_ids.update(() => {
         return [];
     })
-    setTimeout(async () => { await update_all_display_files(new_path) }, 0);
+
+    for (const display_group of get(displays)) {
+        for (const display of display_group.data) {
+            const changed_paths = await get_changed_directory_paths(display, new_path);
+            console.log(changed_paths)
+            if (!changed_paths) continue;
+            for (const path of changed_paths) {
+                update_folder_elements_recursively(display, path);
+                console.log(path, "updated")
+            }
+        }
+    }
 }
 
 export function get_display_ids_where_file_is_missing(path: string, file: FolderElement, selected_display_ids: string[], all_files: Record<string, Record<string, FolderElement[]>>): string[][] {
@@ -54,6 +64,40 @@ export function get_display_ids_where_file_is_missing(path: string, file: Folder
         missing.push(selected_display_id);
     }
     return [missing, colliding];
+}
+
+export async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
+    const current_folder = await get_file_tree_data(display.ip, file_path);
+    if (current_folder === null) return null;
+    const directory_strings = get_recursive_changed_directory_paths(display, file_path, current_folder, get(all_files));
+    console.log(directory_strings);
+    if (directory_strings.size === 0) return null;
+    const directory_strings_array = [...directory_strings];
+    return directory_strings_array.filter((e) => (!directory_strings_array.some((f) => (f !== e && f.startsWith(e)))));
+}
+
+function get_recursive_changed_directory_paths(display: Display, current_file_path: string, current_folder_elements: TreeElement[], files: Record<string, Record<string, FolderElement[]>>): Set<string> {
+    if (!files.hasOwnProperty(current_file_path) || !files[current_file_path].hasOwnProperty(display.id)) return new Set([current_file_path]);
+    const files_folder: FolderElement[] = files[current_file_path][display.id];
+    if (current_folder_elements.length !== files_folder.length) {
+        return new Set([current_file_path]);
+    }
+
+    let has_changed: Set<string> = new Set();
+    for (const tree_folder_element of current_folder_elements) {
+        const folder_element = files_folder.find(e => e.name === tree_folder_element.name);
+        if (!folder_element || (tree_folder_element.type !== "directory" && folder_element.size !== tree_folder_element.size)) {
+            return new Set([current_file_path]);
+        }
+
+        if (tree_folder_element.type === "directory" && tree_folder_element.contents) {
+            const new_file_path = current_file_path + tree_folder_element.name + '/';
+            for (const string of get_recursive_changed_directory_paths(display, new_file_path, tree_folder_element.contents, files)) {
+                has_changed.add(string);
+            }
+        }
+    }
+    return has_changed;
 }
 
 export async function update_all_display_files(path: string) {

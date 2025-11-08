@@ -1,5 +1,5 @@
 import { notifications } from "./stores/notification";
-import { to_display_status, type DisplayStatus, type FolderElement } from "./types";
+import { to_display_status, type DisplayStatus, type FolderElement, type TreeElement } from "./types";
 import { get_uuid } from "./utils";
 
 export async function get_screenshot(ip: string) {
@@ -72,6 +72,20 @@ done
         }
     }
     return folder_element_list;
+}
+
+export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[]|null> {
+    const options = {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            command: `cd ".${path}" && tree -Js`
+        })
+    };
+    const raw_response = await request_display(ip, '/shellCommand', options);
+    if (!raw_response) return null;
+    const tree_structure: TreeElement[]|null = (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
+    return tree_structure;
 }
 
 
