@@ -66,7 +66,7 @@ export function get_display_ids_where_file_is_missing(path: string, file: Folder
     return [missing, colliding];
 }
 
-export async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
+async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
     const current_folder = await get_file_tree_data(display.ip, file_path);
     if (current_folder === null) return null;
     const directory_strings = get_recursive_changed_directory_paths(display, file_path, current_folder, get(all_files));
@@ -100,15 +100,7 @@ function get_recursive_changed_directory_paths(display: Display, current_file_pa
     return has_changed;
 }
 
-export async function update_all_display_files(path: string) {
-    for (const display_group of get(displays)) {
-        for (const display of display_group.data) {
-            await update_folder_elements_recursively(display, path);
-        }
-    }
-}
-
-async function update_folder_elements_recursively(display: Display, file_path: string = '/'): Promise<number> {
+export async function update_folder_elements_recursively(display: Display, file_path: string = '/'): Promise<number> {
     const new_folder_elements = await get_file_data(display.ip, file_path);
     all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
         if (!files.hasOwnProperty(file_path)) {

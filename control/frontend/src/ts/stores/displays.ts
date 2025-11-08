@@ -3,7 +3,6 @@ import type { Display, DisplayGroup, DisplayStatus } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
 import { get_uuid, image_content_hash } from "../utils";
 import { get_screenshot } from "../api_handler";
-import DisplayGroupObject from "../../components/DisplayGroupObject.svelte";
 
 export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
     id: get_uuid(),
@@ -25,8 +24,8 @@ export function add_display(ip: string, mac: string | null, name: string, status
     });
 }
 
-export function edit_display_data(display_id: string, ip: string, mac: string | null, name: string) {
-    update_displays_with_map((display: Display) => {
+export async function edit_display_data(display_id: string, ip: string, mac: string | null, name: string) {
+    await update_displays_with_map((display: Display) => {
         if (display.id !== display_id) return display;
         return { ...display, ip: ip, mac: mac, name: name };
     })

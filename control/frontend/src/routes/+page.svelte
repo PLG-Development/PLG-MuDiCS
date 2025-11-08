@@ -55,10 +55,10 @@
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
 		if (!!existing_display_id) {
-			edit_display_data(existing_display_id, ip, mac, name);
+			await edit_display_data(existing_display_id, ip, mac, name);
 		} else {
 			const status = await ping_ip(text_inputs_valid.ip.value);
-			add_display(ip, mac, name, status);
+			await add_display(ip, mac, name, status);
 		}
 		popup_close_function();
 	}
