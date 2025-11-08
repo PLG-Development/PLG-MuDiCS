@@ -55,6 +55,13 @@ export type FolderElement = {
     size: number;
 }
 
+export type TreeElement = {
+    contents?: TreeElement[];
+    type: "file" | "directory";
+    name: string;
+    size: number;
+}
+
 
 export type Display = {
     id: string;
