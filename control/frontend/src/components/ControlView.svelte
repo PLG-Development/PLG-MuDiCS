@@ -18,6 +18,10 @@
 	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { selected_display_ids } from '../ts/stores/select';
+	import { onMount } from 'svelte';
+
+	let show_text_body: string = `<p>I've been working on this <strong>new feature</strong> for the past few days. 
+	It's been quite <em>challenging</em> but I think I'm making good progress.</p>`;
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -39,6 +43,20 @@
 			closable: true
 		};
 	};
+
+	const show_text_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: text_popup,
+			title: 'Text anzeigen',
+			title_icon: TextAlignStart,
+			closable: true
+		};
+	};
+
+	onMount(() => {
+		show_text_popup();
+	});
 </script>
 
 {#snippet send_keys_popup()}
@@ -48,6 +66,12 @@
 	<div class="flex flex-row justify-end gap-2">
 		<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
 	</div>
+{/snippet}
+
+{#snippet text_popup()}
+	<!-- <div class="flex flex-row justify-end gap-2">
+		<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
+	</div> -->
 {/snippet}
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
@@ -89,7 +113,8 @@
 				</div>
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}><TextAlignStart /> Text anzeigen</Button
+					disabled={$selected_display_ids.length === 0}
+					click_function={show_text_popup}><TextAlignStart /> Text anzeigen</Button
 				>
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"

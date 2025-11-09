@@ -40,7 +40,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="bg-stone-800 rounded-2xl min-w-[30%] max-w-[80%] max-h-[80%] flex flex-col shadow-2xl/60 overflow-hidden"
+			class="bg-stone-800 rounded-2xl min-w-[30%] max-w-[95%] max-h-[90%] flex flex-col shadow-2xl/60 overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<div
