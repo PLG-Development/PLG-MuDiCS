@@ -26,13 +26,13 @@
 		click_function?: (e: MouseEvent) => void;
 		menu_options?: MenuOption[] | null;
 		menu_class?: string;
-		div_class?: string,
+		div_class?: string;
 		children?: any;
 	}>();
 
 	let menu_shown = $state(false);
 	let button_element: HTMLButtonElement;
-	let menu_element: HTMLDivElement;
+	let menu_element: HTMLDivElement | null = $state(null);
 	let position_bottom = $state(true);
 
 	function onclick(e: MouseEvent) {
@@ -47,7 +47,7 @@
 	}
 
 	function getPolygon(): [number, number][] | null {
-		if (!button_element || !button_element) return null;
+		if (!button_element || !menu_element) return null;
 		const b = button_element.getBoundingClientRect();
 		const m = menu_element.getBoundingClientRect();
 
