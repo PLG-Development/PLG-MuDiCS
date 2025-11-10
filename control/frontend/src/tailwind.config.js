@@ -201,6 +201,7 @@ module.exports = {
     'group-active:border-stone-900',
     'group-active:border-stone-950',
 
+    'h-10',
     'h-15',
     'h-20',
     'h-25',

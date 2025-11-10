@@ -38,6 +38,7 @@
 	},
 	"dependencies": {
 		"@thisux/sveltednd": "^0.0.20",
+		"dexie": "^4.2.1",
 		"lucide-svelte": "^0.545.0",
 		"svelte-splitpanes": "^8.0.9"
 	}

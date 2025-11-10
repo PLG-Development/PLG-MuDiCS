@@ -2,7 +2,7 @@ import { notifications } from "./stores/notification";
 import { to_display_status, type DisplayStatus, type FolderElement, type TreeElement } from "./types";
 import { get_uuid } from "./utils";
 
-export async function get_screenshot(ip: string) {
+export async function get_screenshot(ip: string): Promise<Blob|null> {
     const options = { method: 'PATCH' };
     return await request_display(ip, '/takeScreenshot', options);
 }
@@ -63,8 +63,7 @@ done
         if (response_element.name.charAt(2) !== '.') {
             const folder_element: FolderElement = {
                 id: get_uuid(),
-                hash: JSON.stringify(response),
-                thumbnail_url: null,
+                hash: JSON.stringify(response_element),
                 name: response_element.name.slice(2), // remove "./"
                 type: response_element.type,
                 date_created: new Date(response_element.created),
@@ -109,6 +108,11 @@ export async function ping_ip(ip: string): Promise<DisplayStatus> {
     const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
     if (!raw_response) return null;
     return raw_response.status ? to_display_status(raw_response.status) : null;
+}
+
+export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob|null> {
+    const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' });
+    return raw_response;
 }
 
 

@@ -48,7 +48,6 @@ export const supported_file_types: Record<string, SupportedFileType> = {
 export type FolderElement = {
     id?: string;
     hash: string | null;
-    thumbnail_url: string | null;
     name: string;
     type: string;
     date_created: Date;

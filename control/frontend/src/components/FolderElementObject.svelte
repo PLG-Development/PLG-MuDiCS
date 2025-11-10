@@ -36,8 +36,22 @@
 		run_on_all_selected_displays,
 		update_screenshot
 	} from '../ts/stores/displays';
+	import { get_thumbnail_url } from '../ts/stores/thumbnails';
+	import { db } from '../ts/indexdb/file_thumbnails.db';
+	import { onDestroy, onMount } from 'svelte';
+	import { liveQuery } from 'dexie';
 
 	let { file } = $props<{ file: FolderElement }>();
+
+	let thumbnail_url: string | null = $state(null);
+	// Update thumbnail_url automatically if data is available
+	const subscription = liveQuery(() => db.thumbnail_blobs.get(file.hash)).subscribe({
+		next: async () => {
+			thumbnail_url = await get_thumbnail_url(file.hash);
+		},
+		error: (err) => console.error('Dexie subscription error:', err)
+	});
+	onDestroy(() => subscription.unsubscribe());
 
 	const is_folder = file.type === 'inode/directory';
 
@@ -168,16 +182,23 @@
 		})} rounded-r-lg transition-colors duration-200 gap-4 flex flex-row justify-between cursor-pointer group w-full min-w-0"
 	>
 		<div class="flex flex-row gap-2 min-w-0 w-full">
-			<div class="aspect-square rounded-md flex justify-center items-center p-2">
+			<div
+				class="aspect-square rounded-md flex justify-center items-center"
+			>
 				{#if is_folder}
-					<Folder class="size-full" />
-				{:else if file.thumbnail}
-					<div></div>
+					<Folder class="size-full p-2" />
+				{:else if thumbnail_url}
+					<img
+						src={thumbnail_url}
+						alt="file_thumbnail"
+						class="object-contain size-full select-none block"
+						draggable="false"
+					/>
 				{:else if get_file_type(file)?.icon}
 					{@const Icon = get_file_type(file)?.icon}
-					<Icon class="size-full" />
+					<Icon class="size-full p-2" />
 				{:else}
-					<FileIcon />
+					<FileIcon class="size-full p-2" />
 				{/if}
 			</div>
 			<div class="content-center truncate select-none w-full" title={file.name}>

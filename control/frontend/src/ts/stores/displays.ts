@@ -109,6 +109,13 @@ export async function update_screenshot(display_id: string, check_type: "first_c
     const display_ip = get_display_by_id(display_id, get(displays))?.ip;
     if (!display_ip) return;
     const new_blob = await get_screenshot(display_ip);
+    if (!new_blob) {
+        update_displays_with_map((display: Display) => {
+            if (display.id !== display_id) return display;
+            return { ...display, preview_url: null, preview_timeout_id: null };
+        })
+        return;
+    }
     const display = get_display_by_id(display_id, get(displays));
 
     let update_needed = check_type === "first_check";

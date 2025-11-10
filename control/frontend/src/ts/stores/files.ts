@@ -5,6 +5,7 @@ import { selected_file_ids } from "./select";
 import { get_file_data, get_file_tree_data } from "../api_handler";
 import { notifications } from "./notification";
 import { CirclePoundSterling } from "lucide-svelte";
+import { deactivate_old_thumbnail_urls, generate_thumbnail } from "./thumbnails";
 
 export const all_files: Writable<Record<string, Record<string, FolderElement[]>>> = writable<Record<string, Record<string, FolderElement[]>>>({});
 // {
@@ -29,6 +30,8 @@ export async function change_file_path(new_path: string) {
     selected_file_ids.update(() => {
         return [];
     })
+
+    deactivate_old_thumbnail_urls();
 
     for (const display_group of get(displays)) {
         for (const display of display_group.data) {
@@ -111,6 +114,13 @@ export async function update_folder_elements_recursively(display: Display, file_
         const existing_folder_elements = files[file_path].hasOwnProperty(display.id) ? files[file_path][display.id] : [];
 
         const diff = get_folder_elements_difference(existing_folder_elements, new_folder_elements);
+        // Generate Thumbnails:
+        setTimeout(async () => {
+            for (const folder_element of diff.new) {
+                await generate_thumbnail(display.ip, file_path, folder_element);
+            }
+        }, 0)
+
         files[file_path][display.id].push(...diff.new);
         return remove_folder_elements_recursively(files, display, diff.deleted, file_path);
     })
@@ -168,6 +178,7 @@ function get_folder_elements_difference(old_elements: FolderElement[], new_eleme
     const only_in_new = new_elements.filter(e => !old_hashes.has(e.hash));
     return { deleted: only_in_old, new: only_in_new };
 }
+
 
 
 
