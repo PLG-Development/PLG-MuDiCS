@@ -202,7 +202,7 @@
 				{/if}
 			</div>
 			<div class="content-center truncate select-none w-full" title={file.name}>
-				{file.name.includes('.') ? file.name.slice(0, file.name.lastIndexOf('.')) : file.name}
+				{file.name.includes('.') && !is_folder && get_file_type(file) ? file.name.slice(0, file.name.lastIndexOf('.')) : file.name}
 			</div>
 		</div>
 		<div
