@@ -1,12 +1,14 @@
 import { get, writable, type Writable } from "svelte/store";
 import { get_thumbnail_blob } from "../api_handler";
-import { supported_file_types, type FolderElement } from "../types";
+import { type FolderElement } from "../types";
 import { db } from "../indexdb/file_thumbnails.db";
+import { get_file_type } from "../utils";
 
 export const active_thumbnail_urls: Writable<string[]> = writable<string[]>([]);
 
 export async function generate_thumbnail(display_ip: string, path: string, folder_element: FolderElement): Promise<void> {
-    if (!Object.values(supported_file_types).some(e => e.mime_type === folder_element.type) || !folder_element.hash) return;
+    const supported_file_type = get_file_type(folder_element);
+    if (!supported_file_type || !folder_element.hash) return;
     const hash: string = folder_element.hash;
     if (await db.thumbnail_blobs.get(hash)) return;
 

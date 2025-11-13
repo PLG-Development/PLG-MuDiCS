@@ -1,48 +1,18 @@
-import { FileBox, FileImage, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
+import { FileBox, FileImage, FileText, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
 import type { Snippet } from "svelte";
 
 export type SupportedFileType = {
-    display_name:
-    string; mime_type:
-    string; icon: typeof X;
+    display_name: string;
+    mime_type: string;
 };
-
-export const supported_file_types: Record<string, SupportedFileType> = {
-    '.mp4': {
-        display_name: 'MP4',
-        mime_type: 'video/mp4',
-        icon: FileVideoCamera,
-    },
-    '.jpg': {
-        display_name: 'JPG',
-        mime_type: 'image/jpg',
-        icon: FileImage,
-    },
-    '.jpeg': {
-        display_name: 'JPG',
-        mime_type: 'image/jpeg',
-        icon: FileImage,
-    },
-    '.png': {
-        display_name: 'PNG',
-        mime_type: 'image/png',
-        icon: FileImage,
-    },
-    '.gif': {
-        display_name: 'GIF',
-        mime_type: 'image/gif',
-        icon: ImagePlay,
-    },
-    '.pptx': {
-        display_name: 'PPTX',
-        mime_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        icon: FileBox,
-    },
-    '.odp': {
-        display_name: 'ODP',
-        mime_type: 'application/vnd.oasis.opendocument.presentation',
-        icon: FileBox,
-    }
+export const supported_file_type_icon: Record<string, typeof X> = {
+    'MP4': FileVideoCamera,
+    'JPG': FileImage,
+    'PNG': FileImage,
+    'GIF': ImagePlay,
+    'PPTX': FileBox,
+    'ODP': FileBox,
+    'PDF': FileText
 }
 
 export type FolderElement = {

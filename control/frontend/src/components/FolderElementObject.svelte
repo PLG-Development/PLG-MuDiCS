@@ -14,7 +14,8 @@
 		get_shifted_color
 	} from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import { supported_file_types, type FolderElement, type SupportedFileType } from '../ts/types';
+	import { supported_file_type_icon, type FolderElement, type SupportedFileType } from '../ts/types';
+	
 	import {
 		is_selected,
 		select,
@@ -28,7 +29,7 @@
 		get_display_ids_where_file_is_missing
 	} from '../ts/stores/files';
 	import RefreshPlay from './RefreshPlay.svelte';
-	import { get_file_size_display_string } from '../ts/utils';
+	import { get_file_size_display_string, get_file_type } from '../ts/utils';
 	import { open_file } from '../ts/api_handler';
 	import {
 		displays,
@@ -54,22 +55,6 @@
 	onDestroy(() => subscription.unsubscribe());
 
 	const is_folder = file.type === 'inode/directory';
-
-	function get_file_type(file: FolderElement): SupportedFileType | null {
-		for (const key of Object.keys(supported_file_types)) {
-			if (file.type === supported_file_types[key].mime_type) {
-				return supported_file_types[key];
-			}
-		}
-		// Fallback:
-		const extension = file.name.split('.').pop();
-		if (extension) {
-			if (Object.keys(supported_file_types).includes('.' + extension)) {
-				return supported_file_types['.' + extension];
-			}
-		}
-		return null;
-	}
 
 	function get_created_string(date_object: Date, full_string = false) {
 		if (full_string) {
@@ -191,11 +176,11 @@
 					<img
 						src={thumbnail_url}
 						alt="file_thumbnail"
-						class="object-contain size-full select-none block"
+						class="object-contain size-full select-none block p-1"
 						draggable="false"
 					/>
-				{:else if get_file_type(file)?.icon}
-					{@const Icon = get_file_type(file)?.icon}
+				{:else if supported_file_type_icon[get_file_type(file)?.display_name || '']}
+					{@const Icon = supported_file_type_icon[get_file_type(file)?.display_name || '']}
 					<Icon class="size-full p-2" />
 				{:else}
 					<FileIcon class="size-full p-2" />

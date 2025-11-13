@@ -49,7 +49,10 @@
 			{title}:
 		</div>
 		{#if is_valid_function && focussed}
-			<div class={current_valid ? "text-green-400" : "text-red-400"} transition:fade={{ duration: 100 }}>
+			<div
+				class={current_valid ? 'text-green-400' : 'text-red-400'}
+				transition:fade={{ duration: 100 }}
+			>
 				{current_info}
 			</div>
 		{/if}

@@ -1,19 +1,40 @@
-export function get_uuid(): string {
-    return crypto.randomUUID();
+import type { FolderElement, SupportedFileType } from "./types";
+import supported_file_types_json from './../../../../shared/supported_file_types.json';
+
+const supported_file_types: Record<string, SupportedFileType> = supported_file_types_json as Record<string, SupportedFileType>;
+
+export function get_file_type(file: FolderElement): SupportedFileType | null {
+  for (const key of Object.keys(supported_file_types)) {
+    if (file.type === supported_file_types[key].mime_type) {
+      return supported_file_types[key];
+    }
+  }
+  // Fallback:
+  const extension = file.name.split('.').pop();
+  if (extension) {
+    if (Object.keys(supported_file_types).includes('.' + extension)) {
+      return supported_file_types['.' + extension];
+    }
+  }
+  return null;
 }
 
-export function get_file_size_display_string(size: number, toFixed: number|null = null): string {
-    if (size === 0) return "0 B";
+export function get_uuid(): string {
+  return crypto.randomUUID();
+}
 
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
+export function get_file_size_display_string(size: number, toFixed: number | null = null): string {
+  if (size === 0) return "0 B";
 
-    const i = Math.floor(Math.log(size) / Math.log(k));
-    const value = size / Math.pow(k, i);
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
 
-    const size_string = `${value.toFixed(toFixed !== null ? toFixed : Math.max(0, 2 - Math.floor(Math.log10(value))))} ${sizes[i]}`;
+  const i = Math.floor(Math.log(size) / Math.log(k));
+  const value = size / Math.pow(k, i);
 
-    return size_string.replace('.', ',');
+  const size_string = `${value.toFixed(toFixed !== null ? toFixed : Math.max(0, 2 - Math.floor(Math.log10(value))))} ${sizes[i]}`;
+
+  return size_string.replace('.', ',');
 }
 
 
@@ -38,5 +59,11 @@ export async function image_content_hash(blob: Blob, size = 32): Promise<number>
 
   bitmap.close(); // GPU-Ressourcen freigeben
   return hash >>> 0; // unsigned int
+}
+
+
+
+export function is_valid_name(input: string): boolean {
+  return /^[\p{L}\p{N}\p{M}\-_.+,()[\]{}@!§$%&=~^ ]+$/u.test(input);
 }
 
