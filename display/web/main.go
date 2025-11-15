@@ -48,6 +48,12 @@ func StartWebServer(v string, port string) {
 		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)
 	})
 
+	staticGroup := e.Group("/static")
+	staticGroup.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Filesystem: http.FS(StaticDirFS),
+		HTML5:      true,
+	}))
+
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.CORS())
 	apiGroup.GET("/ping", pingRoute)
