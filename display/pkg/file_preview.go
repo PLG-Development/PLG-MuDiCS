@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 )
-var ErrFileTypePreviewNotSupported = errors.New("file type not supported for preview");
-var ErrFilePreviewToolsMissing = errors.New("required tools for file preview are missing");
+
+var ErrFileTypePreviewNotSupported = errors.New("file type not supported for preview")
+var ErrFilePreviewToolsMissing = errors.New("required tools for file preview are missing")
 
 func GenerateFilePreview(inputPath string) (string, error) {
 	var err error
@@ -36,7 +37,7 @@ func GenerateFilePreview(inputPath string) (string, error) {
 }
 
 func generateImagePreview(inputPath string, outputPath string) error {
-	cmd := exec.Command("magick", inputPath, "-thumbnail", "100x100", "-quality", "50", outputPath)
+	cmd := exec.Command("magick", inputPath, "-gravity", "center", "-crop", "1:1", "-thumbnail", "100", "-quality", "50", outputPath)
 	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		if result.ExitCode == 127 {
@@ -53,7 +54,7 @@ func generatePDFPreview(inputPath string, outputPath string) error {
 		return ErrFilePreviewToolsMissing
 	}
 
-	cmd := exec.Command("magick", fmt.Sprintf("%s[0]", inputPath), "-thumbnail", "100x100", "-quality", "50", outputPath)
+	cmd := exec.Command("magick", fmt.Sprintf("%s[0]", inputPath), "-gravity", "center", "-crop", "1:1", "-thumbnail", "100x100", "-quality", "50", outputPath)
 	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		if result.ExitCode == 127 {
