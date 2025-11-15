@@ -10,6 +10,10 @@ templ indexTemplate() {
 			<script src="/static/htmx.min.js"></script>
 			<script src="/static/htmx-ext-sse.min.js"></script>
 			<style>
+				:root {
+					--background-color: hsl(256, 10%, 10%);
+				}
+
 				body {
 				    display: flex;
 	                justify-content: center; /* centers horizontally */
@@ -19,7 +23,7 @@ templ indexTemplate() {
 	                margin: 0;
 	                padding: 0;
 	                overflow: hidden;
-					background-color: hsl(256, 10%, 10%);
+					background-color: var(--background-color);
 					color: hsl(256, 90%, 95%);
 				}
 
