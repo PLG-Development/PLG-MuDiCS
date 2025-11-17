@@ -42,11 +42,8 @@ Even when the command itself fails.
 
 ### Request Body
 
-- `super`: bool
-- `ctrl`: bool
-- `alt`: bool
-- `shift`: bool
-- `keys`: list[key string]
+- `key`: string for key
+- `action`: "press" or "release"
 
 ## PATCH `/showHTML`
 
