@@ -6,7 +6,9 @@ All response and request bodies are `application/json` if not otherwise specifie
 
 ### Responses
 
-#### _General Error_
+#### All Errors
+
+If not specified otherwise.
 
 - `description`: string
 
