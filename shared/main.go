@@ -13,7 +13,7 @@ type CommandResponse struct {
 }
 
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Description string `json:"description"`
 }
 
 func RunShellCommand(cmd *exec.Cmd) CommandResponse {

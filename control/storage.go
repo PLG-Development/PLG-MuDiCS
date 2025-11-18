@@ -16,13 +16,13 @@ func getStorageRoute(ctx echo.Context) error {
 	data, err := os.ReadFile(storageFile)
 	if err != nil {
 		slog.Error("Could not read storage file", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Could not read storage file"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Could not read storage file"})
 	}
 
 	var content interface{}
 	if err := json.Unmarshal(data, &content); err != nil {
 		slog.Error("Could not parse storage file", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Could not parse storage file"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Could not parse storage file"})
 	}
 
 	return ctx.JSON(http.StatusOK, content)
@@ -31,15 +31,15 @@ func getStorageRoute(ctx echo.Context) error {
 func setStorageRoute(ctx echo.Context) error {
 	var payload interface{}
 	if err := ctx.Bind(&payload); err != nil {
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Invalid JSON payload"})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: "Invalid JSON payload"})
 	}
 
 	data, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to marshal storage file"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to marshal storage file"})
 	}
 	if err := os.WriteFile(storageFile, data, 0644); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to write storage file"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to write storage file"})
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{})
