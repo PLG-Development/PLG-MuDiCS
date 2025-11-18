@@ -21,6 +21,7 @@ func getStorageRoute(ctx echo.Context) error {
 
 	var content interface{}
 	if err := json.Unmarshal(data, &content); err != nil {
+		slog.Error("Could not parse storage file", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Could not parse storage file"})
 	}
 
