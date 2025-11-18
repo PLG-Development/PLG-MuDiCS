@@ -12,7 +12,9 @@ type CommandResponse struct {
 	ExitCode int    `json:"exitCode"`
 }
 
-
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
 
 func RunShellCommand(cmd *exec.Cmd) CommandResponse {
 	var stdout, stderr bytes.Buffer

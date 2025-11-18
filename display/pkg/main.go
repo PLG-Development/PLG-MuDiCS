@@ -95,7 +95,7 @@ func GetStoragePath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to determine user home directory: %w", err)
 	}
-	storagePath = filepath.Join(home, ".local", "share", "plg-mudics")
+	storagePath = filepath.Join(home, ".local", "share", "plg-mudics", "display")
 	if err := os.MkdirAll(storagePath, os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create local config directory: %w", err)
 	}

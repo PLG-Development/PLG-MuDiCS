@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"plg-mudics/control/frontend"
 	"plg-mudics/shared"
 	"time"
@@ -14,7 +15,25 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var storageFile string
+
 func main() {
+	var err error
+
+	path, err := getStoragePath()
+	if err != nil {
+		slog.Error("Failed to initialize storage path", "error", err)
+		os.Exit(1)
+	}
+	storageFile = filepath.Join(path, "storage.json")
+	// Ensure storage.json exists
+	if _, err := os.Stat(storageFile); os.IsNotExist(err) {
+		if err := os.WriteFile(storageFile, []byte("{}"), 0644); err != nil {
+			slog.Error("Failed to initialize storage.json", "error", err)
+			os.Exit(1)
+		}
+	}
+
 	e := echo.New()
 
 	// Serve the embedded SvelteKit frontend
@@ -26,6 +45,8 @@ func main() {
 	// Servers all API endpoints, e.g. our custom logic
 	apiGroup := e.Group("/api")
 	apiGroup.GET("/ping", pingRoute)
+	apiGroup.GET("/storage", getStorageRoute)
+	apiGroup.POST("/storage", setStorageRoute)
 
 	port := "8080"
 
@@ -38,7 +59,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	err := shared.OpenBrowserWindow("http://localhost:"+port, false, false)
+	err = shared.OpenBrowserWindow("http://localhost:"+port, false, false)
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
 		os.Exit(1)

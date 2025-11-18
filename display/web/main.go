@@ -21,10 +21,6 @@ import (
 	"plg-mudics/display/pkg"
 )
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
 var version string
 var sseConnection chan string
 var supportedExtensions = map[string]bool{
@@ -136,7 +132,7 @@ func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		fullPath, exists, err := pkg.ResolveStorageFilePath(pathParam)
 		if err != nil {
 			slog.Warn("Failed to validate file path", "path", pathParam, "error", err)
-			return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid file path"})
+			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Invalid file path"})
 		}
 		ctx.Set("fullPath", fullPath)
 		ctx.Set("fileExists", exists)
@@ -150,14 +146,14 @@ func shellCommandRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&commandInput); err != nil {
 		slog.Error("Failed to parse shell command", "error", err)
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Invalid JSON request"})
 	}
 
 	cmd := exec.Command("bash", "-c", commandInput.Command)
 	storagePath, err := pkg.GetStoragePath()
 	if err != nil {
 		slog.Error("Failed to get storage path", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Internal server error"})
 	}
 	cmd.Dir = storagePath
 
@@ -176,19 +172,19 @@ func keyboardInputRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Invalid JSON request"})
 	}
 
 	code, ok := pkg.KeyboardEvents[request.Key]
 	if !ok {
 		slog.Error("Unsupported key", "key", request.Key)
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: fmt.Sprintf("Unsupported key: %s", request.Key)})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: fmt.Sprintf("Unsupported key: %s", request.Key)})
 	}
 
 	err := pkg.KeyboardInput(code)
 	if err != nil {
 		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to send keyboard input"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to send keyboard input"})
 	}
 
 	slog.Info("Keyboard input sent", "key", request.Key)
@@ -200,25 +196,25 @@ func uploadFileRoute(ctx echo.Context) error {
 
 	// Ensure parent directories exist
 	if err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to prepare storage directory"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to prepare storage directory"})
 	}
 
 	if ctx.Get("fileExists").(bool) {
-		return ctx.JSON(http.StatusConflict, ErrorResponse{Error: "File already exists"})
+		return ctx.JSON(http.StatusConflict, shared.ErrorResponse{Error: "File already exists"})
 	}
 
 	ext := strings.ToLower(filepath.Ext(fullPath))
 	if !supportedExtensions[ext] {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: fmt.Sprintf("Unsupported file extension: %s", ext)})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: fmt.Sprintf("Unsupported file extension: %s", ext)})
 	}
 
 	data, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to read file body"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to read file body"})
 	}
 
 	if err := os.WriteFile(fullPath, data, os.ModePerm); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to save file"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to save file"})
 	}
 
 	slog.Info("File uploaded successfully", "path", fullPath)
@@ -229,13 +225,13 @@ func downloadFileRoute(ctx echo.Context) error {
 	fullPath := ctx.Get("fullPath").(string)
 
 	if !ctx.Get("fileExists").(bool) {
-		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "File not found"})
+		return ctx.JSON(http.StatusNotFound, shared.ErrorResponse{Error: "File not found"})
 	}
 
 	err := ctx.File(fullPath)
 	if err != nil {
 		slog.Error("Failed to serve file", "file", fullPath, "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Internal server error"})
 	}
 
 	slog.Info("File downloaded successfully", "path", fullPath)
@@ -247,17 +243,17 @@ func openFileRoute(ctx echo.Context) error {
 	fullPath := ctx.Get("fullPath").(string)
 
 	if !ctx.Get("fileExists").(bool) {
-		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "File not found"})
+		return ctx.JSON(http.StatusNotFound, shared.ErrorResponse{Error: "File not found"})
 	}
 
 	if sseConnection == nil {
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Cant connect to display browser client"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Cant connect to display browser client"})
 	}
 
 	err := resetView()
 	if err != nil {
 		slog.Error("Failed to reset view", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to reset view"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to reset view"})
 	}
 
 	ext := strings.ToLower(filepath.Ext(fullPath))
@@ -275,10 +271,10 @@ func openFileRoute(ctx echo.Context) error {
 		err := pkg.OpenPresentation(fullPath)
 		if err != nil {
 			slog.Error("Failed to open presentation", "file", pathParam, "error", err)
-			return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to open presentation"})
+			return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to open presentation"})
 		}
 	default:
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Unsupported file type"})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Unsupported file type"})
 	}
 
 	slog.Info("Successfully run file", "file", pathParam)
@@ -291,13 +287,13 @@ func showHTMLRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse request", "error", err)
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid JSON request"})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "Invalid JSON request"})
 	}
 
 	err := resetView()
 	if err != nil {
 		slog.Error("Failed to reset view", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to reset view"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to reset view"})
 	}
 
 	sseConnection <- request.HTML
@@ -318,13 +314,13 @@ func takeScreenshotRoute(ctx echo.Context) error {
 	screenshotPath, err := pkg.TakeScreenshot()
 	if err != nil {
 		slog.Error("Failed to take screenshot", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Internal server error"})
 	}
 
 	err = ctx.File(screenshotPath)
 	if err != nil {
 		slog.Error("Failed to serve file", "file", screenshotPath, "error", err)
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Internal server error"})
 	}
 
 	return nil
@@ -334,19 +330,19 @@ func previewRoute(ctx echo.Context) error {
 	fullPath := ctx.Get("fullPath").(string)
 	exists := ctx.Get("fileExists").(bool)
 	if !exists {
-		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "File not found"})
+		return ctx.JSON(http.StatusNotFound, shared.ErrorResponse{Error: "File not found"})
 	}
 
 	outputFilePath, err := pkg.GenerateFilePreview(fullPath)
 	if err != nil {
 		slog.Error("Failed to generate preview", "file", fullPath, "error", err)
 		if errors.Is(err, pkg.ErrFileTypePreviewNotSupported) {
-			return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "File type not supported for preview"})
+			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Error: "File type not supported for preview"})
 		}
 		if errors.Is(err, pkg.ErrFilePreviewToolsMissing) {
-			return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Required tools for file preview are missing"})
+			return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Required tools for file preview are missing"})
 		}
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to generate preview"})
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Error: "Failed to generate preview"})
 	}
 
 	return ctx.File(outputFilePath)
