@@ -1,6 +1,19 @@
 import { FileBox, FileImage, FileText, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
 import type { Snippet } from "svelte";
 
+export type RequestResponse = {
+    ok: boolean,
+    http_code?: number
+    blob?: Blob,
+    json?: any,
+}
+
+export type ShellCommandResponse = {
+    stdout: string,
+    stderr: string,
+    exitCode: number,
+}
+
 export type SupportedFileType = {
     display_name: string;
     mime_type: string;

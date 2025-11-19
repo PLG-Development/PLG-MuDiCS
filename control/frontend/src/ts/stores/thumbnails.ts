@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from "svelte/store";
 import { get_thumbnail_blob } from "../api_handler";
 import { type FolderElement } from "../types";
-import { db } from "../indexdb/file_thumbnails.db";
+import { db, type ThumbnailBlobDBEntry } from "../indexdb/file_thumbnails.db";
 import { get_file_type } from "../utils";
 
 export const active_thumbnail_urls: Writable<string[]> = writable<string[]>([]);
@@ -17,9 +17,9 @@ export async function generate_thumbnail(display_ip: string, path: string, folde
     await db.thumbnail_blobs.add({ hash: hash, blob: thumbnail_blob });
 }
 
-export async function get_thumbnail_url(hash: string): Promise<string | null> {
+export async function get_thumbnail_url(hash: string | null): Promise<string | null> {
     if (hash === null) return null;
-    const thumbnail_blob = await db.thumbnail_blobs.get(hash);
+    const thumbnail_blob = await db.thumbnail_blobs.get(hash) as ThumbnailBlobDBEntry;
     if (!thumbnail_blob) return null;
     const new_url = URL.createObjectURL(thumbnail_blob.blob);
     active_thumbnail_urls.update((current: string[]) => {

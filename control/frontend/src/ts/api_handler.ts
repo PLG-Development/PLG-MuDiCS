@@ -1,10 +1,12 @@
 import { notifications } from "./stores/notification";
-import { to_display_status, type DisplayStatus, type FolderElement, type TreeElement } from "./types";
+import { to_display_status, type DisplayStatus, type FolderElement, type RequestResponse, type ShellCommandResponse, type TreeElement } from "./types";
 import { get_uuid } from "./utils";
 
-export async function get_screenshot(ip: string): Promise<Blob|null> {
+export async function get_screenshot(ip: string): Promise<Blob | null> {
     const options = { method: 'PATCH' };
-    return await request_display(ip, '/takeScreenshot', options);
+    const response = await request_display(ip, '/takeScreenshot', options);
+    if (!response.ok || !response.blob) return null;
+    return response.blob;
 }
 
 export async function open_file(ip: string, path_to_file: string): Promise<void> {
@@ -47,11 +49,11 @@ done
 ` })
     };
     const raw_response = await request_display(ip, '/shellCommand', options);
-    if (is_cd_directory_error(ip, raw_response)) {
-        return [];
-    }
+    if (!raw_response.ok || !raw_response.json) return [];
+    const json_response = raw_response.json as ShellCommandResponse;
+    if (is_cd_directory_error(ip, json_response)) return [];
 
-    const response: FileInfo[] = raw_response.stdout.trim()
+    const response: FileInfo[] = json_response.stdout.trim()
         .split("\n")
         .filter(Boolean)
         .map((line: string) => JSON.parse(line) as FileInfo);
@@ -84,15 +86,16 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
         })
     };
     const raw_response = await request_display(ip, '/shellCommand', options);
-    if (is_cd_directory_error(ip, raw_response)) {
-        return null;
-    }
 
-    return (JSON.parse(raw_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
+    if (!raw_response.ok || !raw_response.json) return null;
+    const json_response = raw_response.json as ShellCommandResponse;
+    if (is_cd_directory_error(ip, json_response)) return null;
+
+    return (JSON.parse(json_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
 }
 
 
-export async function show_blackscreen(ip: string) {
+export async function show_blackscreen(ip: string): Promise<void> {
     const options = {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -106,70 +109,82 @@ export async function show_blackscreen(ip: string) {
 
 export async function ping_ip(ip: string): Promise<DisplayStatus> {
     const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
-    if (!raw_response) return null;
-    return raw_response.status ? to_display_status(raw_response.status) : null;
+    if (!raw_response.ok || !raw_response.json) return null;
+    return raw_response.json.status ? to_display_status(raw_response.json.status) : null;
 }
 
-export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob|null> {
-    const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' });
-    return raw_response;
+export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob | null> {
+    const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' }, [415]);
+    if (!raw_response.ok || !raw_response.blob) return null
+    return raw_response.blob;
 }
 
 
 
 
-async function request_display(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
+async function request_display(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
     const url = `http://${ip}:1323/api${api_route}`;
-    return await raw_request(url, options);
+    return await request(url, options, supress_error_handling_http_codes);
 }
 
-async function request_control(api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
+async function request_control(api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<RequestResponse> {
     const url = `${window.location.origin}/api${api_route}`;
-    return await raw_request(url, options);
+    return await request(url, options);
 }
 
 
-async function raw_request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<null | any> {
+async function request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
     try {
         const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
         console.log(url + cache_buster)
         const response = await fetch(url + cache_buster, options);
-        if (!response.ok) {
-            console.error(`HTTP error! Status: ${response.status}`);
-            notifications.push("error", `HTTP-Fehler bei API-Anfrage`, `${url}\nHTTP-Status: ${response.status}`);
-        }
-        const contentType = response.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-            return await response.blob();
-        } else {
-            const json = await response.json();
-            if (json.error && json.error !== '') {
-                notifications.push("error", `Interner Fehler bei API-Anfrage`, `${url}\nJSON: ${JSON.stringify(json)}`);
+        if (response.ok || supress_error_handling_http_codes.includes(response.status)) {
+            const contentType = response.headers.get("content-type") || "";
+            let request_response: RequestResponse;
+            if (!contentType.includes("application/json")) {
+                const blob: Blob = await response.blob();
+                request_response = { ok: response.ok, http_code: response.status, blob: blob };
+            } else {
+                const json: Object = await response.json();
+                request_response = { ok: response.ok, http_code: response.status, json: json };
             }
-            return json;
+            console.log(request_response);
+            return request_response;
         }
+
+        let error_description: string;
+        try {
+            const json: { description: string } = await response.json();
+            error_description = json.description;
+        } catch (error_on_json_parsing: any) {
+            error_description = `unknown error: ${error_on_json_parsing}`;
+        }
+        console.error(url, error_description);
+        notifications.push("error", `Fehler ${response.status} bei API-Anfrage`, `${url}\nFehler: ${error_description}`);
     } catch (error: any) {
         if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
             console.log("Request failed - Is the targeted device online?")
         } else {
-            console.error(error);
-            notifications.push("error", `Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
+            console.error(url, error);
+            notifications.push("error", `Fataler Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
         }
-        return null;
     }
+    return { ok: false };
 }
 
-function is_cd_directory_error(ip: string, raw_response: any): boolean {
-    if (!raw_response) return true;
-    if (raw_response.exitCode !== 0) {
-        if (raw_response.stderr && /bash: line \d+: cd: .+: No such file or directory/.test(raw_response.stderr)) {
+
+
+
+function is_cd_directory_error(ip: string, shell_response: ShellCommandResponse): boolean {
+    if (shell_response.exitCode !== 0) {
+        if (shell_response.stderr && /bash: line \d+: cd: .+: No such file or directory/.test(shell_response.stderr)) {
             console.log("current file_path does not exist on display:", ip);
             return true;
         }
-        console.error(raw_response);
-        notifications.push("error", "Fehler in ShellCommand", `Fehlercode: ${raw_response.exitCode}\nFehler: ${raw_response.stderr ?? ''}`)
+        console.error(shell_response);
+        notifications.push("error", "Fehler in ShellCommand", `Fehlercode: ${shell_response.exitCode}\nFehler: ${shell_response.stderr ?? ''}`)
         return true;
     }
-    if (raw_response.stdout.trim() === '') return true;
+    if (shell_response.stdout.trim() === '') return true;
     return false;
 }
