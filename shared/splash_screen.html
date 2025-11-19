@@ -40,15 +40,7 @@
 		<text class="splash-text" x="850" y="66.25" font-size="90">S</text>
 
 		<!-- Controller -->
-		<rect
-			x="325"
-			y="350"
-			width="300"
-			height="168.75"
-			rx="8"
-			ry="8"
-			class="splash-control-monitor"
-		/>
+		<rect x="325" y="350" width="300" height="168.75" rx="8" ry="8" class="splash-control-monitor" />
 		<rect x="335" y="390" width="135" height="120" rx="8" ry="8" class="splash-other-button" />
 		<rect x="480" y="390" width="135" height="55" rx="8" ry="8" class="splash-other-button" />
 		<rect x="480" y="455" width="135" height="55" rx="8" ry="8" class="splash-start-button" />
@@ -59,30 +51,15 @@
 		<path class="window-controls" fill="none" d="M 575 360 H 590 V 375 H 575 V 360" />
 		<path class="window-controls" d="M 550 375 H 565" />
 
-		<svg
-			class="cursor"
-			width="50"
-			height="50"
-			viewBox="0 0 24 24"
-			x="510"
-			y="480"
-			aria-hidden="true"
-		>
-			<g
-				stroke="#ffffff"
-				fill="#000000"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
+		<svg class="cursor" width="50" height="50" viewBox="0 0 24 24" x="510" y="480" aria-hidden="true">
+			<g stroke="#ffffff" fill="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 				<path stroke="#000000" d="M 6.5 10 H 18 V 19 H 6" />
 				<path d="M22 14a8 8 0 0 1-8 8" />
 				<path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
 				<path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1" />
 				<path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10" />
 				<path
-					d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"
-				/>
+					d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
 			</g>
 		</svg>
 	</svg>
@@ -90,6 +67,9 @@
 
 <style>
 	:root {
+		--splash-fade-out-delay: 0s;
+		--splash-fade-out-state: running;
+
 		--base-stroke: #444444;
 		--base-stroke-active: #109e00;
 
@@ -118,13 +98,20 @@
 		align-items: center;
 		justify-content: center;
 		z-index: 9999;
-		animation: splash-fade 1s ease 4s forwards;
+		/* animation: splash-fade 1s ease 4s forwards; */
 		height: 100vh;
 		width: 100vw;
+
+		animation-name: splash-fade;
+		animation-duration: 1s;
+		animation-timing-function: ease;
+		animation-fill-mode: forwards;
+		animation-delay: var(--splash-fade-out-delay);
+		animation-play-state: var(--splash-fade-out-state);
 	}
 
 	#splash-svg {
-		max-height: 40vh;
+		max-height: 50vh;
 		max-width: 80vw;
 		opacity: 0;
 		animation: fade-in 1s ease 500ms forwards;

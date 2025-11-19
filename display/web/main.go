@@ -5,8 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,6 +19,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/micmonay/keybd_event"
+	"github.com/skip2/go-qrcode"
 
 	"plg-mudics/display/pkg"
 )
@@ -44,6 +47,7 @@ func StartWebServer(v string, port string) {
 	e.GET("/splash", func(ctx echo.Context) error {
 		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)
 	})
+	e.GET("/qr", qrRoute)
 
 	staticGroup := e.Group("/static")
 	staticGroup.Use(middleware.StaticWithConfig(middleware.StaticConfig{
@@ -97,8 +101,9 @@ func sseRoute(ctx echo.Context) error {
 	if err != nil {
 		slog.Error("Failed to get device MAC address", "error", err)
 	}
+	showQR := !isPortFree(8080)
 	var status bytes.Buffer
-	deviceInfoTemplate(ip, mac).Render(context.Background(), &status)
+	deviceInfoTemplate(ip, mac, showQR).Render(context.Background(), &status)
 	connectedEvent := Event{
 		Data: status.Bytes(),
 	}
@@ -125,6 +130,29 @@ func sseRoute(ctx echo.Context) error {
 			flusher.Flush()
 		}
 	}
+}
+
+func qrRoute(c echo.Context) error {
+	data := c.QueryParam("data")
+	if data == "" {
+		return c.String(http.StatusBadRequest, "missing data")
+	}
+
+	qr, err := qrcode.New(data, qrcode.Medium)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "could not generate qr")
+	}
+
+	qr.DisableBorder = true
+	qr.ForegroundColor = color.RGBA{R: 0x1c, G: 0x19, B: 0x17, A: 0xff}
+	qr.BackgroundColor = color.RGBA{R: 0xe7, G: 0xe5, B: 0xe4, A: 0xff}
+
+	png, err := qr.PNG(-1)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "could not encode png")
+	}
+
+	return c.Blob(http.StatusOK, "image/png", png)
 }
 
 func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -353,4 +381,14 @@ func resetView() error {
 	sseConnection <- ""
 
 	return nil
+}
+
+func isPortFree(port int) bool {
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return false
+	}
+	_ = l.Close()
+	return true
 }
