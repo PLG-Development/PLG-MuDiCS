@@ -137,6 +137,7 @@
 
 {#snippet add_new_display_popup(existing_display_id: string | null = null)}
 	<TextInput
+		focused_on_start
 		bind:current_value={text_inputs_valid.name.value}
 		bind:current_valid={text_inputs_valid.name.valid}
 		title="Anzeigename"
@@ -250,5 +251,5 @@
 			<FileView />
 		</div>
 	</div>
-	<PopUp content={popup_content} close_function={popup_close_function} className="bg-white/10" />
+	<PopUp content={popup_content} close_function={popup_close_function} className="bg-white/10" snippet_container_class="min-w-115" />
 </main>
