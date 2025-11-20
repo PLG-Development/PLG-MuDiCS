@@ -26,15 +26,6 @@ import (
 
 var version string
 var sseConnection chan string
-var supportedExtensions = map[string]bool{
-	".mp4":  true,
-	".jpg":  true,
-	".jpeg": true,
-	".png":  true,
-	".gif":  true,
-	".pptx": true,
-	".odp":  true,
-}
 var badRequestDescription string = "Request uses invalid JSON syntax or does not follow request schema."
 
 func StartWebServer(v string, port string) {
