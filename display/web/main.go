@@ -197,10 +197,14 @@ func shellCommandRoute(ctx echo.Context) error {
 
 func keyboardInputRoute(ctx echo.Context) error {
 	var request struct {
-		Key string `json:"key"`
+		Key    string `json:"key"`
+		Action string `json:"action"`
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+	}
+	if request.Action != "press" && request.Action != "release" {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
 	}
 
@@ -210,7 +214,15 @@ func keyboardInputRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Unsupported key: %s", request.Key)})
 	}
 
-	err := pkg.KeyboardInput(code)
+	var action pkg.KeyAction
+	if request.Action == "press" {
+		action = pkg.KeyPress
+	}
+	if request.Action == "release" {
+		action = pkg.KeyRelease
+	}
+
+	err := pkg.KeyboardInput(code, action)
 	if err != nil {
 		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send keyboard input"})
