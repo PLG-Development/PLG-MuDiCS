@@ -15,13 +15,11 @@
 	import PopUp from './PopUp.svelte';
 	import type { PopupContent } from '../ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
+	import { send_keyboard_input, show_blackscreen, show_html } from '../ts/api_handler';
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { selected_display_ids } from '../ts/stores/select';
 	import { onMount } from 'svelte';
-
-	let show_text_body: string = `<p>I've been working on this <strong>new feature</strong> for the past few days. 
-	It's been quite <em>challenging</em> but I think I'm making good progress.</p>`;
+	import TipTapInput from './TipTapInput.svelte';
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -50,28 +48,25 @@
 			snippet: text_popup,
 			title: 'Text anzeigen',
 			title_icon: TextAlignStart,
-			closable: true
+			closable: true,
+			window_class: 'size-full'
 		};
 	};
-
-	onMount(() => {
-		show_text_popup();
-	});
 </script>
 
 {#snippet send_keys_popup()}
-	<div>
-		<KeyInput />
-	</div>
-	<div class="flex flex-row justify-end gap-2">
-		<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
+	<div class="overflow-hidden flex flex-col gap-2">
+		<div>
+			<KeyInput />
+		</div>
+		<div class="flex flex-row justify-end gap-2">
+			<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
+		</div>
 	</div>
 {/snippet}
 
 {#snippet text_popup()}
-	<!-- <div class="flex flex-row justify-end gap-2">
-		<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
-	</div> -->
+	<TipTapInput />
 {/snippet}
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
@@ -159,7 +154,7 @@
 			content={popup_content}
 			close_function={popup_close_function}
 			className="rounded-b-2xl"
-			snippet_container_class="overflow-hidden"
+			snippet_container_class="size-full"
 		/>
 	</div>
 </div>

@@ -73,9 +73,10 @@ export type PopupContent = {
     open: boolean;
     snippet: Snippet<[string]> | null;
     snippet_arg?: string;
-    title: string;
+    title?: string;
     title_class?: string;
     title_icon?: typeof X | null;
+    window_class?: string;
     closable?: boolean;
 }
 

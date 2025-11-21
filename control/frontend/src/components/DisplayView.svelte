@@ -181,7 +181,7 @@
 					</span>
 					<div class="flex flex-row gap-1">
 						<button
-							class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
+							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
 								all_selected($displays, $selected_display_ids),
 								{
 									bg: true,

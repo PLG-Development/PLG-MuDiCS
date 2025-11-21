@@ -25,6 +25,17 @@ export async function send_keyboard_input(ip: string, key: string): Promise<void
     await request_display(ip, '/keyboardInput', options);
 }
 
+export async function show_html(ip: string, html: string) {
+    const options = {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            html: html
+        })
+    };
+    await request_display(ip, '/showHTML', options);
+}
+
 export async function get_file_data(ip: string, path: string): Promise<FolderElement[]> {
     interface FileInfo {
         name: string;
@@ -136,7 +147,7 @@ async function request_control(api_route: string, options: { method: string, hea
 async function request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
     try {
         const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
-        console.log(url + cache_buster)
+        console.log(url + cache_buster, options.body ?? null);
         const response = await fetch(url + cache_buster, options);
         if (response.ok || supress_error_handling_http_codes.includes(response.status)) {
             const contentType = response.headers.get("content-type") || "";
