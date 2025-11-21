@@ -87,16 +87,3 @@ export function to_display_status(value: string): DisplayStatus {
         ? (value as DisplayStatus)
         : null;
 }
-
-export function display_status_to_info(status: DisplayStatus): string {
-    switch (status) {
-        case 'app_online':
-            return 'Online';
-        case 'app_offline':
-            return 'Lädt';
-        case 'host_offline':
-            return 'Offline';
-        case null:
-            return '???';
-    }
-}

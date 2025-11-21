@@ -6,7 +6,7 @@
 	import DisplayView from '../components/DisplayView.svelte';
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import PopUp from '../components/PopUp.svelte';
-	import { display_status_to_info, type PopupContent } from '../ts/types';
+	import { type PopupContent } from '../ts/types';
 	import TextInput from '../components/TextInput.svelte';
 	import {
 		add_display,
@@ -21,6 +21,7 @@
 	import { ping_ip } from '../ts/api_handler';
 	import { onMount } from 'svelte';
 	import { on_start } from '../ts/main';
+	import { display_status_to_info } from '../ts/utils';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -222,7 +223,7 @@
 </style>
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
-	{@html SplashScreen}
+	<!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
