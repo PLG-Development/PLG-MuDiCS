@@ -111,7 +111,7 @@ export async function show_blackscreen(ip: string): Promise<void> {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-            html: `<div style="width:100dvw; height:100dvh; background-color:black;"></div>`
+            html: ``
         })
     };
     await request_display(ip, '/showHTML', options);
