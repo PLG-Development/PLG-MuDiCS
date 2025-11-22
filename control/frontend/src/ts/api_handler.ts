@@ -210,7 +210,7 @@ function handle_shell_error(ip: string, shell_response: ShellCommandResponse, sh
             return true;
         }
         console.error(shell_response);
-        notifications.push("error", `Fehler ${shell_response.exitCode} in API-Shell`, `${shell_command}\nFehler: ${shell_response.stderr}`);
+        notifications.push("error", `Fehler ${shell_response.exitCode} in API-Shell`, `${ip}\n${shell_command}\nFehler: ${shell_response.stderr}`);
         return true;
     }
     if (shell_response.stdout.trim() === '') return true;
