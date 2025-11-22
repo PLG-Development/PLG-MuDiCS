@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from "svelte/store";
 import type { Display, FolderElement, TreeElement } from "../types";
 import { displays, get_display_by_id } from "./displays";
-import { selected_display_ids, selected_file_ids } from "./select";
+import { select, selected_display_ids, selected_file_ids } from "./select";
 import { get_file_data, get_file_tree_data } from "../api_handler";
 import { notifications } from "./notification";
 import { CirclePoundSterling } from "lucide-svelte";
@@ -41,6 +41,15 @@ export async function change_file_path(new_path: string) {
             for (const path of changed_paths) {
                 update_folder_elements_recursively(display, path);
             }
+        }
+    }
+}
+
+export async function filter_file_selection_for_current_selected_displays() {
+    for (const selected_file_id of get(selected_file_ids)) {
+        if (!get_file_by_id(selected_file_id, get(all_files), get(current_file_path), true)) {
+            // file not found in selected displays
+            select(selected_file_ids, selected_file_id, false);
         }
     }
 }
@@ -250,9 +259,14 @@ function sort_files(files: FolderElement[]) {
     return files;
 }
 
-export function get_file_from_id(file_id: string, all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string): FolderElement | null {
-    const current_path_elements: Record<string, FolderElement[]> | undefined = all_files[current_file_path];
+export function get_file_by_id(file_id: string, all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string, only_from_selected_displays: boolean = false): FolderElement | null {
+    let current_path_elements: Record<string, FolderElement[]> | undefined = all_files[current_file_path];
     if (!current_path_elements) return null;
+    if (only_from_selected_displays) {
+        current_path_elements = Object.fromEntries(
+            Object.entries(current_path_elements).filter(([key]) => get(selected_file_ids).includes(key))
+        );
+    }
     const all_folder_elements = Object.values(current_path_elements).flat();
     const found = all_folder_elements.find(el => el.id === file_id);
     if (!found) return null;
@@ -263,7 +277,7 @@ export async function run_for_selected_files_on_selected_displays(action: (ip: s
     const files = get(all_files);
     const file_path = get(current_file_path);
     const folder_element_hashs: string[] = get(selected_file_ids)
-        .map((file_id) => get_file_from_id(file_id, files, file_path))
+        .map((file_id) => get_file_by_id(file_id, files, file_path))
         .filter((element) => element !== null)
         .map((folder_element) => folder_element.hash)
         .filter((hash) => hash !== null);

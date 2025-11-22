@@ -11,6 +11,7 @@
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 	import { update_screenshot } from '../ts/stores/displays';
+	import { filter_file_selection_for_current_selected_displays } from '../ts/stores/files';
 
 	let { display, get_display_menu_options, close_pinned_display } = $props<{
 		display: Display;
@@ -22,6 +23,7 @@
 
 	function onclick(e: Event) {
 		select(selected_display_ids, display.id);
+		filter_file_selection_for_current_selected_displays();
 		e.stopPropagation();
 	}
 

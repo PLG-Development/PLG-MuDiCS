@@ -22,7 +22,7 @@
 		get_current_folder_elements,
 		get_display_ids_where_file_is_missing,
 		get_display_ids_where_path_does_not_exist,
-		get_file_from_id,
+		get_file_by_id,
 		get_longest_existing_path_and_needed_parts,
 		run_for_selected_files_on_selected_displays,
 		update_current_folder_on_selected_displays
@@ -145,7 +145,7 @@
 		>
 		<div class="flex flex-col gap-2 overflow-auto h-full min-h-0 grow-0">
 			{#each $selected_file_ids
-				.map((file_id) => get_file_from_id(file_id, $all_files, $current_file_path))
+				.map((file_id) => get_file_by_id(file_id, $all_files, $current_file_path))
 				.filter((element) => element !== null) as file}
 				<FolderElementObject {file} not_interactable />
 			{/each}
