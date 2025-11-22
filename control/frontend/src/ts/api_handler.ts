@@ -113,7 +113,7 @@ export async function create_folders(ip: string, path: string, folder_names: str
 }
 
 export async function delete_files(ip: string, current_path: string, file_names: string[]) {
-    let command: string = 'cd ".${current_path}"';
+    let command: string = `cd ".${current_path}"`;
     for (const file_name of file_names) {
         command += ` && rm -r "${file_name}"`;
     }
