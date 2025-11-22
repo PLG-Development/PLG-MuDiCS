@@ -215,10 +215,15 @@
 					<Button
 						title="Neuen Ordner erstellen (Neuen Ordner mit ausgewählten Objekten erstellen)"
 						className="px-3 flex"
-						click_function={show_new_folder_popup}><FolderPlus /></Button
+						click_function={show_new_folder_popup}
+						disabled={$selected_display_ids.length === 0}><FolderPlus /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
-					<Button title="Datei(en) hochladen" className="px-3 flex"><Upload /></Button>
+					<Button
+						title="Datei(en) hochladen"
+						className="px-3 flex"
+						disabled={$selected_display_ids.length === 0}><Upload /></Button
+					>
 					<Button
 						title="Ausgewählte Datei(en) herunterladen"
 						className="px-3 flex"
@@ -228,6 +233,7 @@
 					<Button
 						title="Aktuellen Ordner / Ausgewählte Datei(en) zwischen Bildschirmen synchronisieren"
 						className="px-3 flex gap-3"
+						disabled={$selected_display_ids.length === 0}
 						><RefreshCcw />
 						<span class="hidden 2xl:flex">Synchronisieren</span>
 					</Button>
@@ -238,9 +244,13 @@
 						className="px-3 flex"
 						disabled={$selected_file_ids.length === 0}><Scissors /></Button
 					>
-					<Button title="Ausgewählte Datei(en) einfügen" className="px-3 flex"
-						><ClipboardPaste /></Button
+					<Button
+						title="Ausgewählte Datei(en) einfügen"
+						className="!p-0 flex relative"
+						disabled={$selected_display_ids.length === 0}
 					>
+						<ClipboardPaste />
+					</Button>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
 						title="Ausgewählte Datei umbenennen"
