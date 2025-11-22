@@ -191,15 +191,21 @@ export function get_current_folder_elements(all_files: Record<string, Record<str
             FileOnDisplay:
             for (const file_on_display of files_on_display_array[key]) {
                 for (const existing_file of files) {
+                    const both_same_folder = file_on_display.type === "inode/directory" && existing_file.type === "inode/directory" && file_on_display.name === existing_file.name;
+                    if (both_same_folder && file_on_display.size !== existing_file.size) {
+                        existing_file.size = -1;
+                    }
                     if (file_on_display.hash === existing_file.hash) {
+                        continue FileOnDisplay;
+                    } else if (both_same_folder) {
+                        existing_file.date_created = null;
                         continue FileOnDisplay;
                     }
                 }
-                files.push(file_on_display);
+                files.push({ ...file_on_display });
             }
         }
     }
-
     return sort_files(files);
 }
 

@@ -74,9 +74,14 @@ done
     for (const response_element of response) {
         // filter hidden files (start with '.' -> './.config')
         if (response_element.name.charAt(2) !== '.') {
+            const truncated = {
+                ...response_element,
+                created: response_element.created.slice(0, 16) // truncated to YYYY-MM-DD hh-mm -> no (milli)seconds
+            };
+
             const folder_element: FolderElement = {
                 id: get_uuid(),
-                hash: JSON.stringify(response_element),
+                hash: JSON.stringify(truncated),
                 name: response_element.name.slice(2), // remove "./"
                 type: response_element.type,
                 date_created: new Date(response_element.created),

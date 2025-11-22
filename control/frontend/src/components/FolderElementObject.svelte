@@ -14,8 +14,12 @@
 		get_shifted_color
 	} from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import { supported_file_type_icon, type FolderElement, type SupportedFileType } from '../ts/types';
-	
+	import {
+		supported_file_type_icon,
+		type FolderElement,
+		type SupportedFileType
+	} from '../ts/types';
+
 	import {
 		is_selected,
 		select,
@@ -56,7 +60,11 @@
 
 	const is_folder = file.type === 'inode/directory';
 
-	function get_created_string(date_object: Date, full_string = false) {
+	function get_created_string(date_object: Date | null, full_string = false) {
+		if (!date_object) {
+			return full_string ? 'Verschiedene Daten auf verschiedenen Bildschirmen' : 'versch.';
+		}
+
 		if (full_string) {
 			return (
 				get_formated_date_string(date_object, true) + ' ' + get_formated_time_string(date_object)
@@ -167,16 +175,14 @@
 		})} rounded-r-lg transition-colors duration-200 gap-4 flex flex-row justify-between cursor-pointer group w-full min-w-0"
 	>
 		<div class="flex flex-row gap-2 min-w-0 w-full">
-			<div
-				class="aspect-square rounded-md flex justify-center items-center"
-			>
+			<div class="aspect-square rounded-md flex justify-center items-center">
 				{#if is_folder}
 					<Folder class="size-full p-2" />
 				{:else if thumbnail_url}
 					<img
 						src={thumbnail_url}
 						alt="file_thumbnail"
-						class="object-contain size-full select-none block p-1"
+						class="object-contain size-full select-none block p-1 rounded-lg"
 						draggable="false"
 					/>
 				{:else if supported_file_type_icon[get_file_type(file)?.display_name || '']}
@@ -187,7 +193,9 @@
 				{/if}
 			</div>
 			<div class="content-center truncate select-none w-full" title={file.name}>
-				{file.name.includes('.') && !is_folder && get_file_type(file) ? file.name.slice(0, file.name.lastIndexOf('.')) : file.name}
+				{file.name.includes('.') && !is_folder && get_file_type(file)
+					? file.name.slice(0, file.name.lastIndexOf('.'))
+					: file.name}
 			</div>
 		</div>
 		<div

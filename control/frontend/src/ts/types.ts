@@ -30,10 +30,10 @@ export const supported_file_type_icon: Record<string, typeof X> = {
 
 export type FolderElement = {
     id?: string;
-    hash: string | null;
+    hash: string;
     name: string;
     type: string;
-    date_created: Date;
+    date_created: Date | null;
     size: number;
 }
 
