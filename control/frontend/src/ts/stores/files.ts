@@ -181,28 +181,6 @@ function get_folder_elements_difference(old_elements: FolderElement[], new_eleme
 
 
 
-
-// export function updates_files_on_display(display_id: string, new_folder_elements: FolderElement[], file_path: string) {
-//     all_files.update((files) => {
-//         if (!files.hasOwnProperty(file_path)) {
-//             files[file_path] = {};
-//         }
-//         files[file_path][display_id] = new_folder_elements;
-//         return files;
-//     });
-// }
-
-// async function get_files_on_all_displays(current_file_path: string) {
-//     for (const display_group of get(displays)) {
-//         for (const display of display_group.data) {
-//             const new_folder_elements = await get_file_data(display.ip, current_file_path);
-//             updates_files_on_display(display.id, new_folder_elements, current_file_path)
-//             console.log(new_folder_elements)
-//         }
-//     }
-// }
-
-
 export function get_current_folder_elements(all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string, selected_display_ids: string[]) {
     if (!all_files.hasOwnProperty(current_file_path)) return [];
 
@@ -213,10 +191,8 @@ export function get_current_folder_elements(all_files: Record<string, Record<str
             FileOnDisplay:
             for (const file_on_display of files_on_display_array[key]) {
                 for (const existing_file of files) {
-                    if (file_on_display.name === existing_file.name) {
-                        if (file_on_display.hash === existing_file.hash) {
-                            continue FileOnDisplay;
-                        }
+                    if (file_on_display.hash === existing_file.hash) {
+                        continue FileOnDisplay;
                     }
                 }
                 files.push(file_on_display);
