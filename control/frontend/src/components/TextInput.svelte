@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { get_shifted_color } from '../ts/stores/ui_behavior';
 	import { onMount } from 'svelte';
+	import { selected_display_ids } from '../ts/stores/select';
 
 	let {
 		current_value = $bindable(),
@@ -44,6 +45,10 @@
 	onMount(() => {
 		validate_input();
 		if (focused_on_start && input_element) input_element.focus();
+
+		selected_display_ids.subscribe(() => {
+			validate_input();
+		});
 	});
 </script>
 
