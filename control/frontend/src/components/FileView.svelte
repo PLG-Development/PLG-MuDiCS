@@ -52,6 +52,21 @@
 		popup_content.open = false;
 	}
 
+	async function create_new_folder() {
+		for (const display_id of $selected_display_ids) {
+			const display = get_display_by_id(display_id, $displays);
+			if (!display) continue;
+			const path_data = get_longest_existing_path_and_needed_parts(
+				$current_file_path,
+				display_id,
+				$all_files
+			);
+			await create_folders(display.ip, path_data.existing, [...path_data.needed, current_name]);
+		}
+		await update_current_folder_on_selected_displays();
+		popup_close_function();
+	}
+
 	const show_new_folder_popup = () => {
 		current_name = '';
 		current_valid = false;
@@ -115,25 +130,12 @@
 				return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
+		enter_mode="submit"
+		enter_function={create_new_folder}
 	/>
 	<div class="flex flex-row justify-end gap-2">
-		<Button
-			className="px-4 font-bold"
-			click_function={async () => {
-				for (const display_id of $selected_display_ids) {
-					const display = get_display_by_id(display_id, $displays);
-					if (!display) continue;
-					const path_data = get_longest_existing_path_and_needed_parts(
-						$current_file_path,
-						display_id,
-						$all_files
-					);
-					await create_folders(display.ip, path_data.existing, [...path_data.needed, current_name]);
-				}
-				await update_current_folder_on_selected_displays();
-				popup_close_function();
-			}}
-			disabled={!current_valid}>Neuen Ordner erstellen</Button
+		<Button className="px-4 font-bold" click_function={create_new_folder} disabled={!current_valid}
+			>Neuen Ordner erstellen</Button
 		>
 	</div>
 {/snippet}

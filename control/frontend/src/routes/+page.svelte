@@ -73,7 +73,7 @@
 		text_inputs_valid = text_inputs_valid_null_values;
 		popup_content = {
 			open: true,
-			snippet: add_new_display_popup,
+			snippet: display_popup,
 			title: 'Neuen Bildschirm hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
@@ -103,7 +103,7 @@
 		}
 		popup_content = {
 			open: true,
-			snippet: add_new_display_popup,
+			snippet: display_popup,
 			snippet_arg: display_id,
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
@@ -138,7 +138,7 @@
 	</div>
 {/snippet}
 
-{#snippet add_new_display_popup(existing_display_id: string | null = null)}
+{#snippet display_popup(existing_display_id: string | null = null)}
 	<TextInput
 		focused_on_start
 		bind:current_value={text_inputs_valid.name.value}
@@ -154,6 +154,7 @@
 			if (is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
+		enter_mode="focus_next"
 	/>
 	<div class="flex flex-row gap-2">
 		<TextInput
@@ -167,6 +168,7 @@
 					: [false, 'Ungültige IP-Adresse'];
 			}}
 			className="grow"
+			enter_mode="focus_next"
 		/>
 		<div class="flex items-end shrink-0">
 			<Button
@@ -196,6 +198,10 @@
 					? [true, 'Gültige MAC-Adresse']
 					: [false, 'Ungültige MAC-Adresse'];
 		}}
+		enter_mode="submit"
+		enter_function={() => {
+			finalize_add_edit_display(existing_display_id);
+		}}
 	/>
 	<div class="flex flex-row gap-2 justify-end pt-2">
 		{#if !!existing_display_id}
@@ -217,7 +223,6 @@
 		</Button>
 	</div>
 {/snippet}
-
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
 	<!-- {@html SplashScreen} -->
@@ -262,4 +267,3 @@
 		snippet_container_class="min-w-115"
 	/>
 </main>
-
