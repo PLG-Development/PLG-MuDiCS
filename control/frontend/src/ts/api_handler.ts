@@ -43,8 +43,7 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
         size: string;
         created: string;
     }
-
-    const raw_response = await run_shell_command(ip, `cd ".${path}" && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
+    const command = `cd ".${path}" && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
         typ=$(file -b --mime-type -- "$f")
         size=$(stat -c '%s' -- "$f")
         created=$(stat -c '%w' -- "$f")
@@ -53,11 +52,12 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
             '{name:$name, type:$type, size:($size|tostring), created:$created}' | tr -d '\n'
         echo
         done
-    `);
+    `
+    const raw_response = await run_shell_command(ip, command);
     if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
     if (json_response.exitCode === 0 && json_response.stdout.trim() === '') return [];
-    if (is_cd_directory_error(ip, json_response)) return null;
+    if (handle_shell_error(ip, json_response, command, true)) return null;
 
     const response: FileInfo[] = json_response.stdout.trim()
         .split("\n")
@@ -89,11 +89,12 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
 }
 
 export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[] | null> {
-    const raw_response = await run_shell_command(ip, `cd ".${path}" && tree -Js`);
+    const command = `cd ".${path}" && tree -Js`
+    const raw_response = await run_shell_command(ip, command);
 
     if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
-    if (is_cd_directory_error(ip, json_response)) return null;
+    if (handle_shell_error(ip, json_response, command, true)) return null;
 
     return (JSON.parse(json_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
 }
@@ -105,16 +106,22 @@ export async function create_folders(ip: string, path: string, folder_names: str
         command += `&& mkdir "${part}" && cd "${part}/"`;
     }
 
-    await run_shell_command(ip, command);
+    const raw_response = await run_shell_command(ip, command);
+    if (!raw_response.ok || !raw_response.json) return;
+    const json_response = raw_response.json as ShellCommandResponse;
+    handle_shell_error(ip, json_response, command, true);
 }
 
 export async function delete_files(ip: string, current_path: string, file_names: string[]) {
-    let del_string: string = '';
+    let command: string = 'cd ".${current_path}"';
     for (const file_name of file_names) {
-        del_string += `&& rm -r "${file_name}"`;
+        command += ` && rm -r "${file_name}"`;
     }
-    await run_shell_command(ip, `cd ".${current_path}" ${del_string}`);
-
+    await run_shell_command(ip, command);
+    const raw_response = await run_shell_command(ip, command);
+    if (!raw_response.ok || !raw_response.json) return;
+    const json_response = raw_response.json as ShellCommandResponse;
+    handle_shell_error(ip, json_response, command, true);
 }
 
 
@@ -196,14 +203,14 @@ async function request(url: string, options: { method: string, headers?: Record<
 
 
 
-function is_cd_directory_error(ip: string, shell_response: ShellCommandResponse): boolean {
+function handle_shell_error(ip: string, shell_response: ShellCommandResponse, shell_command: string, command_includs_cd: boolean): boolean {
     if (shell_response.exitCode !== 0) {
-        if (shell_response.stderr && /bash: line \d+: cd: .+: No such file or directory/.test(shell_response.stderr)) {
+        if (command_includs_cd && shell_response.stderr && /bash: line \d+: cd: .+: No such file or directory/.test(shell_response.stderr)) {
             console.log("current file_path does not exist on display:", ip);
             return true;
         }
         console.error(shell_response);
-        notifications.push("error", "Fehler in ShellCommand", `Fehlercode: ${shell_response.exitCode}\nFehler: ${shell_response.stderr ?? ''}`)
+        notifications.push("error", `Fehler ${shell_response.exitCode} in API-Shell`, `${shell_command}\nFehler: ${shell_response.stderr}`);
         return true;
     }
     if (shell_response.stdout.trim() === '') return true;
