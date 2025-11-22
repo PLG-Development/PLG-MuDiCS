@@ -1,6 +1,4 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
-
 
 /* Adding more color steps */
 @theme {
@@ -13,8 +11,6 @@
     --color-stone-750: oklch(0.321 0.0085 50.928);
     --color-stone-850: oklch(0.242 0.0065 45.171);
 }
-
-
 
 
 
