@@ -262,7 +262,7 @@
 			<div class="flex flex-col gap-2 p-2 min-h-0 max-w-full">
 				{#if $selected_display_ids.length === 0}
 					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
-						Es wurden keine Bildschirme ausgewählt.
+						Es sind keine Bildschirme ausgewählt.
 					</span>
 				{:else}
 					{#each get_current_folder_elements($all_files, $current_file_path, $selected_display_ids) as folder_element (folder_element.id)}
