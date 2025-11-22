@@ -23,6 +23,7 @@
 	import type { PopupContent } from '../ts/types';
 	import TextInput from './TextInput.svelte';
 	import { is_valid_name } from '../ts/utils';
+	import HighlightedText from './HighlightedText.svelte';
 
 	let current_name: string = '';
 	let current_valid: boolean = false;
@@ -169,12 +170,14 @@
 						</section>
 					{/each}
 					{#if get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).length === 0}
-						<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
-							Es sind keine Dateien auf {$selected_display_ids.length === 1
+						<span class="text-stone-450 px-10 py-6 leading-relaxed text-center max-w-full">
+							Es existieren keine Dateien auf {$selected_display_ids.length === 1
 								? 'dem ausgewähltem Bildchirm'
-								: 'den ausgewählten Bildschirmen'} vorhanden. Klicke auf <Upload
-								class="inline pb-1"
-							/> um Datei(en) hochzuladen.
+								: 'den ausgewählten Bildschirmen'} im aktuellen Ordner. Klicke auf <HighlightedText
+								bg="bg-stone-700"
+								fg="text-stone-400"
+								className="!p-1"><Upload class="inline pb-1" /></HighlightedText
+							> um Datei(en) hochzuladen.
 						</span>
 					{/if}
 				{/if}

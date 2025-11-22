@@ -22,6 +22,7 @@
 	import { onMount } from 'svelte';
 	import { on_start } from '../ts/main';
 	import { display_status_to_info } from '../ts/utils';
+	import HighlightedText from '../components/HighlightedText.svelte';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -118,9 +119,10 @@
 
 {#snippet remove_display_popup(display_id: string)}
 	<div class="max-w-prose px-2">
-		Soll der Bildschirm "{get_display_by_id(display_id, $displays)?.name || '?'}" wirklich gelöscht
-		werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation auf dem
-		Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
+		Soll der Bildschirm <HighlightedText
+			>{get_display_by_id(display_id, $displays)?.name || '?'}</HighlightedText
+		> wirklich gelöscht werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation
+		auf dem Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
 	</div>
 	<div class="flex flex-row justify-end gap-2">
 		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
@@ -216,11 +218,6 @@
 	</div>
 {/snippet}
 
-<style>
-	:root {
-		--splash-fade-out-delay: 4s !important;
-	}
-</style>
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
 	<!-- {@html SplashScreen} -->
@@ -258,5 +255,11 @@
 			<FileView />
 		</div>
 	</div>
-	<PopUp content={popup_content} close_function={popup_close_function} className="bg-white/10" snippet_container_class="min-w-115" />
+	<PopUp
+		content={popup_content}
+		close_function={popup_close_function}
+		className="bg-white/10"
+		snippet_container_class="min-w-115"
+	/>
 </main>
+
