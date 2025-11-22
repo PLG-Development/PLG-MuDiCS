@@ -32,6 +32,7 @@ export async function edit_display_data(display_id: string, ip: string, mac: str
 }
 
 export function remove_display(display_id: string) {
+    select(selected_display_ids, display_id, false);
     displays.update((displays: DisplayGroup[]) => {
         displays = displays.map(display_group => ({
             ...display_group,
