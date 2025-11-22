@@ -298,9 +298,9 @@ export async function run_for_selected_files_on_selected_displays(action: (ip: s
 }
 
 export function get_longest_existing_path_and_needed_parts(path: string, display_id: string, all_files: Record<string, Record<string, FolderElement[]>>): { existing: string; needed: string[] } {
-    const path_parts = path.slice(0, path.length - 1).split('/');
-    for (let i = path_parts.length; i > 1; i--) {
-        const current_path = [...path_parts].splice(0, i).join('/') + '/';;
+    const path_parts = path.slice(1, path.length - 1).split('/').filter(e => e.length !== 0); // remove front and back / and split after that, then remove empty strings
+    for (let i = path_parts.length; i > 0; i--) {
+        const current_path = '/' + [...path_parts].splice(0, i).join('/') + '/';;
         if (all_files.hasOwnProperty(current_path)) {
             if (all_files[current_path].hasOwnProperty(display_id)) {
                 return { existing: current_path, needed: [...path_parts].splice(i) };

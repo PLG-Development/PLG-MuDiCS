@@ -103,7 +103,7 @@ export async function create_folders(ip: string, path: string, folder_names: str
     let command = `cd ".${path}"`;
 
     for (const part of folder_names) {
-        command += `&& mkdir "${part}" && cd "${part}/"`;
+        command += ` && mkdir "${part}" && cd "${part}/"`;
     }
 
     const raw_response = await run_shell_command(ip, command);
