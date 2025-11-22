@@ -46,7 +46,10 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { liveQuery } from 'dexie';
 
-	let { file } = $props<{ file: FolderElement }>();
+	let { file, not_interactable = false } = $props<{
+		file: FolderElement;
+		not_interactable?: boolean;
+	}>();
 
 	let thumbnail_url: string | null = $state(null);
 	// Update thumbnail_url automatically if data is available
@@ -88,18 +91,21 @@
 	}
 
 	function get_grayed_out_text_color_strings(is_selected: boolean): string {
+		if (not_interactable) return 'text-stone-400';
 		const color = is_selected ? 'text-stone-600' : 'text-stone-400';
 		const factor = is_selected ? -1 : 1;
 		return `${color} group-hover:${get_shifted_color(color, factor * 100)} group-active:${get_shifted_color(color, factor * 150)}`;
 	}
 
 	function get_grayed_out_border_color_strings(is_selected: boolean): string {
+		if (not_interactable) return 'border-stone-550';
 		const color = is_selected ? 'border-stone-450' : 'border-stone-550';
 		const factor = is_selected ? 1 : 1;
 		return `${color} group-hover:${get_shifted_color(color, factor * 100)} group-active:${get_shifted_color(color, factor * 150)}`;
 	}
 
 	function onclick(e: Event) {
+		if (not_interactable) return;
 		select(selected_file_ids, file.id);
 		e.stopPropagation();
 	}
@@ -115,51 +121,53 @@
 </script>
 
 <div class="flex flex-row h-{$current_height.file} w-full">
-	<div class="h-{$current_height.file} aspect-square max-w-15 flex">
-		<Button
-			disabled={!is_folder && get_file_type(file) === null}
-			title={!is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
-			className="flex rounded-l-lg rounded-r-none {is_folder
-				? 'text-stone-450'
-				: 'text-stone-800'} w-full"
-			div_class="w-full"
-			bg={get_selectable_color_classes(
-				!is_folder && get_file_type(file) !== null,
-				{
-					bg: true
-				},
-				-50
-			)}
-			hover_bg={get_selectable_color_classes(
-				!is_folder,
-				{
-					bg: true
-				},
-				50
-			)}
-			active_bg={get_selectable_color_classes(
-				!is_folder,
-				{
-					bg: true
-				},
-				100
-			)}
-			click_function={(e) => {
-				open();
-				e.stopPropagation();
-			}}
-		>
-			{#if is_folder}
-				<ArrowRight class="size-full" strokeWidth="3" />
-			{:else if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[0].length !== 0}
-				<RefreshPlay className="size-full" />
-			{:else if get_file_type(file) !== null}
-				<Play class="size-full" strokeWidth="3" />
-			{:else}
-				<Ban class="size-full" strokeWidth="3" />
-			{/if}
-		</Button>
-	</div>
+	{#if !not_interactable}
+		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
+			<Button
+				disabled={!is_folder && get_file_type(file) === null}
+				title={!is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
+				className="flex rounded-l-lg rounded-r-none {is_folder
+					? 'text-stone-450'
+					: 'text-stone-800'} w-full"
+				div_class="w-full"
+				bg={get_selectable_color_classes(
+					!is_folder && get_file_type(file) !== null,
+					{
+						bg: true
+					},
+					-50
+				)}
+				hover_bg={get_selectable_color_classes(
+					!is_folder,
+					{
+						bg: true
+					},
+					50
+				)}
+				active_bg={get_selectable_color_classes(
+					!is_folder,
+					{
+						bg: true
+					},
+					100
+				)}
+				click_function={(e) => {
+					open();
+					e.stopPropagation();
+				}}
+			>
+				{#if is_folder}
+					<ArrowRight class="size-full" strokeWidth="3" />
+				{:else if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[0].length !== 0}
+					<RefreshPlay className="size-full" />
+				{:else if get_file_type(file) !== null}
+					<Play class="size-full" strokeWidth="3" />
+				{:else}
+					<Ban class="size-full" strokeWidth="3" />
+				{/if}
+			</Button>
+		</div>
+	{/if}
 	<div
 		role="button"
 		tabindex="0"
@@ -167,12 +175,17 @@
 			if (e.key === 'Enter' || e.key === ' ') onclick(e);
 		}}
 		{onclick}
-		class="{get_selectable_color_classes(is_selected(file.id, $selected_file_ids), {
-			bg: true,
-			hover: true,
-			active: true,
-			text: true
-		})} rounded-r-lg transition-colors duration-200 gap-4 flex flex-row justify-between cursor-pointer group w-full min-w-0"
+		class="{get_selectable_color_classes(
+			!not_interactable && is_selected(file.id, $selected_file_ids),
+			{
+				bg: true,
+				hover: !not_interactable,
+				active: !not_interactable,
+				text: true
+			}
+		)} {not_interactable
+			? 'rounded-lg'
+			: 'rounded-r-lg cursor-pointer'} transition-colors duration-200 gap-4 flex flex-row justify-between group w-full min-w-0"
 	>
 		<div class="flex flex-row gap-2 min-w-0 w-full">
 			<div class="aspect-square rounded-md flex justify-center items-center">
@@ -203,7 +216,7 @@
 				is_selected(file.id, $selected_file_ids)
 			)} duration-200 transition-colors"
 		>
-			{#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
+			<!-- {#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
 				<Button
 					className="h-8 aspect-square transition-colors duration-200 !p-1.5 text-stone-100"
 					bg="bg-red-500"
@@ -229,7 +242,7 @@
 				>
 					<RefreshCcwDot class="size-full" />
 				</Button>
-			{/if}
+			{/if} -->
 			<div
 				class="w-14 content-center text-center select-none text-xs whitespace-nowrap"
 				title={get_created_string(file.date_created, true)}

@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from "svelte/store";
 import type { Display, FolderElement, TreeElement } from "../types";
-import { displays } from "./displays";
-import { selected_file_ids } from "./select";
+import { displays, get_display_by_id } from "./displays";
+import { selected_display_ids, selected_file_ids } from "./select";
 import { get_file_data, get_file_tree_data } from "../api_handler";
 import { notifications } from "./notification";
 import { CirclePoundSterling } from "lucide-svelte";
@@ -45,8 +45,17 @@ export async function change_file_path(new_path: string) {
     }
 }
 
+export async function update_current_folder_on_selected_displays() {
+    const current_path = get(current_file_path);
+    for (const display_id of get(selected_display_ids)) {
+        const display = get_display_by_id(display_id, get(displays));
+        if (!display) continue;
+        update_folder_elements_recursively(display, current_path);
+    }
+}
+
 export function get_display_ids_where_file_is_missing(path: string, file: FolderElement, selected_display_ids: string[], all_files: Record<string, Record<string, FolderElement[]>>): string[][] {
-    if (!all_files.hasOwnProperty(path)) return [];
+    if (!all_files.hasOwnProperty(path)) return [selected_display_ids, []];
     const missing: string[] = [];
     const colliding: string[] = [];
     Display:
@@ -66,6 +75,17 @@ export function get_display_ids_where_file_is_missing(path: string, file: Folder
         missing.push(selected_display_id);
     }
     return [missing, colliding];
+}
+
+export function get_display_ids_where_path_does_not_exist(path: string, selected_display_ids: string[], all_files: Record<string, Record<string, FolderElement[]>>): string[] {
+    if (!all_files.hasOwnProperty(path)) return selected_display_ids;
+    const out: string[] = [];
+    for (const selected_display_id of selected_display_ids) {
+        if (!all_files[path].hasOwnProperty(selected_display_id)) {
+            out.push(selected_display_id);
+        }
+    }
+    return out;
 }
 
 async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
@@ -103,6 +123,7 @@ function get_recursive_changed_directory_paths(display: Display, current_file_pa
 
 export async function update_folder_elements_recursively(display: Display, file_path: string = '/'): Promise<number> {
     const new_folder_elements = await get_file_data(display.ip, file_path);
+    if (new_folder_elements === null) return 0;
     all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
         if (!files.hasOwnProperty(file_path)) {
             files[file_path] = {};
@@ -223,8 +244,54 @@ function sort_files(files: FolderElement[]) {
         if (nameCompare !== 0) return nameCompare;
 
         // Wenn name gleich, absteigend nach date_created
+        if (!b.date_created || !a.date_created) return -1;
         return b.date_created.getTime() - a.date_created.getTime();
     });
     return files;
 }
 
+export function get_file_from_id(file_id: string, all_files: Record<string, Record<string, FolderElement[]>>, current_file_path: string): FolderElement | null {
+    const current_path_elements: Record<string, FolderElement[]> | undefined = all_files[current_file_path];
+    if (!current_path_elements) return null;
+    const all_folder_elements = Object.values(current_path_elements).flat();
+    const found = all_folder_elements.find(el => el.id === file_id);
+    if (!found) return null;
+    return found
+}
+
+export async function run_for_selected_files_on_selected_displays(action: (ip: string, file_names: string[]) => Promise<void>): Promise<void> {
+    const files = get(all_files);
+    const file_path = get(current_file_path);
+    const folder_element_hashs: string[] = get(selected_file_ids)
+        .map((file_id) => get_file_from_id(file_id, files, file_path))
+        .filter((element) => element !== null)
+        .map((folder_element) => folder_element.hash)
+        .filter((hash) => hash !== null);
+
+    for (const display_id of get(selected_display_ids)) {
+        if (!files[file_path].hasOwnProperty(display_id)) continue;
+        const files_on_display = files[file_path][display_id];
+
+        const selected_file_names_on_display: string[] = files_on_display.filter((e) => e.hash && folder_element_hashs.includes(e.hash)).map((folder_element) => folder_element.name);
+        if (selected_file_names_on_display.length === 0) continue;
+
+        const display = get_display_by_id(display_id, get(displays));
+        if (!display) continue
+
+        await action(display.ip, selected_file_names_on_display);
+    }
+
+}
+
+export function get_longest_existing_path_and_needed_parts(path: string, display_id: string, all_files: Record<string, Record<string, FolderElement[]>>): { existing: string; needed: string[] } {
+    const path_parts = path.slice(0, path.length - 1).split('/');
+    for (let i = path_parts.length; i > 1; i--) {
+        const current_path = [...path_parts].splice(0, i).join('/') + '/';;
+        if (all_files.hasOwnProperty(current_path)) {
+            if (all_files[current_path].hasOwnProperty(display_id)) {
+                return { existing: current_path, needed: [...path_parts].splice(i) };
+            }
+        }
+    }
+    return { existing: '/', needed: path_parts };
+}

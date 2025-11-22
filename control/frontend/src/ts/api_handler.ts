@@ -36,7 +36,7 @@ export async function show_html(ip: string, html: string) {
     await request_display(ip, '/showHTML', options);
 }
 
-export async function get_file_data(ip: string, path: string): Promise<FolderElement[]> {
+export async function get_file_data(ip: string, path: string): Promise<FolderElement[] | null> {
     interface FileInfo {
         name: string;
         type: string;
@@ -44,25 +44,20 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
         created: string;
     }
 
-    const options = {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-            command: `cd ".${path}" && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
-  typ=$(file -b --mime-type -- "$f")
-  size=$(stat -c '%s' -- "$f")
-  created=$(stat -c '%w' -- "$f")
-  [ "$created" = "-" ] && created=$(stat -c '%y' -- "$f")
-  jq -n --arg name "$f" --arg type "$typ" --arg size "$size" --arg created "$created" \
-    '{name:$name, type:$type, size:($size|tostring), created:$created}' | tr -d '\n'
-  echo
-done
-` })
-    };
-    const raw_response = await request_display(ip, '/shellCommand', options);
-    if (!raw_response.ok || !raw_response.json) return [];
+    const raw_response = await run_shell_command(ip, `cd ".${path}" && find . -maxdepth 1 -mindepth 1 -print0 | while IFS= read -r -d '' f; do
+        typ=$(file -b --mime-type -- "$f")
+        size=$(stat -c '%s' -- "$f")
+        created=$(stat -c '%w' -- "$f")
+        [ "$created" = "-" ] && created=$(stat -c '%y' -- "$f")
+        jq -n --arg name "$f" --arg type "$typ" --arg size "$size" --arg created "$created" \
+            '{name:$name, type:$type, size:($size|tostring), created:$created}' | tr -d '\n'
+        echo
+        done
+    `);
+    if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
-    if (is_cd_directory_error(ip, json_response)) return [];
+    if (json_response.exitCode === 0 && json_response.stdout.trim() === '') return [];
+    if (is_cd_directory_error(ip, json_response)) return null;
 
     const response: FileInfo[] = json_response.stdout.trim()
         .split("\n")
@@ -94,20 +89,32 @@ done
 }
 
 export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[] | null> {
-    const options = {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-            command: `cd ".${path}" && tree -Js`
-        })
-    };
-    const raw_response = await request_display(ip, '/shellCommand', options);
+    const raw_response = await run_shell_command(ip, `cd ".${path}" && tree -Js`);
 
     if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
     if (is_cd_directory_error(ip, json_response)) return null;
 
     return (JSON.parse(json_response.stdout.trim()) as [TreeElement, any])[0].contents || null;
+}
+
+export async function create_folders(ip: string, path: string, folder_names: string[]): Promise<void> {
+    let command = `cd ".${path}"`;
+
+    for (const part of folder_names) {
+        command += `&& mkdir "${part}" && cd "${part}/"`;
+    }
+
+    await run_shell_command(ip, command);
+}
+
+export async function delete_files(ip: string, current_path: string, file_names: string[]) {
+    let del_string: string = '';
+    for (const file_name of file_names) {
+        del_string += `&& rm -r "${file_name}"`;
+    }
+    await run_shell_command(ip, `cd ".${current_path}" ${del_string}`);
+
 }
 
 
@@ -122,19 +129,17 @@ export async function show_blackscreen(ip: string): Promise<void> {
     await request_display(ip, '/showHTML', options);
 }
 
-
-export async function ping_ip(ip: string): Promise<DisplayStatus> {
-    const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
-    if (!raw_response.ok || !raw_response.json) return null;
-    return raw_response.json.status ? to_display_status(raw_response.json.status) : null;
-}
-
 export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob | null> {
     const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' }, [415]);
     if (!raw_response.ok || !raw_response.blob) return null
     return raw_response.blob;
 }
 
+export async function ping_ip(ip: string): Promise<DisplayStatus> {
+    const raw_response = await request_control(`/ping?ip=${ip}`, { method: 'GET' });
+    if (!raw_response.ok || !raw_response.json) return null;
+    return raw_response.json.status ? to_display_status(raw_response.json.status) : null;
+}
 
 
 
@@ -203,4 +208,15 @@ function is_cd_directory_error(ip: string, shell_response: ShellCommandResponse)
     }
     if (shell_response.stdout.trim() === '') return true;
     return false;
+}
+
+async function run_shell_command(ip: string, command: string): Promise<RequestResponse> {
+    const options = {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            command: command
+        })
+    };
+    return await request_display(ip, '/shellCommand', options);
 }
