@@ -55,6 +55,9 @@ export async function filter_file_selection_for_current_selected_displays() {
 }
 
 export async function update_current_folder_on_selected_displays() {
+    selected_file_ids.update(() => {
+        return [];
+    });
     const current_path = get(current_file_path);
     for (const display_id of get(selected_display_ids)) {
         const display = get_display_by_id(display_id, get(displays));
