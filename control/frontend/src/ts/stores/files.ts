@@ -276,9 +276,10 @@ export function get_file_by_id(file_id: string, all_files: Record<string, Record
 export async function run_for_selected_files_on_selected_displays(action: (ip: string, file_names: string[]) => Promise<void>): Promise<void> {
     const files = get(all_files);
     const file_path = get(current_file_path);
-    const folder_element_hashs: string[] = get(selected_file_ids)
+    const folder_elements: FolderElement[] = get(selected_file_ids)
         .map((file_id) => get_file_by_id(file_id, files, file_path))
-        .filter((element) => element !== null)
+        .filter((element) => element !== null);
+    const folder_element_hashs = folder_elements
         .map((folder_element) => folder_element.hash)
         .filter((hash) => hash !== null);
 
@@ -286,7 +287,9 @@ export async function run_for_selected_files_on_selected_displays(action: (ip: s
         if (!files[file_path].hasOwnProperty(display_id)) continue;
         const files_on_display = files[file_path][display_id];
 
-        const selected_file_names_on_display: string[] = files_on_display.filter((e) => e.hash && folder_element_hashs.includes(e.hash)).map((folder_element) => folder_element.name);
+        const selected_file_names_on_display: string[] = files_on_display
+            .filter((e) => (e.hash && folder_element_hashs.includes(e.hash)) || (e.type === 'inode/directory' && folder_elements.some(e2 => e2.name === e.name && e2.type === 'inode/directory')))
+            .map((folder_element) => folder_element.name);
         if (selected_file_names_on_display.length === 0) continue;
 
         const display = get_display_by_id(display_id, get(displays));
