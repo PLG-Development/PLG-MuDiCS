@@ -53,7 +53,7 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
         echo
         done
     `
-    const raw_response = await run_shell_command(ip, command);
+    const raw_response = await run_shell_command(ip, command, true);
     if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
     if (json_response.exitCode === 0 && json_response.stdout.trim() === '') return [];
@@ -90,7 +90,7 @@ export async function get_file_data(ip: string, path: string): Promise<FolderEle
 
 export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[] | null> {
     const command = `cd ".${path}" && tree -Js`
-    const raw_response = await run_shell_command(ip, command);
+    const raw_response = await run_shell_command(ip, command, true);
 
     if (!raw_response.ok || !raw_response.json) return null;
     const json_response = raw_response.json as ShellCommandResponse;
@@ -112,7 +112,7 @@ export async function create_folders(ip: string, path: string, folder_names: str
     handle_shell_error(ip, json_response, command, true);
 }
 
-export async function delete_files(ip: string, current_path: string, file_names: string[]) {
+export async function delete_files(ip: string, current_path: string, file_names: string[]): Promise<void> {
     let command: string = `cd ".${current_path}"`;
     for (const file_name of file_names) {
         command += ` && rm -r "${file_name}"`;
@@ -136,7 +136,7 @@ export async function show_blackscreen(ip: string): Promise<void> {
 }
 
 export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob | null> {
-    const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' }, [415]);
+    const raw_response = await request_display(ip, `/file/preview${path_to_file}`, { method: 'GET' }, true, [415]);
     if (!raw_response.ok || !raw_response.blob) return null
     return raw_response.blob;
 }
@@ -149,9 +149,9 @@ export async function ping_ip(ip: string): Promise<DisplayStatus> {
 
 
 
-async function request_display(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
+async function request_display(ip: string, api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }, log_in_debug: boolean = false, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
     const url = `http://${ip}:1323/api${api_route}`;
-    return await request(url, options, supress_error_handling_http_codes);
+    return await request(url, options, log_in_debug, supress_error_handling_http_codes);
 }
 
 async function request_control(api_route: string, options: { method: string, headers?: Record<string, string>, body?: any }): Promise<RequestResponse> {
@@ -160,10 +160,14 @@ async function request_control(api_route: string, options: { method: string, hea
 }
 
 
-async function request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
+async function request(url: string, options: { method: string, headers?: Record<string, string>, body?: any }, log_in_debug: boolean = false, supress_error_handling_http_codes: number[] = []): Promise<RequestResponse> {
     try {
         const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
-        console.log(url + cache_buster, options.body ?? null);
+        if (log_in_debug) {
+            console.debug(url + cache_buster, options.body);
+        } else {
+            console.log(url + cache_buster, options.body);
+        }
         const response = await fetch(url + cache_buster, options);
         if (response.ok || supress_error_handling_http_codes.includes(response.status)) {
             const contentType = response.headers.get("content-type") || "";
@@ -175,7 +179,11 @@ async function request(url: string, options: { method: string, headers?: Record<
                 const json: Object = await response.json();
                 request_response = { ok: response.ok, http_code: response.status, json: json };
             }
-            console.log(request_response);
+            if (log_in_debug) {
+                console.debug(request_response);
+            } else {
+                console.log(request_response);
+            }
             return request_response;
         }
 
@@ -216,7 +224,7 @@ function handle_shell_error(ip: string, shell_response: ShellCommandResponse, sh
     return false;
 }
 
-async function run_shell_command(ip: string, command: string): Promise<RequestResponse> {
+async function run_shell_command(ip: string, command: string, log_in_debug: boolean = false): Promise<RequestResponse> {
     const options = {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -224,5 +232,5 @@ async function run_shell_command(ip: string, command: string): Promise<RequestRe
             command: command
         })
     };
-    return await request_display(ip, '/shellCommand', options);
+    return await request_display(ip, '/shellCommand', options, log_in_debug);
 }
