@@ -99,18 +99,18 @@ export function get_display_ids_where_path_does_not_exist(path: string, selected
 
 async function get_changed_directory_paths(display: Display, file_path: string): Promise<string[] | null> {
     const current_folder = await get_file_tree_data(display.ip, file_path);
-    if (current_folder === null) return [file_path];
     const directory_strings = get_recursive_changed_directory_paths(display, file_path, current_folder, get(all_files));
     if (directory_strings.size === 0) return null;
     const directory_strings_array = [...directory_strings];
     return directory_strings_array.filter((e) => (!directory_strings_array.some((f) => (f !== e && f.startsWith(e)))));
 }
 
-function get_recursive_changed_directory_paths(display: Display, current_file_path: string, current_folder_elements: TreeElement[], files: Record<string, Record<string, FolderElement[]>>): Set<string> {
-    if (!files.hasOwnProperty(current_file_path) || !files[current_file_path].hasOwnProperty(display.id)) return new Set([current_file_path]);
+function get_recursive_changed_directory_paths(display: Display, current_file_path: string, current_folder_elements: TreeElement[] | null, files: Record<string, Record<string, FolderElement[]>>): Set<string> {
     const files_folder: FolderElement[] = files[current_file_path][display.id];
-    if (current_folder_elements.length !== files_folder.length) {
-        return new Set([current_file_path]);
+    if ((!files_folder || files_folder.length === 0) && (!current_folder_elements || current_folder_elements.length === 0)) {
+        return new Set([]); // no data -> no update needed
+    } else if (!files_folder || !current_folder_elements || current_folder_elements.length !== files_folder.length) {
+        return new Set([current_file_path]); // existing data does not match new data -> update
     }
 
     let has_changed: Set<string> = new Set();
