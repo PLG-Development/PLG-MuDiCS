@@ -5,7 +5,12 @@
 	import type { PopupContent } from '../ts/types';
 	import { fade } from 'svelte/transition';
 
-	let { content, close_function, className = '', snippet_container_class = '' } = $props<{
+	let {
+		content,
+		close_function,
+		className = '',
+		snippet_container_class = ''
+	} = $props<{
 		content: PopupContent;
 		close_function: () => void;
 		className?: string;
@@ -40,29 +45,33 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="bg-stone-800 rounded-2xl min-w-[30%] max-w-[95%] max-h-[90%] flex flex-col shadow-2xl/60 overflow-hidden"
+			class="bg-stone-800 rounded-2xl min-w-[30%] max-w-[90%] max-h-[85%] flex flex-col shadow-2xl/60 overflow-hidden {content.window_class ??
+				''}"
 			onclick={(e) => e.stopPropagation()}
 		>
-			<div
-				class="font-bold bg-stone-700 p-1.5 flex flex-row justify-between gap-8 w-full"
-			>
-				<div class="flex flex-row flex-1 gap-3 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 flex-shrink-0 text-lg {content.title_class ?? ''}">
-					{#if content.title_icon}
-						{@const Icon = content.title_icon}
-						<Icon strokeWidth="2" class="flex-shrink-0" />
-					{/if}
-					<div class="flex-shrink-0">
-						{content.title}
+			{#if content.title}
+				<div class="font-bold bg-stone-700 p-1.5 flex flex-row justify-between gap-8 w-full">
+					<div
+						class="flex flex-row flex-1 gap-3 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 flex-shrink-0 text-lg {content.title_class ??
+							''}"
+					>
+						{#if content.title_icon}
+							{@const Icon = content.title_icon}
+							<Icon strokeWidth="2" class="flex-shrink-0" />
+						{/if}
+						<div class="flex-shrink-0">
+							{content.title}
+						</div>
+					</div>
+					<div class="flex aspect-square flex-shrink-0">
+						{#if content.closable}
+							<Button className="aspect-square !p-1.5" click_function={try_to_close}>
+								<X />
+							</Button>
+						{/if}
 					</div>
 				</div>
-				<div class="flex aspect-square flex-shrink-0">
-					{#if content.closable}
-						<Button className="aspect-square !p-1.5" click_function={try_to_close}>
-							<X />
-						</Button>
-					{/if}
-				</div>
-			</div>
+			{/if}
 			<div class="p-2 min-h-0 overflow-auto flex flex-col gap-2 {snippet_container_class}">
 				{@render content.snippet(content.snippet_arg)}
 			</div>

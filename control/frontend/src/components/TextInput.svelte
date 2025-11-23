@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { get_shifted_color } from '../ts/stores/ui_behavior';
 	import { onMount } from 'svelte';
+	import { selected_display_ids } from '../ts/stores/select';
 
 	let {
 		current_value = $bindable(),
@@ -11,7 +12,9 @@
 		title,
 		placeholder = '',
 		is_valid_function = null,
-		focused_on_start = false
+		focused_on_start = false,
+		enter_mode = 'none',
+		enter_function = null
 	} = $props<{
 		current_value: string;
 		current_valid: boolean;
@@ -21,6 +24,8 @@
 		placeholder?: string;
 		is_valid_function?: ((input: string) => [boolean, string]) | null;
 		focused_on_start?: boolean;
+		enter_mode?: 'none' | 'focus_next' | 'submit';
+		enter_function?: (() => void) | null;
 	}>();
 
 	let focus_bg = get_shifted_color(bg, 100);
@@ -41,9 +46,37 @@
 			return 'inset-ring-2 inset-ring-red-400';
 		}
 	}
+
+	function focus_next_element() {
+		const focusable = Array.from(document.querySelectorAll<HTMLElement>('input')).filter(
+			(el) => !el.hasAttribute('disabled')
+		);
+
+		const index = focusable.indexOf(input_element);
+		if (index !== -1 && index < focusable.length - 1) {
+			focusable[index + 1].focus();
+		}
+	}
+
+	function handle_keydown(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+
+		if (enter_mode === 'focus_next') {
+			event.preventDefault();
+			focus_next_element();
+		} else if (enter_mode === 'submit' && enter_function) {
+			event.preventDefault();
+			enter_function();
+		}
+	}
+
 	onMount(() => {
 		validate_input();
 		if (focused_on_start && input_element) input_element.focus();
+
+		selected_display_ids.subscribe(() => {
+			validate_input();
+		});
 	});
 </script>
 
@@ -65,6 +98,7 @@
 		bind:this={input_element}
 		bind:value={current_value}
 		bind:focused
+		onkeydown={handle_keydown}
 		type="text"
 		oninput={validate_input}
 		class="{bg} focus:{focus_bg} outline-none py-2 px-3 rounded-xl transition-all duration-100 {get_highlighting_string()}"

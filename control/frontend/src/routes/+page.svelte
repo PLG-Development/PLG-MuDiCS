@@ -6,7 +6,7 @@
 	import DisplayView from '../components/DisplayView.svelte';
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import PopUp from '../components/PopUp.svelte';
-	import { display_status_to_info, type PopupContent } from '../ts/types';
+	import { type PopupContent } from '../ts/types';
 	import TextInput from '../components/TextInput.svelte';
 	import {
 		add_display,
@@ -21,6 +21,8 @@
 	import { ping_ip } from '../ts/api_handler';
 	import { onMount } from 'svelte';
 	import { on_start } from '../ts/main';
+	import { display_status_to_info } from '../ts/utils';
+	import HighlightedText from '../components/HighlightedText.svelte';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -71,7 +73,7 @@
 		text_inputs_valid = text_inputs_valid_null_values;
 		popup_content = {
 			open: true,
-			snippet: add_new_display_popup,
+			snippet: display_popup,
 			title: 'Neuen Bildschirm hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
@@ -101,7 +103,7 @@
 		}
 		popup_content = {
 			open: true,
-			snippet: add_new_display_popup,
+			snippet: display_popup,
 			snippet_arg: display_id,
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
@@ -117,9 +119,10 @@
 
 {#snippet remove_display_popup(display_id: string)}
 	<div class="max-w-prose px-2">
-		Soll der Bildschirm "{get_display_by_id(display_id, $displays)?.name || '?'}" wirklich gelöscht
-		werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation auf dem
-		Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
+		Soll der Bildschirm <HighlightedText
+			>{get_display_by_id(display_id, $displays)?.name || '?'}</HighlightedText
+		> wirklich gelöscht werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation
+		auf dem Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
 	</div>
 	<div class="flex flex-row justify-end gap-2">
 		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
@@ -135,7 +138,7 @@
 	</div>
 {/snippet}
 
-{#snippet add_new_display_popup(existing_display_id: string | null = null)}
+{#snippet display_popup(existing_display_id: string | null = null)}
 	<TextInput
 		focused_on_start
 		bind:current_value={text_inputs_valid.name.value}
@@ -151,6 +154,7 @@
 			if (is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
+		enter_mode="focus_next"
 	/>
 	<div class="flex flex-row gap-2">
 		<TextInput
@@ -164,6 +168,7 @@
 					: [false, 'Ungültige IP-Adresse'];
 			}}
 			className="grow"
+			enter_mode="focus_next"
 		/>
 		<div class="flex items-end shrink-0">
 			<Button
@@ -193,6 +198,10 @@
 					? [true, 'Gültige MAC-Adresse']
 					: [false, 'Ungültige MAC-Adresse'];
 		}}
+		enter_mode="submit"
+		enter_function={() => {
+			finalize_add_edit_display(existing_display_id);
+		}}
 	/>
 	<div class="flex flex-row gap-2 justify-end pt-2">
 		{#if !!existing_display_id}
@@ -215,14 +224,8 @@
 	</div>
 {/snippet}
 
-<style>
-	:root {
-		--splash-fade-out-delay: 4s !important;
-	}
-</style>
-
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
-	{@html SplashScreen}
+	<!-- {@html SplashScreen} -->
 
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
@@ -257,5 +260,10 @@
 			<FileView />
 		</div>
 	</div>
-	<PopUp content={popup_content} close_function={popup_close_function} className="bg-white/10" snippet_container_class="min-w-115" />
+	<PopUp
+		content={popup_content}
+		close_function={popup_close_function}
+		className="bg-white/10"
+		snippet_container_class="min-w-115"
+	/>
 </main>

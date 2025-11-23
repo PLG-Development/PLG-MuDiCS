@@ -1,5 +1,12 @@
 #!/usr/bin/env nu
 
+print "Checking if we have an internet connection ..."
+
+if (ping google.com -c 5 -W 10 -s 1400 | complete | get exit_code) != 0 {
+    print "No internet connection. Exiting."
+    exit 1
+}
+
 print "Checking for new version of PLG-MuDiCS ..."
 if (new_version_available) {
     print "New version available. Trying to update ..."
@@ -15,7 +22,7 @@ def get_new_nixos_config [] {
     let temp_file_path = (mktemp "nixos-temp-XXXXXX")
     let nixos_config_path = "nixos"
 
-    http get https://github.com/PLG-Development/PLG-MuDiCS/releases/latest/download/nixos.zip --max-time 5sec | save -p -f $temp_file_path
+    http get https://github.com/PLG-Development/PLG-MuDiCS/releases/latest/download/nixos.zip | save -p -f $temp_file_path
 
     unzip $temp_file_path -d $temp_folder_path
     rm -rf $nixos_config_path
@@ -29,7 +36,7 @@ def get_new_nixos_config [] {
 def get_new_display_file [] {
     let temp_file_path = (mktemp "display-temp-XXXXXX")
 
-    http get https://github.com/PLG-Development/PLG-MuDiCS/releases/latest/download/plg-mudics-display --max-time 5sec | save -p -f $temp_file_path
+    http get https://github.com/PLG-Development/PLG-MuDiCS/releases/latest/download/plg-mudics-display | save -p -f $temp_file_path
 
     chmod +x $temp_file_path
     mv $temp_file_path plg-mudics-display

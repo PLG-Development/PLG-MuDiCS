@@ -3,6 +3,7 @@ import type { Display, DisplayGroup, DisplayStatus } from "../types";
 import { is_selected, select, selected_display_ids } from "./select";
 import { get_uuid, image_content_hash } from "../utils";
 import { get_screenshot } from "../api_handler";
+import { filter_file_selection_for_current_selected_displays } from "./files";
 
 export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
     id: get_uuid(),
@@ -32,6 +33,8 @@ export async function edit_display_data(display_id: string, ip: string, mac: str
 }
 
 export function remove_display(display_id: string) {
+    select(selected_display_ids, display_id, false);
+    filter_file_selection_for_current_selected_displays();
     displays.update((displays: DisplayGroup[]) => {
         displays = displays.map(display_group => ({
             ...display_group,
@@ -57,6 +60,7 @@ export function select_all_of_group(display_group: DisplayGroup, new_value: bool
     for (const display of display_group.data) {
         select(selected_display_ids, display.id, new_value);
     }
+    filter_file_selection_for_current_selected_displays();
 }
 
 export function set_new_display_group_data(display_group_id: string, new_data: Display[]) {

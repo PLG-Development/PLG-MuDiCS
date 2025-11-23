@@ -30,10 +30,10 @@ export const supported_file_type_icon: Record<string, typeof X> = {
 
 export type FolderElement = {
     id?: string;
-    hash: string | null;
+    hash: string;
     name: string;
     type: string;
-    date_created: Date;
+    date_created: Date | null;
     size: number;
 }
 
@@ -73,9 +73,10 @@ export type PopupContent = {
     open: boolean;
     snippet: Snippet<[string]> | null;
     snippet_arg?: string;
-    title: string;
+    title?: string;
     title_class?: string;
     title_icon?: typeof X | null;
+    window_class?: string;
     closable?: boolean;
 }
 
@@ -85,17 +86,4 @@ export function to_display_status(value: string): DisplayStatus {
     return ["host_offline", "app_offline", "app_online"].includes(value)
         ? (value as DisplayStatus)
         : null;
-}
-
-export function display_status_to_info(status: DisplayStatus): string {
-    switch (status) {
-        case 'app_online':
-            return 'Online';
-        case 'app_offline':
-            return 'Lädt';
-        case 'host_offline':
-            return 'Offline';
-        case null:
-            return '???';
-    }
 }

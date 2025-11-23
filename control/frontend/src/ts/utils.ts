@@ -1,4 +1,4 @@
-import type { FolderElement, SupportedFileType } from "./types";
+import type { DisplayStatus, FolderElement, SupportedFileType } from "./types";
 import supported_file_types_json from './../../../../shared/supported_file_types.json';
 
 const supported_file_types: Record<string, SupportedFileType> = supported_file_types_json as Record<string, SupportedFileType>;
@@ -24,6 +24,7 @@ export function get_uuid(): string {
 }
 
 export function get_file_size_display_string(size: number, toFixed: number | null = null): string {
+  if (size < 0) return toFixed === null ? "versch." : "Verschiedene Größen auf verschiedenen Bildschirmen";
   if (size === 0) return "0 B";
 
   const k = 1024;
@@ -67,3 +68,15 @@ export function is_valid_name(input: string): boolean {
   return /^[\p{L}\p{N}\p{M}\-_.+,()[\]{}@!§$%&=~^ ]+$/u.test(input);
 }
 
+export function display_status_to_info(status: DisplayStatus): string {
+  switch (status) {
+    case 'app_online':
+      return 'Online';
+    case 'app_offline':
+      return 'Lädt';
+    case 'host_offline':
+      return 'Offline';
+    case null:
+      return '???';
+  }
+}

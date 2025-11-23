@@ -154,7 +154,7 @@
 			transition:fade={{ duration: 50 }}
 			class="absolute {position_bottom
 				? 'top-full'
-				: 'bottom-full'} {menu_class} z-100 my-1.5 min-w-64 rounded-xl backdrop-blur bg-black/20 border border-stone-400/10 shadow-xl/20 p-2 flex flex-col gap-2 text-stone-200 cursor-auto"
+				: 'bottom-full'} {menu_class} z-100 my-1.5 min-w-64 rounded-xl backdrop-blur bg-stone-800/45 border border-stone-400/10 shadow-xl/20 p-2 flex flex-col gap-2 text-stone-200 cursor-auto"
 			onclick={(e) => {
 				e.stopPropagation();
 			}}

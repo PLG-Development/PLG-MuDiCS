@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { display_status_to_info, type DisplayStatus } from "../ts/types";
+	import { type DisplayStatus } from "../ts/types";
+	import { display_status_to_info } from "../ts/utils";
 
 	let { selected, status, className = "" } = $props<{
 		selected: boolean;

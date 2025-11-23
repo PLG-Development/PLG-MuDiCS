@@ -26,6 +26,7 @@
 	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
+	import HighlightedText from './HighlightedText.svelte';
 
 	let { handle_display_deletion, handle_display_editing } = $props<{
 		handle_display_deletion: (display_id: string) => void;
@@ -104,7 +105,12 @@
 <svelte:window on:wheel={on_wheel} />
 
 <div class="h-[calc(100dvh-3rem-(6*var(--spacing)))] flex flex-col gap-2">
-	<Splitpanes horizontal theme="mudics-stone-theme" on:resized={handle_splitpane_resize} dblClickSplitter={false}>
+	<Splitpanes
+		horizontal
+		theme="mudics-stone-theme"
+		on:resized={handle_splitpane_resize}
+		dblClickSplitter={false}
+	>
 		{#if $pinned_display_id}
 			<!-- Pinned Item -->
 			<Pane maxSize={60} snapSize={20} bind:size={pinned_pane_size}>
@@ -181,7 +187,7 @@
 					</span>
 					<div class="flex flex-row gap-1">
 						<button
-							class="gap-2 min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
+							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
 								all_selected($displays, $selected_display_ids),
 								{
 									bg: true,
@@ -245,9 +251,10 @@
 					>
 						{#if $displays.length === 1 && $displays[0].data.length === 0}
 							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
-								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf <Settings
-									class="inline pb-1"
-								/> und "Neuen Bildschirm hinzufügen".
+								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
+								<HighlightedText fg="text-stone-450" className="!p-1"><Settings class="inline pb-1" /></HighlightedText>
+								und
+								<HighlightedText fg="text-stone-450">Neuen Bildschirm hinzufügen</HighlightedText>.
 							</div>
 						{:else}
 							{#each $displays as display_group (display_group.id)}
@@ -257,7 +264,11 @@
 									animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
 									class="outline-none"
 								>
-									<DisplayGroupObject {display_group} {get_display_menu_options} {close_pinned_display} />
+									<DisplayGroupObject
+										{display_group}
+										{get_display_menu_options}
+										{close_pinned_display}
+									/>
 								</section>
 							{/each}
 						{/if}
