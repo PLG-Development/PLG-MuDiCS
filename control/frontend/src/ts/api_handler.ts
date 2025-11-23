@@ -112,6 +112,15 @@ export async function create_folders(ip: string, path: string, folder_names: str
     handle_shell_error(ip, json_response, command, true);
 }
 
+export async function rename_file(ip: string, path: string, old_file_name: string, new_file_name: string): Promise<void> {
+    const command: string = `cd ".${path}" && mv "${old_file_name}" "${new_file_name}"`;
+
+    const raw_response = await run_shell_command(ip, command);
+    if (!raw_response.ok || !raw_response.json) return;
+    const json_response = raw_response.json as ShellCommandResponse;
+    handle_shell_error(ip, json_response, command, true);
+}
+
 export async function delete_files(ip: string, current_path: string, file_names: string[]): Promise<void> {
     let command: string = `cd ".${current_path}"`;
     for (const file_name of file_names) {

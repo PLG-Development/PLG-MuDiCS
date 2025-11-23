@@ -34,7 +34,7 @@
 	import TextInput from './TextInput.svelte';
 	import { is_valid_name } from '../ts/utils';
 	import { displays, get_display_by_id, run_on_all_selected_displays } from '../ts/stores/displays';
-	import { create_folders, delete_files } from '../ts/api_handler';
+	import { create_folders, delete_files, rename_file } from '../ts/api_handler';
 	import { get } from 'svelte/store';
 	import HighlightedText from './HighlightedText.svelte';
 
@@ -61,11 +61,43 @@
 				display_id,
 				$all_files
 			);
-			await create_folders(display.ip, path_data.existing, [...path_data.needed, current_name]);
+			await create_folders(display.ip, path_data.existing, [
+				...path_data.needed,
+				current_name.trim()
+			]);
 		}
 		await update_current_folder_on_selected_displays();
 		popup_close_function();
 	}
+
+	async function edit_file_name(new_file_name: string) {
+		await run_for_selected_files_on_selected_displays(async (ip: string, file_names: string[]) => {
+			if (file_names.length !== 1) {
+				console.log('EEEERRRRROOOOOOR', file_names);
+				return; // Error
+			}
+			await rename_file(ip, $current_file_path, file_names[0], new_file_name);
+		});
+		await update_current_folder_on_selected_displays();
+		popup_close_function();
+	}
+
+	const show_edit_file_popup = () => {
+		const file = get_file_by_id($selected_file_ids[0], $all_files, $current_file_path);
+		if (!file) return;
+		const is_folder = file.type === 'inode/directory';
+		const extension = is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
+		current_name = file.name.slice(0, file.name.length - extension.length);
+		current_valid = true;
+		popup_content = {
+			open: true,
+			snippet: edit_file_name_popup,
+			title: `${is_folder ? 'Ordner' : 'Datei'} umbenennen`,
+			title_icon: FolderPlus,
+			snippet_arg: extension,
+			closable: true
+		};
+	};
 
 	const show_new_folder_popup = () => {
 		current_name = '';
@@ -140,6 +172,41 @@
 	</div>
 {/snippet}
 
+{#snippet edit_file_name_popup(extension: string)}
+	<TextInput
+		focused_on_start={true}
+		bind:current_value={current_name}
+		bind:current_valid
+		title="Neuer {extension === '' ? 'Ordner' : 'Datei'}name"
+		is_valid_function={(input: string) => {
+			if (input.startsWith('.')) return [false, 'Name darf nicht mit . beginnen'];
+			const trimmed_input = input.trim() + extension;
+			if (trimmed_input.length === 0 || trimmed_input.length > 50)
+				return [false, 'Ungültige Länge'];
+			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
+			if (
+				get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).some(
+					(e) =>
+						e.name === trimmed_input &&
+						e.id !== get_file_by_id($selected_file_ids[0], $all_files, $current_file_path)?.id
+				)
+			)
+				return [false, 'Name bereits verwendet'];
+			return [true, 'Gültiger Name'];
+		}}
+		enter_mode="submit"
+		enter_function={() => edit_file_name(current_name.trim() + extension)}
+		{extension}
+	/>
+	<div class="flex flex-row justify-end gap-2">
+		<Button
+			className="px-4 font-bold"
+			click_function={() => edit_file_name(current_name.trim() + extension)}
+			disabled={!current_valid}>{extension === '' ? 'Ordner' : 'Datei'} umbenennen</Button
+		>
+	</div>
+{/snippet}
+
 {#snippet delete_request_popup()}
 	<div class="flex flex-col gap-1 h-full min-h-0 grow-0">
 		<span class="text-stone-400 px-1"
@@ -162,13 +229,10 @@
 			click_function={async () => {
 				await run_for_selected_files_on_selected_displays(
 					async (ip: string, file_names: string[]) => {
-						delete_files(ip, $current_file_path, file_names);
+						await delete_files(ip, $current_file_path, file_names);
 					}
 				);
 				await update_current_folder_on_selected_displays();
-				selected_file_ids.update(() => {
-					return [];
-				});
 				popup_close_function();
 			}}>Löschen</Button
 		>
@@ -257,6 +321,7 @@
 					<Button
 						title="Ausgewählte Datei umbenennen"
 						className="px-3 flex"
+						click_function={show_edit_file_popup}
 						disabled={$selected_file_ids.length !== 1}><Pen /></Button
 					>
 					<Button
@@ -300,7 +365,7 @@
 			content={popup_content}
 			close_function={popup_close_function}
 			className="rounded-b-2xl"
-			snippet_container_class="overflow-hidden"
+			snippet_container_class="overflow-hidden min-w-90"
 		/>
 	</div>
 </div>

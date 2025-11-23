@@ -13,6 +13,7 @@
 		placeholder = '',
 		is_valid_function = null,
 		focused_on_start = false,
+		extension = null,
 		enter_mode = 'none',
 		enter_function = null
 	} = $props<{
@@ -24,6 +25,7 @@
 		placeholder?: string;
 		is_valid_function?: ((input: string) => [boolean, string]) | null;
 		focused_on_start?: boolean;
+		extension?: string | null;
 		enter_mode?: 'none' | 'focus_next' | 'submit';
 		enter_function?: (() => void) | null;
 	}>();
@@ -41,7 +43,7 @@
 	function get_highlighting_string(): string {
 		if (!is_valid_function) return '';
 		if (current_valid) {
-			return 'focus:inset-ring-2 focus:inset-ring-green-400';
+			return 'focus-within:inset-ring-2 focus-within:inset-ring-green-400';
 		} else {
 			return 'inset-ring-2 inset-ring-red-400';
 		}
@@ -80,7 +82,7 @@
 	});
 </script>
 
-<div class="flex flex-col {className}">
+<div class="flex flex-col {className} relative">
 	<div class="flex flex-row justify-between text-sm px-1 gap-4">
 		<div class="text-stone-400">
 			{title}:
@@ -94,7 +96,7 @@
 			</div>
 		{/if}
 	</div>
-	<input
+	<!-- <input
 		bind:this={input_element}
 		bind:value={current_value}
 		bind:focused
@@ -103,5 +105,30 @@
 		oninput={validate_input}
 		class="{bg} focus:{focus_bg} outline-none py-2 px-3 rounded-xl transition-all duration-100 {get_highlighting_string()}"
 		{placeholder}
-	/>
+	/> -->
+
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		onclick={() => {
+			input_element.focus();
+		}}
+		class="{bg} focus-within:{focus_bg} flex items-center rounded-xl {get_highlighting_string()} cursor-text"
+	>
+		<input
+			bind:this={input_element}
+			bind:value={current_value}
+			bind:focused
+			onkeydown={handle_keydown}
+			oninput={validate_input}
+			type="text"
+			class=" outline-none py-2 px-3 transition-all duration-100 flex-grow group"
+			{placeholder}
+		/>
+		{#if extension}
+			<span class="pr-3 text-stone-400 select-none pointer-events-none">
+				{extension}
+			</span>
+		{/if}
+	</div>
 </div>
