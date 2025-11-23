@@ -16,6 +16,8 @@ type ErrorResponse struct {
 	Description string `json:"description"`
 }
 
+var BadRequestDescription string = "Request uses invalid JSON syntax or does not follow request schema."
+
 func RunShellCommand(cmd *exec.Cmd) CommandResponse {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

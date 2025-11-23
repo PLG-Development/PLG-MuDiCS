@@ -27,7 +27,6 @@ import (
 
 var version string
 var sseConnection chan string
-var badRequestDescription string = "Request uses invalid JSON syntax or does not follow request schema."
 
 func StartWebServer(v string, port string) {
 	version = v
@@ -167,7 +166,7 @@ func shellCommandRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&commandInput); err != nil {
 		slog.Error("Failed to parse shell command", "error", err)
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
 	cmd := exec.Command("bash", "-c", commandInput.Command)
@@ -194,10 +193,10 @@ func keyboardInputRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 	if request.Action != "press" && request.Action != "release" {
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
 	code, ok := pkg.KeyboardEvents[request.Key]
@@ -238,7 +237,7 @@ func uploadFileRoute(ctx echo.Context) error {
 
 	data, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
 	if err := os.WriteFile(fullPath, data, os.ModePerm); err != nil {
@@ -315,7 +314,7 @@ func showHTMLRoute(ctx echo.Context) error {
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse request", "error", err)
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
 	err := resetView()
