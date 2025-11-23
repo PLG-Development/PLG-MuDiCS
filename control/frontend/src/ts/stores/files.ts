@@ -290,7 +290,7 @@ export async function run_for_selected_files_on_selected_displays(action: (ip: s
         if (selected_file_names_on_display.length === 0) continue;
 
         const display = get_display_by_id(display_id, get(displays));
-        if (!display) continue
+        if (!display) continue;
 
         await action(display.ip, selected_file_names_on_display);
     }

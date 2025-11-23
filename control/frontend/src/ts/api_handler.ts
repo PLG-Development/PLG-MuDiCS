@@ -117,7 +117,6 @@ export async function delete_files(ip: string, current_path: string, file_names:
     for (const file_name of file_names) {
         command += ` && rm -r "${file_name}"`;
     }
-    await run_shell_command(ip, command);
     const raw_response = await run_shell_command(ip, command);
     if (!raw_response.ok || !raw_response.json) return;
     const json_response = raw_response.json as ShellCommandResponse;
