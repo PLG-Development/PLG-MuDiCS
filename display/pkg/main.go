@@ -56,15 +56,31 @@ func OpenPresentation(path string) error {
 	return nil
 }
 
-func KeyboardInput(key int) error {
+type KeyAction int
+
+const (
+	KeyPress KeyAction = iota
+	KeyRelease
+)
+
+func KeyboardInput(key int, action KeyAction) error {
+	var err error
+
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		return fmt.Errorf("failed to create key bonding: %w", err)
 	}
 	kb.SetKeys(key)
 
-	if err := kb.Launching(); err != nil {
-		return fmt.Errorf("failed to launch key event: %w", err)
+	switch action {
+	case KeyPress:
+		err = kb.Press()
+	case KeyRelease:
+		err = kb.Release()
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to run key event: %w", err)
 	}
 
 	return nil

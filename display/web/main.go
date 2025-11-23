@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	shared "plg-mudics/shared"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -188,10 +189,14 @@ func shellCommandRoute(ctx echo.Context) error {
 
 func keyboardInputRoute(ctx echo.Context) error {
 	var request struct {
-		Key string `json:"key"`
+		Key    string `json:"key"`
+		Action string `json:"action"`
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
+	}
+	if request.Action != "press" && request.Action != "release" {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: badRequestDescription})
 	}
 
@@ -201,7 +206,15 @@ func keyboardInputRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Unsupported key: %s", request.Key)})
 	}
 
-	err := pkg.KeyboardInput(code)
+	var action pkg.KeyAction
+	if request.Action == "press" {
+		action = pkg.KeyPress
+	}
+	if request.Action == "release" {
+		action = pkg.KeyRelease
+	}
+
+	err := pkg.KeyboardInput(code, action)
 	if err != nil {
 		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send keyboard input"})
@@ -365,10 +378,18 @@ func previewRoute(ctx echo.Context) error {
 
 // Reset previous file views so they dont collide with the new one
 func resetView() error {
-	err := pkg.KeyboardInput(keybd_event.VK_ESC)
+	var err error
+
+	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyPress)
 	if err != nil {
 		return fmt.Errorf("failed to send ESC key: %w", err)
 	}
+	time.Sleep(400 * time.Millisecond)
+	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyRelease)
+	if err != nil {
+		return fmt.Errorf("failed to send ESC key: %w", err)
+	}
+
 	sseConnection <- ""
 
 	return nil
