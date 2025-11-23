@@ -2,93 +2,69 @@
 
 /* Adding more color steps */
 @theme {
-    --color-stone-150: oklch(0.9465 0.002 77.571);
-    --color-stone-250: oklch(0.896 0.004 52.542);
-    --color-stone-350: oklch(0.789 0.0075 56.313);
-    --color-stone-450: oklch(0.631 0.0115 57.165);
-    --color-stone-550: oklch(0.4985 0.012 65.855);
-    --color-stone-650: oklch(0.409 0.0105 70.599);
-    --color-stone-750: oklch(0.321 0.0085 50.928);
-    --color-stone-850: oklch(0.242 0.0065 45.171);
+	--color-stone-150: oklch(0.9465 0.002 77.571);
+	--color-stone-250: oklch(0.896 0.004 52.542);
+	--color-stone-350: oklch(0.789 0.0075 56.313);
+	--color-stone-450: oklch(0.631 0.0115 57.165);
+	--color-stone-550: oklch(0.4985 0.012 65.855);
+	--color-stone-650: oklch(0.409 0.0105 70.599);
+	--color-stone-750: oklch(0.321 0.0085 50.928);
+	--color-stone-850: oklch(0.242 0.0065 45.171);
 }
-
-
-
-
-
-
 
 /* Splitpanes */
 .splitpanes.mudics-stone-theme {
-    .splitpanes__pane {
-        @apply bg-stone-900;
-    }
+	.splitpanes__pane {
+		@apply bg-stone-900;
+	}
 
-    .splitpanes__splitter {
-        @apply bg-transparent hover:bg-stone-700 active:bg-stone-600 transition-colors duration-200 shrink-0 relative box-border rounded mx-5;
-        /* box-sizing: border-box;
+	.splitpanes__splitter {
+		@apply bg-transparent hover:bg-stone-700 active:bg-stone-600 transition-colors duration-200 shrink-0 relative box-border rounded mx-5;
+		/* box-sizing: border-box;
         position: relative;
         flex-shrink: 0; */
 
-        &:before,
-        &:after {
-            @apply bg-stone-750 transition-colors duration-200 absolute top-[50%] left-[50%] content-[''] rounded;
-        }
+		&:before,
+		&:after {
+			@apply bg-stone-750 transition-colors duration-200 absolute top-[50%] left-[50%] content-[''] rounded;
+		}
 
-        &:hover:before,
-        &:hover:after {
-            @apply bg-stone-400;
-        }
+		&:hover:before,
+		&:hover:after {
+			@apply bg-stone-400;
+		}
 
-        &:active:before,
-        &:active:after {
-            @apply bg-stone-300;
-        }
+		&:active:before,
+		&:active:after {
+			@apply bg-stone-300;
+		}
 
-        &:first-child {
-            /* cursor: auto; */
-        }
-    }
+		&:first-child {
+			/* cursor: auto; */
+		}
+	}
 }
 
 .mudics-stone-theme {
-    &.splitpanes .splitpanes .splitpanes__splitter {
-        @apply z-10;
-    }
+	&.splitpanes .splitpanes .splitpanes__splitter {
+		@apply z-10;
+	}
 
-    /* &.splitpanes--vertical>.splitpanes__splitter,
-    .splitpanes--vertical>.splitpanes__splitter {
-        @apply w-2.5 cursor-col-resize;
+	&.splitpanes--horizontal > .splitpanes__splitter,
+	.splitpanes--horizontal > .splitpanes__splitter {
+		@apply h-2 cursor-row-resize;
 
-        &:before,
-        &:after {
-            @apply w-0.5 h-10 translate-y-[-50%];
-        }
+		&:before,
+		&:after {
+			@apply h-0.5 w-10 translate-x-[-50%];
+		}
 
-        &:before {
-            @apply ml-[calc(-0.75*var(--spacing))];
-        }
+		&:before {
+			@apply mt-[calc(-0.7*var(--spacing))];
+		}
 
-        &:after {
-            @apply ml-[calc(0.25*var(--spacing))];
-        }
-    } */
-
-    &.splitpanes--horizontal>.splitpanes__splitter,
-    .splitpanes--horizontal>.splitpanes__splitter {
-        @apply h-2 cursor-row-resize;
-
-        &:before,
-        &:after {
-            @apply h-0.5 w-10 translate-x-[-50%];
-        }
-
-        &:before {
-            @apply mt-[calc(-0.7*var(--spacing))];
-        }
-
-        &:after {
-            @apply mt-[calc(0.1*var(--spacing))];
-        }
-    }
+		&:after {
+			@apply mt-[calc(0.1*var(--spacing))];
+		}
+	}
 }
