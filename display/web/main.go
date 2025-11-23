@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	shared "plg-mudics/shared"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -377,10 +378,18 @@ func previewRoute(ctx echo.Context) error {
 
 // Reset previous file views so they dont collide with the new one
 func resetView() error {
-	err := pkg.KeyboardInput(keybd_event.VK_ESC)
+	var err error
+
+	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyPress)
 	if err != nil {
 		return fmt.Errorf("failed to send ESC key: %w", err)
 	}
+	time.Sleep(400 * time.Millisecond)
+	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyRelease)
+	if err != nil {
+		return fmt.Errorf("failed to send ESC key: %w", err)
+	}
+
 	sseConnection <- ""
 
 	return nil
