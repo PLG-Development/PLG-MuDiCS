@@ -13,6 +13,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/mdlayher/wol"
 )
 
 var storageFile string
@@ -45,6 +46,7 @@ func main() {
 	// Servers all API endpoints, e.g. our custom logic
 	apiGroup := e.Group("/api")
 	apiGroup.GET("/ping", pingRoute)
+	apiGroup.POST("/wakeOnLan", wakeOnLanRoute)
 	apiGroup.GET("/storage", getStorageRoute)
 	apiGroup.POST("/storage", setStorageRoute)
 
@@ -90,4 +92,29 @@ func pingRoute(ctx echo.Context) error {
 type PingResponse struct {
 	Status string `json:"status"`
 	Error  string `json:"error"`
+}
+
+type WakeOnLanRequest struct {
+	MACAddress string `json:"mac_address"`
+}
+
+func wakeOnLanRoute(ctx echo.Context) error {
+	var data WakeOnLanRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
+	}
+	mac, err := net.ParseMAC(data.MACAddress)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: "Invalid MAC address"})
+	}
+
+	client, err := wol.NewClient()
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to create Wake-on-LAN client"})
+	}
+	if err := client.Wake("255.255.255.255", mac); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send Wake-on-LAN packet"})
+	}
+
+	return ctx.JSON(http.StatusOK, struct{}{})
 }
