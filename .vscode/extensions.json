@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "golang.go",
+    "esbenp.prettier-vscode",
+    "svelte.svelte-vscode",
+    "a-h.templ",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
