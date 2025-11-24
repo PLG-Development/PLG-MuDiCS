@@ -190,6 +190,7 @@
 							</button>
 							{#if option.color}
 								<button
+									aria-label="Color"
 									onclick={option.color.color_picker}
 									title={option.title}
 									class="flex p-1 rounded-r-xl cursor-pointer duration-200 transition-colors justify-center items-center {get_selectable_color_classes(
