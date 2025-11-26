@@ -82,13 +82,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={() => {
-							run_on_all_selected_displays(
-								() => {
-									send_keyboard_input;
-								},
-								true,
-								'VK_LEFT'
-							);
+							run_on_all_selected_displays(send_keyboard_input, true, 'VK_LEFT');
 						}}><ArrowBigLeft /></Button
 					>
 					<Button
@@ -96,13 +90,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={() => {
-							run_on_all_selected_displays(
-								() => {
-									send_keyboard_input;
-								},
-								true,
-								'VK_RIGHT'
-							);
+							run_on_all_selected_displays(send_keyboard_input, true, 'VK_RIGHT');
 						}}><ArrowBigRight /></Button
 					>
 				</div>
