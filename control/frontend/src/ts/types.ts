@@ -29,7 +29,7 @@ export const supported_file_type_icon: Record<string, typeof X> = {
 }
 
 export type FolderElement = {
-    id?: string;
+    id: string;
     hash: string;
     name: string;
     type: string;
