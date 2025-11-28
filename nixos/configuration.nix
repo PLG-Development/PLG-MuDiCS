@@ -12,6 +12,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  hardware.steam-hardware.enable = true;
+
   networking.networkmanager.enable = true;
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
