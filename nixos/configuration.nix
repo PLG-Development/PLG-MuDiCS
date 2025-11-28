@@ -89,6 +89,8 @@
     xfce.thunar-archive-plugin
     git
     nushell
+    unzip
+    iputils
 
     # Libraries
     imagemagick
@@ -100,7 +102,7 @@
     wantedBy = ["multi-user.target"];
     after = ["network-online.target"];
     wants = ["network-online.target"];
-    path = with pkgs; [nushell unzip iputils];
+    path = config.environment.systemPackages;
     script = "nu ${./update.sh}";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/mudics";
@@ -113,7 +115,7 @@
     wantedBy = ["default.target"];
     after = ["update-mudics.service" "graphical.target"];
     wants = ["graphical.target"];
-    path = with pkgs; [ungoogled-chromium];
+    path = config.environment.systemPackages;
     script = "./plg-mudics-display";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/mudics";
