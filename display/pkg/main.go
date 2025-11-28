@@ -48,7 +48,7 @@ func GetDeviceMac() (string, error) {
 }
 
 func OpenPresentation(path string) error {
-	cmd := exec.Command("bash", "-c", "-r", fmt.Sprintf("soffice --show %s -nologo -norestore", path))
+	cmd := exec.Command("soffice", "--show", path, "--nologo", "--norestore")
 	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		return errors.New(result.Stderr)
