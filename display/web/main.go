@@ -15,11 +15,9 @@ import (
 	"path/filepath"
 	shared "plg-mudics/shared"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/micmonay/keybd_event"
 	"github.com/skip2/go-qrcode"
 
 	"plg-mudics/display/pkg"
@@ -266,6 +264,8 @@ func downloadFileRoute(ctx echo.Context) error {
 }
 
 func openFileRoute(ctx echo.Context) error {
+	var err error
+
 	pathParam := ctx.Param("path")
 	fullPath := ctx.Get("fullPath").(string)
 
@@ -277,7 +277,7 @@ func openFileRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Cant connect to display browser client"})
 	}
 
-	err := resetView()
+	err = resetView()
 	if err != nil {
 		slog.Error("Failed to reset view", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to reset view"})
@@ -295,13 +295,16 @@ func openFileRoute(ctx echo.Context) error {
 		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
 		sseConnection <- templateBuffer.String()
 	case ".pptx", ".odp":
-		err := pkg.OpenPresentation(fullPath)
-		if err != nil {
-			slog.Error("Failed to open presentation", "file", pathParam, "error", err)
-			return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open presentation"})
-		}
+		err = pkg.OpenPresentation(fullPath)
+	case ".pdf":
+		err = pkg.OpenPDF(fullPath)
 	default:
 		return ctx.JSON(http.StatusUnsupportedMediaType, shared.ErrorResponse{Description: "Unsupported file type"})
+	}
+
+	if err != nil {
+		slog.Error("Failed to open file", "file", pathParam, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open file"})
 	}
 
 	slog.Info("Successfully run file", "file", pathParam)
@@ -377,16 +380,9 @@ func previewRoute(ctx echo.Context) error {
 
 // Reset previous file views so they dont collide with the new one
 func resetView() error {
-	var err error
-
-	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyPress)
+	err := pkg.CloseRunningProgram()
 	if err != nil {
-		return fmt.Errorf("failed to send ESC key: %w", err)
-	}
-	time.Sleep(400 * time.Millisecond)
-	err = pkg.KeyboardInput(keybd_event.VK_ESC, pkg.KeyRelease)
-	if err != nil {
-		return fmt.Errorf("failed to send ESC key: %w", err)
+		return fmt.Errorf("failed to close running program: %w", err)
 	}
 
 	sseConnection <- ""

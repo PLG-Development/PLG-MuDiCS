@@ -10,6 +10,7 @@ Open source solution for advanced remote control and coordination of one or more
 - Bash
 - Chromium
 - LibreOffice (optional, presentation view)
+- Xreader (optional, pdf view)
 - ImageMagick (optional, image preview)
 - ffmpeg (optional, video preview)
 - Ghostscript (optional, pdf preview)

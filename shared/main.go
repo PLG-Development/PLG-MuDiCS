@@ -2,8 +2,10 @@ package shared
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os/exec"
+	"time"
 )
 
 type CommandResponse struct {
@@ -24,6 +26,34 @@ func RunShellCommand(cmd *exec.Cmd) CommandResponse {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 
+	return parseCmdResult(cmd, stdout, stderr, err)
+
+}
+
+func RunShellCommandNonBlocking(cmd *exec.Cmd) CommandResponse {
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.Start()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 1)
+
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return CommandResponse{}
+	case err := <-done:
+		return parseCmdResult(cmd, stdout, stderr, err)
+	}
+}
+
+func parseCmdResult(cmd *exec.Cmd, stdout, stderr bytes.Buffer, err error) CommandResponse {
 	commandOutput := CommandResponse{
 		Stdout:   stdout.String(),
 		Stderr:   stderr.String(),

@@ -91,6 +91,7 @@
     nushell
     unzip
     iputils
+    xreader
 
     # Libraries
     imagemagick
