@@ -98,7 +98,7 @@
     wantedBy = ["multi-user.target"];
     after = ["network-online.target"];
     wants = ["network-online.target"];
-    path = with pkgs; [nushell unzip];
+    path = with pkgs; [nushell unzip iputils];
     script = "nu ${./update.sh}";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/plg-mudics";
