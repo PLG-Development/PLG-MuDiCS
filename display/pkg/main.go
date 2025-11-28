@@ -48,7 +48,12 @@ func GetDeviceMac() (string, error) {
 }
 
 func OpenPresentation(path string) error {
-	cmd := exec.Command("soffice", "--show", path, "--nologo", "--norestore")
+	tempDirPath, err := os.MkdirTemp("", "plg-mudics-libreoffice-profile-")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary profile directory: %w", err)
+	}
+
+	cmd := exec.Command("soffice", "--show", path, "--nologo", "--norestore", fmt.Sprintf("-env:UserInstallation=file:///%s", tempDirPath))
 	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		return errors.New(result.Stderr)
