@@ -77,7 +77,7 @@
     user = "mudics";
   };
 
-  networking.hostName = "plg-mudics";
+  networking.hostName = "mudics";
 
   environment.systemPackages = with pkgs; [
     # Programs
@@ -101,7 +101,7 @@
     path = with pkgs; [nushell unzip iputils];
     script = "nu ${./update.sh}";
     serviceConfig = {
-      WorkingDirectory = "/home/mudics/plg-mudics";
+      WorkingDirectory = "/home/mudics/mudics";
       User = "mudics";
       Type = "oneshot";
     };
@@ -114,7 +114,7 @@
     path = with pkgs; [ungoogled-chromium];
     script = "./plg-mudics-display";
     serviceConfig = {
-      WorkingDirectory = "/home/mudics/plg-mudics";
+      WorkingDirectory = "/home/mudics/mudics";
       User = "mudics";
       Type = "simple";
     };
@@ -128,14 +128,14 @@
     wantedBy = ["default.target"];
     after = ["update-mudics.service"];
     path = with pkgs; [nixos-rebuild];
-    script = "nixos-rebuild boot --flake .#plg-mudics";
+    script = "nixos-rebuild boot --flake .#mudics";
     serviceConfig = {
-      WorkingDirectory = "/home/mudics/plg-mudics/nixos";
+      WorkingDirectory = "/home/mudics/mudics/nixos";
     };
   };
 
   systemd.tmpfiles.rules = [
-    "d /home/mudics/plg-mudics 0755 mudics - -"
+    "d /home/mudics/mudics 0755 mudics - -"
   ];
 
   networking.firewall = {
