@@ -224,10 +224,13 @@ func keyboardInputRoute(ctx echo.Context) error {
 }
 
 func uploadFileRoute(ctx echo.Context) error {
+	var err error
+
 	fullPath := ctx.Get("fullPath").(string)
 
 	// Ensure parent directories exist
 	if err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm); err != nil {
+		slog.Error("Failed to create storage path", "error", err, "path", fullPath)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to prepare storage directory"})
 	}
 
@@ -235,12 +238,27 @@ func uploadFileRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusConflict, shared.ErrorResponse{Description: "File already exists"})
 	}
 
-	data, err := io.ReadAll(ctx.Request().Body)
+	file, err := os.Create(fullPath)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
+		slog.Error("Failed to create file", "file", fullPath, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to create file"})
+	}
+	defer func() {
+		fileCloseErr := file.Close()
+		if err != nil || fileCloseErr != nil {
+			os.Remove(fullPath)
+		}
+	}()
+
+	_, err = io.Copy(file, ctx.Request().Body)
+	if err != nil {
+		slog.Error("Failed to write file", "file", fullPath, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to write file"})
 	}
 
-	if err := os.WriteFile(fullPath, data, os.ModePerm); err != nil {
+	err = file.Sync() // ensure data is flushed to disk
+	if err != nil {
+		slog.Error("Failed to sync file to disk", "file", fullPath, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to save file"})
 	}
 
