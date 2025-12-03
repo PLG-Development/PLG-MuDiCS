@@ -16,8 +16,8 @@ func OpenPresentation(path string) error {
 		return fmt.Errorf("failed to create temporary profile directory: %w", err)
 	}
 
-	runningHelpProgram = exec.Command("soffice", "--show", path, "--nologo", "--norestore", fmt.Sprintf("-env:UserInstallation=file:///%s", tempDirPath))
 	result := shared.RunShellCommand(runningHelpProgram)
+	runningHelpProgram = exec.Command("soffice", "--show", path, "--nologo", "--view", "--norestore", fmt.Sprintf("-env:UserInstallation=file:///%s", tempDirPath))
 	killedByParent := -1
 	if result.ExitCode != 0 && result.ExitCode != killedByParent {
 		return errors.New(result.Stderr)
