@@ -273,7 +273,7 @@ func downloadFileRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusNotFound, shared.ErrorResponse{Description: "File not found"})
 	}
 
-	slog.Info("File downloading ...")
+	slog.Info("Serving file for download", "path", fullPath)
 
 	file, err := os.Open(fullPath)
 	if err != nil {
