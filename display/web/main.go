@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	shared "plg-mudics/shared"
-	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/skip2/go-qrcode"
@@ -306,23 +306,29 @@ func openFileRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to reset view"})
 	}
 
-	ext := strings.ToLower(filepath.Ext(fullPath))
-	switch ext {
-	case ".mp4":
+	mType, err := mimetype.DetectFile(fullPath)
+	if err != nil {
+		slog.Error("Failed to detect mime type", "file", pathParam, "error", err)
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to detect file type"})
+	}
+
+	switch mType.String() {
+	case "video/mp4":
 		var templateBuffer bytes.Buffer
 		videoTemplate(pathParam).Render(context.Background(), &templateBuffer)
 
 		sseConnection <- templateBuffer.String()
-	case ".jpg", ".jpeg", ".png", ".gif":
+	case "image/jpeg", "image/png", "image/gif":
 		var templateBuffer bytes.Buffer
 		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
 		sseConnection <- templateBuffer.String()
-	case ".pptx", ".odp":
+	case "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
 		err = pkg.OpenPresentation(fullPath)
-	case ".pdf":
+	case "application/pdf":
 		err = pkg.OpenPDF(fullPath)
 	default:
-		return ctx.JSON(http.StatusUnsupportedMediaType, shared.ErrorResponse{Description: "Unsupported file type"})
+		slog.Info("Unsupported file type", "type", mType)
+		return ctx.JSON(http.StatusUnsupportedMediaType, shared.ErrorResponse{Description: "Unsupported file type: " + mType.String()})
 	}
 
 	if err != nil {

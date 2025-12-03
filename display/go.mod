@@ -7,6 +7,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/micmonay/keybd_event v1.1.2
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	github.com/gabriel-vasile/mimetype v1.4.11
 )
 
 require (
