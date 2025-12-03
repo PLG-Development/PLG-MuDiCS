@@ -245,7 +245,10 @@ func uploadFileRoute(ctx echo.Context) error {
 	}
 	defer func() {
 		fileCloseErr := file.Close()
-		if err != nil || fileCloseErr != nil {
+		if fileCloseErr != nil {
+			slog.Error("Failed to close file", "file", fullPath, "error", fileCloseErr)
+		}
+		if err != nil {
 			os.Remove(fullPath)
 		}
 	}()
