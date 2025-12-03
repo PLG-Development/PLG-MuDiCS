@@ -36,7 +36,7 @@ func RunShellCommandNonBlocking(cmd *exec.Cmd) CommandResponse {
 	cmd.Stderr = &stderr
 	cmd.Start()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
 
 	done := make(chan error, 1)

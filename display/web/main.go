@@ -322,10 +322,8 @@ func openFileRoute(ctx echo.Context) error {
 		var templateBuffer bytes.Buffer
 		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
 		sseConnection <- templateBuffer.String()
-	case "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
-		err = pkg.OpenPresentation(fullPath)
-	case "application/pdf":
-		err = pkg.OpenPDF(fullPath)
+	case "application/pdf", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
+		err = pkg.FileHandler.OpenFile(fullPath)
 	default:
 		slog.Info("Unsupported file type", "type", mType)
 		return ctx.JSON(http.StatusUnsupportedMediaType, shared.ErrorResponse{Description: "Unsupported file type: " + mType.String()})
@@ -409,7 +407,7 @@ func previewRoute(ctx echo.Context) error {
 
 // Reset previous file views so they dont collide with the new one
 func resetView() error {
-	err := pkg.CloseRunningProgram()
+	err := pkg.FileHandler.CloseRunningProgram()
 	if err != nil {
 		return fmt.Errorf("failed to close running program: %w", err)
 	}
