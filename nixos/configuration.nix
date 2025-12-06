@@ -1,9 +1,11 @@
 {
+  inputs,
   config,
   pkgs,
   ...
 }: {
   imports = [
+    inputs.home-manager.nixosModules.default
     ./hardware-configuration.nix
   ];
 
@@ -98,6 +100,15 @@
     ffmpeg
     ghostscript
   ];
+
+  home-manager.users.mudics = {
+    xfconf.settings = {
+      xfce4-power-manager."xfce4-power-manager/dpms-enabled" = false;
+      xfce4-screensaver."saver/enabled" = false;
+    };
+
+    home.stateVersion = "25.05";
+  };
 
   systemd.services.update-mudics = {
     wantedBy = ["multi-user.target"];
