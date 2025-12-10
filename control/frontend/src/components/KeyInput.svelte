@@ -3,8 +3,7 @@
 	import { get_selectable_color_classes } from '../ts/stores/ui_behavior';
 	import key_map_json from './../../../../shared/keys.json';
 	import { fade } from 'svelte/transition';
-	import { selected_display_ids } from '../ts/stores/select';
-	import { displays, get_display_by_id, run_on_all_selected_displays } from '../ts/stores/displays';
+	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { send_keyboard_input } from '../ts/api_handler';
 
 	const bg = 'bg-stone-700';
@@ -64,7 +63,11 @@
 	{active ? 'Erfassung aktiv' : 'Hier für Erfassung klicken'}
 	<div class="absolute top-full left-0 ml-1 mt-0.5 flex flex-col-reverse text-sm text-stone-400">
 		{#each last_keys as key (key.id)}
-			<span animate:flip={{ duration: 200 }} in:fade={{ duration: 200 }} out:fade={{ duration: 500 }} >{key.key}</span>
+			<span
+				animate:flip={{ duration: 200 }}
+				in:fade={{ duration: 200 }}
+				out:fade={{ duration: 500 }}>{key.key}</span
+			>
 		{/each}
 	</div>
 </div>

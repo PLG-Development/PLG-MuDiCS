@@ -1,89 +1,96 @@
-import { FileBox, FileImage, FileText, FileVideoCamera, ImagePlay, type X } from "lucide-svelte";
-import type { Snippet } from "svelte";
+import { FileBox, FileImage, FileText, FileVideoCamera, ImagePlay, type X } from 'lucide-svelte';
+import type { Snippet } from 'svelte';
 
 export type RequestResponse = {
-    ok: boolean,
-    http_code?: number
-    blob?: Blob,
-    json?: any,
-}
+	ok: boolean;
+	http_code?: number;
+	blob?: Blob;
+	json?: Record<string, unknown>;
+};
 
 export type ShellCommandResponse = {
-    stdout: string,
-    stderr: string,
-    exitCode: number,
-}
+	stdout: string;
+	stderr: string;
+	exitCode: number;
+};
 
 export type SupportedFileType = {
-    display_name: string;
-    mime_type: string;
+	display_name: string;
+	mime_type: string;
 };
 export const supported_file_type_icon: Record<string, typeof X> = {
-    'MP4': FileVideoCamera,
-    'JPG': FileImage,
-    'PNG': FileImage,
-    'GIF': ImagePlay,
-    'PPTX': FileBox,
-    'ODP': FileBox,
-    'PDF': FileText
-}
+	MP4: FileVideoCamera,
+	JPG: FileImage,
+	PNG: FileImage,
+	GIF: ImagePlay,
+	PPTX: FileBox,
+	ODP: FileBox,
+	PDF: FileText
+};
 
 export type FolderElement = {
-    id: string;
-    hash: string;
-    name: string;
-    type: string;
-    date_created: Date | null;
-    size: number;
+	path: string;
+	name: string;
+	size: number;
+	type: string;
+	thumbnail: Blob | null;
+};
+
+export function get_file_primary_key(file: FolderElement): string {
+	return JSON.stringify([file.path, file.name, file.size, file.type]);
 }
 
 export type TreeElement = {
-    contents?: TreeElement[];
-    type: "file" | "directory";
-    name: string;
-    size: number;
-}
-
-
-export type Display = {
-    id: string;
-    ip: string;
-    preview_url: string | null;
-    preview_timeout_id: number | null;
-    mac: string | null;
-    name: string;
-    status: DisplayStatus;
-}
-
-export type DisplayGroup = {
-    id: string;
-    data: Display[];
+	contents?: TreeElement[];
+	type: 'file' | 'directory';
+	name: string;
+	size: number;
 };
 
+export type Display = {
+	id: string;
+	ip: string;
+	mac: string | null;
+	position: number;
+	preview: PreviewObject;
+	group_id: string;
+	name: string;
+	status: DisplayStatus;
+};
+
+export type DisplayGroup = {
+	id: string;
+	position: number;
+};
+
+export type PreviewObject = {
+	currently_updating: boolean;
+	url: string | null;
+};
 
 export type MenuOption = {
-    icon?: typeof X;
-    name: string;
-    class?: string;
-    on_select?: () => void;
-    disabled?: boolean;
-}
+	icon?: typeof X;
+	name: string;
+	class?: string;
+	on_select?: () => void | Promise<void>;
+	disabled?: boolean;
+};
 
 export type PopupContent = {
-    open: boolean;
-    snippet: Snippet<[string]> | null;
-    snippet_arg?: string;
-    title?: string;
-    title_class?: string;
-    title_icon?: typeof X | null;
-    window_class?: string;
-    closable?: boolean;
-}
+	open: boolean;
+	snippet: Snippet<[string]> | null;
+	snippet_arg?: string;
+	title?: string;
+	title_class?: string;
+	title_icon?: typeof X | null;
+	window_class?: string;
+	closable?: boolean;
+};
 
-export type DisplayStatus = "host_offline" | "app_offline" | "app_online" | null;
+export type DisplayStatus = 'host_offline' | 'app_offline' | 'app_online' | null;
 
 export function to_display_status(value: string): DisplayStatus {
-    return ["host_offline", "app_offline", "app_online"].includes(value)
-        ? (value as DisplayStatus)
-        : null;
+	return ['host_offline', 'app_offline', 'app_online'].includes(value)
+		? (value as DisplayStatus)
+		: null;
 }

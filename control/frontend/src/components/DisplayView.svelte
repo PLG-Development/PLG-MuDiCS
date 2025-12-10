@@ -2,9 +2,10 @@
 	import { fade, scale } from 'svelte/transition';
 	import {
 		all_displays_of_group_selected,
-		displays,
 		get_display_by_id,
-		select_all_of_group
+		get_display_groups,
+		select_all_of_group,
+		set_new_display_group_order
 	} from '../ts/stores/displays';
 	import {
 		change_height,
@@ -27,6 +28,7 @@
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	import HighlightedText from './HighlightedText.svelte';
+	import { liveQuery, type Observable } from 'dexie';
 
 	let { handle_display_deletion, handle_display_editing } = $props<{
 		handle_display_deletion: (display_id: string) => void;
@@ -34,8 +36,12 @@
 	}>();
 
 	let displays_scroll_box: HTMLElement;
-	let pinned_display: Display | null = $derived(
-		get_display_by_id($pinned_display_id || '', $displays)
+	let pinned_display: Observable<Display | null> = liveQuery(() =>
+		get_display_by_id($pinned_display_id || '')
+	);
+	let display_groups = liveQuery(() => get_display_groups());
+	let all_groups_selected = liveQuery(() =>
+		all_selected($display_groups || [], $selected_display_ids)
 	);
 
 	let last_pinned_pane_size: number = 45;
@@ -66,16 +72,22 @@
 		];
 	}
 
-	function select_all(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
-		const new_value = !all_selected(current_displays, current_selected_display_ids);
+	async function select_all(
+		current_displays: DisplayGroup[],
+		current_selected_display_ids: string[]
+	) {
+		const new_value = !(await all_selected(current_displays, current_selected_display_ids));
 		for (const display_group of current_displays) {
-			select_all_of_group(display_group, new_value);
+			await select_all_of_group(display_group.id, new_value);
 		}
 	}
 
-	function all_selected(current_displays: DisplayGroup[], current_selected_display_ids: string[]) {
+	async function all_selected(
+		current_displays: DisplayGroup[],
+		current_selected_display_ids: string[]
+	) {
 		for (const display_group of current_displays) {
-			if (!all_displays_of_group_selected(display_group, current_selected_display_ids)) {
+			if (!(await all_displays_of_group_selected(display_group.id, current_selected_display_ids))) {
 				return false;
 			}
 		}
@@ -121,16 +133,16 @@
 						>
 							<span
 								class="text-xl font-bold pl-2 content-center truncate min-w-0"
-								title={pinned_display?.name}
+								title={$pinned_display?.name || '...'}
 							>
-								{pinned_display?.name}
+								{$pinned_display?.name || '...'}
 							</span>
 							<div class="flex flex-row gap-1">
 								<div class="flex flex-row items-center mr-1">
 									<span class="text-stone-400"> Aktueller Status: </span>
 									<OnlineState
 										selected={false}
-										status={pinned_display?.status ?? null}
+										status={$pinned_display?.status ?? null}
 										className="flex items-center px-2"
 									/>
 								</div>
@@ -159,9 +171,9 @@
 						<div
 							class="h-full bg-stone-800 rounded-b-2xl overflow-hidden flex justify-center items-center"
 						>
-							{#if pinned_display?.preview_url}
+							{#if $pinned_display?.preview.url}
 								<img
-									src={pinned_display.preview_url}
+									src={$pinned_display.preview.url}
 									alt="preview"
 									class="max-h-full max-w-full object-cover bg-black"
 								/>
@@ -188,7 +200,7 @@
 					<div class="flex flex-row gap-1">
 						<button
 							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
-								all_selected($displays, $selected_display_ids),
+								$all_groups_selected || false,
 								{
 									bg: true,
 									hover: true,
@@ -196,13 +208,9 @@
 									text: true
 								}
 							)}"
-							onclick={() => select_all($displays, $selected_display_ids)}
+							onclick={async () => await select_all($display_groups || [], $selected_display_ids)}
 						>
-							<span
-								>{all_selected($displays, $selected_display_ids)
-									? 'Alle abwählen'
-									: 'Alle auswählen'}</span
-							>
+							<span>{$all_groups_selected || false ? 'Alle abwählen' : 'Alle auswählen'}</span>
 						</button>
 						<div class="flex flex-row">
 							<Button
@@ -234,30 +242,32 @@
 					<div
 						class="min-h-full p-2 flex flex-col gap-4"
 						use:dragHandleZone={{
-							items: $displays,
+							items: $display_groups || [],
 							type: 'group',
 							flipDurationMs: dnd_flip_duration_ms,
 							dropFromOthersDisabled: true,
 							dropTargetStyle: { outline: 'none' }
 						}}
-						onconsider={(e: CustomEvent) => {
+						onconsider={async (e: CustomEvent) => {
 							$is_group_drag = true;
-							$displays = e.detail.items;
+							await set_new_display_group_order(e.detail.items);
 						}}
-						onfinalize={(e: CustomEvent) => {
-							$displays = e.detail.items;
+						onfinalize={async (e: CustomEvent) => {
+							await set_new_display_group_order(e.detail.items);
 							$is_group_drag = false;
 						}}
 					>
-						{#if $displays.length === 1 && $displays[0].data.length === 0}
+						{#if ($display_groups || []).length === 0}
 							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
 								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
-								<HighlightedText fg="text-stone-450" className="!p-1"><Settings class="inline pb-1" /></HighlightedText>
+								<HighlightedText fg="text-stone-450" className="!p-1"
+									><Settings class="inline pb-1" /></HighlightedText
+								>
 								und
 								<HighlightedText fg="text-stone-450">Neuen Bildschirm hinzufügen</HighlightedText>.
 							</div>
 						{:else}
-							{#each $displays as display_group (display_group.id)}
+							{#each $display_groups || [] as display_group (display_group.id)}
 								<!-- Each Group -->
 								<section
 									out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
@@ -265,7 +275,7 @@
 									class="outline-none"
 								>
 									<DisplayGroupObject
-										{display_group}
+										display_group_id={display_group.id}
 										{get_display_menu_options}
 										{close_pinned_display}
 									/>

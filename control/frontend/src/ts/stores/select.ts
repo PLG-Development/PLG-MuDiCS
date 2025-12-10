@@ -1,6 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 
-export const selected_file_ids: Writable<string[]> = writable<string[]>([]);
+export const selected_file_ids: Writable<string[]> = writable<string[]>([]); // JSON.stringify([string, string, number, string])
 export const selected_display_ids: Writable<string[]> = writable<string[]>([]);
 
 

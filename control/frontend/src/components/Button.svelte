@@ -166,8 +166,8 @@
 						? 'text-stone-500 cursor-not-allowed'
 						: 'hover:bg-white/35 active:bg-white/60 cursor-pointer ' +
 							option.class} rounded-lg p-2 transition-colors duration-200 select-none flex flex-row gap-2 items-center"
-					onclick={(e) => {
-						if (option.on_select) option.on_select();
+					onclick={async (e) => {
+						if (option.on_select) await option.on_select();
 						close_menu();
 					}}
 				>
