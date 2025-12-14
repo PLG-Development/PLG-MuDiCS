@@ -20,7 +20,7 @@
 	import Button from './Button.svelte';
 	import OnlineState from './OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
-	import { Menu, Minus, Pencil, PinOff, Plus, Settings, Trash2, VideoOff } from 'lucide-svelte';
+	import { Menu, Pencil, PinOff, Settings, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
 	import { selected_display_ids } from '../ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
@@ -214,7 +214,7 @@
 									change_height('display', 1);
 								}}
 							>
-								<Plus />
+								<ZoomIn />
 							</Button>
 							<Button
 								title="Bildschirme kleiner darstellen"
@@ -225,7 +225,7 @@
 									change_height('display', -1);
 								}}
 							>
-								<Minus />
+								<ZoomOut />
 							</Button>
 						</div>
 					</div>

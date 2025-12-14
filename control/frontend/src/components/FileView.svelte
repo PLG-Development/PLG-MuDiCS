@@ -4,13 +4,13 @@
 		Download,
 		FolderPlus,
 		Info,
-		Minus,
 		Pen,
-		Plus,
 		RefreshCcw,
 		Scissors,
 		Trash2,
-		Upload
+		Upload,
+		ZoomIn,
+		ZoomOut,
 	} from 'lucide-svelte';
 	import { change_height, current_height, next_height_step_size } from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
@@ -258,7 +258,7 @@
 					change_height('file', 1);
 				}}
 			>
-				<Plus />
+				<ZoomIn />
 			</Button>
 			<Button
 				title="Dateien kleiner darstellen"
@@ -269,7 +269,7 @@
 					change_height('file', -1);
 				}}
 			>
-				<Minus />
+				<ZoomOut />
 			</Button>
 		</div>
 	</div>
