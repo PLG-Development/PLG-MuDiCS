@@ -119,6 +119,8 @@ export async function start_screenshot_loop(display_id: string, initial_retry_co
 
 	let retry_count = initial_retry_count;
 	while (retry_count > 0) {
+		retry_count -= 1;
+
 		const new_blob = await get_screenshot(display.ip);
 		if (!new_blob) {
 			display.preview = { currently_updating: false, url: null };
