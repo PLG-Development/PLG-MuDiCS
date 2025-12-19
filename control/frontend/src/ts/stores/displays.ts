@@ -106,16 +106,14 @@ export async function get_display_by_id(display_id: string): Promise<Display | n
 	return (await db.displays.get(display_id)) ?? null;
 }
 
-export async function start_screenshot_loop(display_id: string, initial_retry_count: number = 5) {
+export async function screenshot_loop(display_id: string, initial_retry_count: number = 5) {
 	const display = await db.displays.get(display_id);
 	if (!display || display.preview.currently_updating) return;
 
 	display.preview.currently_updating = true;
-	await db.displays.put(display); // save
+	await db.displays.update(display.id, { preview: display.preview });
 
-	let last_hash: number | null = display.preview.url
-		? await image_content_hash(await fetch(display.preview.url).then((r) => r.blob()))
-		: null;
+	let last_hash: number | null = null;
 
 	let retry_count = initial_retry_count;
 	while (retry_count > 0) {
@@ -124,37 +122,27 @@ export async function start_screenshot_loop(display_id: string, initial_retry_co
 		const new_blob = await get_screenshot(display.ip);
 		if (!new_blob) {
 			display.preview = { currently_updating: false, url: null };
-			await db.displays.put(display); // save
+			await db.displays.update(display.id, { preview: display.preview });
 			return;
 		}
-
-		let fronted_refresh = false;
-		if (!last_hash) {
-			fronted_refresh = true;
-		} else {
-			const new_hash = await image_content_hash(new_blob);
-			if (last_hash !== new_hash) {
-				// last preview image is different to current -> reset to initial_retry_count, revoke old url and update
-				last_hash = new_hash;
-				fronted_refresh = true;
-
-				retry_count = initial_retry_count;
-				if (display.preview.url) {
-					URL.revokeObjectURL(display.preview.url);
-				}
+		const new_hash = await image_content_hash(new_blob);
+		if (last_hash !== new_hash) {
+			if (display.preview.url) {
+				URL.revokeObjectURL(display.preview.url);
 			}
-		}
 
-		if (fronted_refresh) {
+			last_hash = new_hash;
 			display.preview.url = URL.createObjectURL(new_blob);
-			await db.displays.put(display); // save
+			await db.displays.update(display.id, { preview: display.preview });
+
+			retry_count = initial_retry_count;
 		}
 
 		await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep 2s
 	}
 
 	display.preview.currently_updating = false;
-	await db.displays.put(display); // save
+	await db.displays.update(display.id, { preview: display.preview });
 }
 
 export async function run_on_all_selected_displays<T extends unknown[]>(
@@ -167,7 +155,7 @@ export async function run_on_all_selected_displays<T extends unknown[]>(
 		if (display_ip) {
 			await run_function(display_ip, ...args);
 			if (update_screenshot_afterwards) {
-				await start_screenshot_loop(display_id);
+				await screenshot_loop(display_id);
 			}
 		}
 	}

@@ -10,7 +10,7 @@
 	import OnlineState from './OnlineState.svelte';
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
-	import { start_screenshot_loop } from '../ts/stores/displays';
+	import { screenshot_loop } from '../ts/stores/displays';
 
 	let { display, get_display_menu_options, close_pinned_display } = $props<{
 		display: Display;
@@ -31,7 +31,7 @@
 		} else {
 			$pinned_display_id = display.id;
 		}
-		await start_screenshot_loop(display.id);
+		await screenshot_loop(display.id);
 		e.stopPropagation();
 	}
 </script>

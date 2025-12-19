@@ -1,4 +1,4 @@
-import { start_screenshot_loop } from './stores/displays';
+import { screenshot_loop } from './stores/displays';
 import { ping_ip } from './api_handler';
 import type { Display } from './types';
 import { update_folder_elements_recursively } from './stores/files';
@@ -31,5 +31,5 @@ async function update_all_display_status() {
 
 async function on_display_start(display: Display) {
 	await update_folder_elements_recursively(display, '/');
-	await start_screenshot_loop(display.id);
+	await screenshot_loop(display.id);
 }
