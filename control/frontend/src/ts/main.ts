@@ -19,7 +19,7 @@ async function update_all_display_status() {
 		const new_status = await ping_ip(display.ip);
 		if (new_status === null && display.status !== null) continue;
 		if (new_status === 'app_online' && display.status !== 'app_online') {
-			await on_display_start(display);
+			on_display_start(display);
 		}
 		if (new_status !== display.status) {
 			display.status = new_status;
