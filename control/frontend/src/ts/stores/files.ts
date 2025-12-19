@@ -433,24 +433,27 @@ export async function create_folder_on_all_selected_displays(
 	const path_parts = path
 		.slice(1, path.length - 1)
 		.split('/')
-		.filter((e) => e.length !== 0); // remove front and back / and split after that, then remove empty strings
+		.filter((e) => e.length !== 0);
+	let remaining_display_ids = [...selected_display_ids];
 
-	const displays_ids_where_folder_does_not_exist: string[] = selected_display_ids;
-
-	for (let i = path_parts.length; i > 0; i--) {
-		const current_path = '/' + [...path_parts].splice(0, i).join('/') + '/';
-		const displays_for_adding_folder = await get_displays_where_path_exists(
-			path,
-			displays_ids_where_folder_does_not_exist,
-			false
-		);
-		for (let i = displays_for_adding_folder.length; i > 0; i--) {
-			await create_folders(displays_for_adding_folder[i].ip, current_path, [
-				...[...path_parts].splice(i),
-				folder_name
-			]);
-			displays_ids_where_folder_does_not_exist.splice(i, 1);
+	const getDisplaysForPath = async (currentPath: string): Promise<Display[]> => {
+		if (currentPath === '/') {
+			const displays = await db.displays.bulkGet(remaining_display_ids);
+			return displays.filter((d): d is Display => !!d);
 		}
-		if (displays_ids_where_folder_does_not_exist.length === 0) return;
+		return get_displays_where_path_exists(currentPath, remaining_display_ids, false);
+	};
+
+	for (let depth = path_parts.length; depth >= 0 && remaining_display_ids.length; depth--) {
+		const currentPath = depth === 0 ? '/' : `/${path_parts.slice(0, depth).join('/')}/`;
+
+		const displays = await getDisplaysForPath(currentPath);
+		if (!displays.length) continue;
+
+		const folders_to_create = [...path_parts.slice(depth), folder_name];
+		for (const display of displays) {
+			await create_folders(display.ip, currentPath, folders_to_create);
+			remaining_display_ids = remaining_display_ids.filter((id) => id !== display.id);
+		}
 	}
 }

@@ -68,7 +68,7 @@
 		await create_folder_on_all_selected_displays(
 			current_name.trim(),
 			$current_file_path,
-			$selected_file_ids
+			$selected_display_ids
 		);
 		await update_current_folder_on_selected_displays();
 		popup_close_function();
