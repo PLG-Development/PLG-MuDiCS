@@ -311,7 +311,7 @@
 					>
 					<Button
 						title="Ausgewählte Datei(en) einfügen"
-						className="!p-0 flex relative"
+						className="px-3 flex"
 						disabled={$selected_display_ids.length === 0}
 					>
 						<ClipboardPaste />
