@@ -28,11 +28,11 @@ export async function add_display(
 	let group_id: string;
 	if (group) {
 		group_id = group.id;
-		console.log("DISPLAYGROUP WURDE NICHT ERSTELLT")
+		console.log('DISPLAYGROUP WURDE NICHT ERSTELLT');
 	} else {
 		group_id = get_uuid();
 		await db.display_groups.put({ id: group_id, position: 0 });
-		console.log("DISPLAYGROUP WURDE ERSTELLT")
+		console.log('DISPLAYGROUP WURDE ERSTELLT');
 	}
 	const element_count_in_group = (await db.displays.where('group_id').equals(group_id).toArray())
 		.length;
@@ -126,23 +126,24 @@ export async function start_screenshot_loop(display_id: string, initial_retry_co
 			return;
 		}
 
-		let update_needed = false;
+		let fronted_refresh = false;
 		if (!last_hash) {
-			update_needed = true;
+			fronted_refresh = true;
 		} else {
 			const new_hash = await image_content_hash(new_blob);
 			if (last_hash !== new_hash) {
 				// last preview image is different to current -> reset to initial_retry_count, revoke old url and update
+				last_hash = new_hash;
+				fronted_refresh = true;
+
 				retry_count = initial_retry_count;
-				update_needed = true;
 				if (display.preview.url) {
 					URL.revokeObjectURL(display.preview.url);
 				}
-				last_hash = new_hash;
 			}
 		}
 
-		if (update_needed) {
+		if (fronted_refresh) {
 			display.preview.url = URL.createObjectURL(new_blob);
 			await db.displays.put(display); // save
 		}
