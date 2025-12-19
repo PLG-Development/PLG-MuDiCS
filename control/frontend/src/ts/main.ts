@@ -26,7 +26,6 @@ async function update_all_display_status() {
 			await db.displays.put(display); // save
 		}
 	}
-	console.debug('Display Status updated');
 }
 
 async function on_display_start(display: Display) {
