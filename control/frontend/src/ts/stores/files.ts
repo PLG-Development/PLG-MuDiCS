@@ -1,5 +1,5 @@
 import { get, writable, type Writable } from 'svelte/store';
-import { get_file_primary_key, type Display, type FolderElement, type TreeElement } from '../types';
+import { get_file_primary_key, type Display, type Inode, type TreeElement } from '../types';
 import { get_display_by_id } from './displays';
 import { select, selected_display_ids, selected_file_ids } from './select';
 import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
@@ -83,7 +83,7 @@ export async function update_current_folder_on_selected_displays() {
 }
 
 export async function get_missing_colliding_display_ids(
-	file: FolderElement,
+	file: Inode,
 	selected_display_ids: string[]
 ): Promise<{ missing: string[]; colliding: string[] }> {
 	const missing: string[] = await get_display_ids_where_file_is_missing(file, selected_display_ids);
@@ -104,7 +104,7 @@ export async function get_missing_colliding_display_ids(
 }
 
 async function get_display_ids_where_file_is_missing(
-	file: FolderElement,
+	file: Inode,
 	selected_display_ids: string[]
 ): Promise<string[]> {
 	const file_primary_key = get_file_primary_key(file);
@@ -173,10 +173,7 @@ async function get_recursive_changed_directory_paths(
 	current_file_path: string,
 	current_folder_elements: TreeElement[] | null
 ): Promise<Set<string>> {
-	const files_folder: FolderElement[] = await db.files
-		.where('path')
-		.equals(current_file_path)
-		.toArray();
+	const files_folder: Inode[] = await db.files.where('path').equals(current_file_path).toArray();
 	if (
 		(!files_folder || files_folder.length === 0) &&
 		(!current_folder_elements || current_folder_elements.length === 0)
@@ -224,7 +221,7 @@ export async function update_folder_elements_recursively(
 	const existing_file_keys_on_display_in_path: [string, string, number, string][] = (
 		await db.files_on_display.where('display_id').equals(display.id).toArray()
 	).map((e) => JSON.parse(e.file_primary_key) as [string, string, number, string]);
-	const existing_files_on_display_in_path: FolderElement[] = await db.files
+	const existing_files_on_display_in_path: Inode[] = await db.files
 		.where('[path+name+size+type]')
 		.anyOf(existing_file_keys_on_display_in_path)
 		.filter((e) => e.path === file_path)
@@ -343,9 +340,9 @@ export async function update_folder_elements_recursively(
 // }
 
 function get_folder_elements_difference(
-	old_elements: FolderElement[],
-	new_elements: { folder_element: FolderElement; date_created: Date }[]
-): { deleted: FolderElement[]; new: { folder_element: FolderElement; date_created: Date }[] } {
+	old_elements: Inode[],
+	new_elements: { folder_element: Inode; date_created: Date }[]
+): { deleted: Inode[]; new: { folder_element: Inode; date_created: Date }[] } {
 	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e)));
 	const new_keys = new Set(new_elements.map((e) => get_file_primary_key(e.folder_element)));
 
@@ -359,11 +356,11 @@ function get_folder_elements_difference(
 export async function get_current_folder_elements(
 	current_file_path: string,
 	selected_display_ids: string[]
-): Promise<FolderElement[]> {
+): Promise<Inode[]> {
 	const existing_file_keys_on_selected_displays: [string, string, number, string][] = (
 		await db.files_on_display.where('display_id').anyOf(selected_display_ids).toArray()
 	).map((e) => JSON.parse(e.file_primary_key) as [string, string, number, string]);
-	const existing_files_on_selected_displays_in_path: FolderElement[] = await db.files
+	const existing_files_on_selected_displays_in_path: Inode[] = await db.files
 		.where('[path+name+size+type]')
 		.anyOf(existing_file_keys_on_selected_displays)
 		.filter((e) => e.path === current_file_path)
@@ -372,7 +369,7 @@ export async function get_current_folder_elements(
 	return sort_files(existing_files_on_selected_displays_in_path);
 }
 
-function sort_files(files: FolderElement[]) {
+function sort_files(files: Inode[]) {
 	files.sort((a, b) => {
 		const isDirA = a.type === 'inode/directory';
 		const isDirB = b.type === 'inode/directory';
@@ -393,7 +390,7 @@ function sort_files(files: FolderElement[]) {
 export async function get_file_by_id(
 	file_primary_key: string,
 	only_from_selected_displays: boolean = false
-): Promise<FolderElement | null> {
+): Promise<Inode | null> {
 	const file = (await db.files.get(JSON.parse(file_primary_key))) ?? null;
 	if (!file || !only_from_selected_displays) {
 		return file;

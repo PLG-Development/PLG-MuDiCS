@@ -1,25 +1,25 @@
-import Dexie, { type Table } from "dexie";
-import type { Display, DisplayGroup, FolderElement } from "./types";
+import Dexie, { type Table } from 'dexie';
+import type { Display, DisplayGroup, Inode } from './types';
 
 export interface FileOnDisplay {
-  display_id: string,
-  file_primary_key: string, // JSON.stringify([string, string, number, string])
-  date_created: Date;
-  is_loading: boolean,
-  percentage: number,
+	display_id: string;
+	file_primary_key: string; // JSON.stringify([string, string, number, string])
+	date_created: Date;
+	is_loading: boolean;
+	percentage: number;
 }
 
 export class FileDatabase extends Dexie {
-  files!: Table<FolderElement, [string, string, number, string]>;
-  files_on_display!: Table<FileOnDisplay, [string, string]>;
-  displays!: Table<Display, string>;
-  display_groups!: Table<DisplayGroup, string>;
+	files!: Table<Inode, [string, string, number, string]>;
+	files_on_display!: Table<FileOnDisplay, [string, string]>;
+	displays!: Table<Display, string>;
+	display_groups!: Table<DisplayGroup, string>;
 
-  constructor() {
-    super("FileDatabase");
+	constructor() {
+		super('FileDatabase');
 
-    this.version(1).stores({
-      files: `
+		this.version(1).stores({
+			files: `
         [path+name+size+type],
         path,
         name,
@@ -27,7 +27,7 @@ export class FileDatabase extends Dexie {
         type,
         thumbnail
       `,
-      files_on_display: `
+			files_on_display: `
         [display_id+file_primary_key],
         display_id,
         file_primary_key,
@@ -35,7 +35,7 @@ export class FileDatabase extends Dexie {
         is_loading,
         percentage
       `,
-      displays: `
+			displays: `
         id,
         ip,
         mac,
@@ -45,12 +45,12 @@ export class FileDatabase extends Dexie {
         name,
         status
       `,
-      display_groups: `
+			display_groups: `
         id,
         position
       `
-    });
-  }
+		});
+	}
 }
 
 export const db = new FileDatabase();

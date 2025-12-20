@@ -28,7 +28,7 @@ export const supported_file_type_icon: Record<string, typeof X> = {
 	PDF: FileText
 };
 
-export type FolderElement = {
+export type Inode = {
 	path: string;
 	name: string;
 	size: number;
@@ -36,7 +36,7 @@ export type FolderElement = {
 	thumbnail: Blob | null;
 };
 
-export function get_file_primary_key(file: FolderElement): string {
+export function get_file_primary_key(file: Inode): string {
 	return JSON.stringify([file.path, file.name, file.size, file.type]);
 }
 

@@ -6,7 +6,7 @@
 		get_shifted_color
 	} from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import { supported_file_type_icon, type FolderElement } from '../ts/types';
+	import { supported_file_type_icon, type Inode } from '../ts/types';
 
 	import {
 		is_selected,
@@ -27,7 +27,7 @@
 	import { liveQuery } from 'dexie';
 
 	let { file, not_interactable = false } = $props<{
-		file: FolderElement;
+		file: Inode;
 		not_interactable?: boolean;
 	}>();
 

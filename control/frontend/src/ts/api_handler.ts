@@ -2,7 +2,7 @@ import { notifications } from './stores/notification';
 import {
 	to_display_status,
 	type DisplayStatus,
-	type FolderElement,
+	type Inode,
 	type RequestResponse,
 	type ShellCommandResponse,
 	type TreeElement
@@ -45,7 +45,7 @@ export async function show_html(ip: string, html: string) {
 export async function get_file_data(
 	ip: string,
 	path: string
-): Promise<{ folder_element: FolderElement; date_created: Date }[] | null> {
+): Promise<{ folder_element: Inode; date_created: Date }[] | null> {
 	interface FileInfo {
 		name: string;
 		type: string;
@@ -74,12 +74,12 @@ export async function get_file_data(
 		.filter(Boolean)
 		.map((line: string) => JSON.parse(line) as FileInfo);
 
-	const folder_element_list: { folder_element: FolderElement; date_created: Date }[] = [];
+	const folder_element_list: { folder_element: Inode; date_created: Date }[] = [];
 
 	for (const response_element of response) {
 		// filter hidden files (start with '.' -> './.config')
 		if (response_element.name.charAt(2) === '.') continue;
-		const folder_element: FolderElement = {
+		const folder_element: Inode = {
 			path: path,
 			name: response_element.name.slice(2), // remove "./"
 			type: response_element.type,

@@ -25,9 +25,9 @@
 		create_folder_on_all_selected_displays
 	} from '../ts/stores/files';
 	import { slide } from 'svelte/transition';
-	import Inode from './Inode.svelte';
+	import InodeElement from './InodeElement.svelte';
 	import PopUp from './PopUp.svelte';
-	import { get_file_primary_key, type FolderElement, type PopupContent } from '../ts/types';
+	import { get_file_primary_key, type Inode, type PopupContent } from '../ts/types';
 	import TextInput from './TextInput.svelte';
 	import { is_valid_name } from '../ts/utils';
 	import { delete_files, rename_file } from '../ts/api_handler';
@@ -50,7 +50,7 @@
 		closable: true
 	});
 
-	async function get_selected_files(selected_file_ids: string[]): Promise<FolderElement[]> {
+	async function get_selected_files(selected_file_ids: string[]): Promise<Inode[]> {
 		try {
 			const results = await Promise.all(selected_file_ids.map((id) => get_file_by_id(id)));
 			return results.filter((element) => element !== null);
@@ -215,7 +215,7 @@
 		>
 		<div class="flex flex-col gap-2 overflow-auto h-full min-h-0 grow-0">
 			{#each $selected_files || [] as file}
-				<Inode {file} not_interactable />
+				<InodeElement {file} not_interactable />
 			{/each}
 		</div>
 	</div>
@@ -343,7 +343,7 @@
 				{:else}
 					{#each $current_folder_elements || [] as folder_element (get_file_primary_key(folder_element))}
 						<section in:slide={{ duration: 100 }} class="outline-none">
-							<Inode file={folder_element} />
+							<InodeElement file={folder_element} />
 						</section>
 					{/each}
 					{#if ($current_folder_elements || []).length === 0}
