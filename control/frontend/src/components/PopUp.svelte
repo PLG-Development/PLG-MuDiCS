@@ -10,12 +10,12 @@
 		close_function,
 		className = '',
 		snippet_container_class = ''
-	} = $props<{
+	}: {
 		content: PopupContent;
 		close_function: () => void;
 		className?: string;
 		snippet_container_class?: string;
-	}>();
+	} = $props();
 
 	function try_to_close() {
 		if (!content.closable || !content.open) return;

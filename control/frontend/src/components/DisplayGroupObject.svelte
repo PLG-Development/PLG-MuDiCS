@@ -22,11 +22,13 @@
 	import { liveQuery } from 'dexie';
 	import { onMount } from 'svelte';
 
-	let { display_group_id, get_display_menu_options, close_pinned_display } = $props<{
+	let { display_group_id, get_display_menu_options, close_pinned_display }: {
+
 		display_group_id: string;
 		get_display_menu_options: (display_id: string) => MenuOption[];
 		close_pinned_display: () => void;
-	}>();
+	} = $props
+	();
 
 	let all_selected = liveQuery(() =>
 		all_displays_of_group_selected(display_group_id, $selected_display_ids)

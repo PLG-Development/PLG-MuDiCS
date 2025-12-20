@@ -16,7 +16,7 @@
 		menu_class = 'right-0',
 		div_class = '',
 		children
-	} = $props<{
+	}: {
 		className?: string;
 		bg?: string;
 		hover_bg?: string;
@@ -28,7 +28,7 @@
 		menu_class?: string;
 		div_class?: string;
 		children?: any;
-	}>();
+	} = $props();
 
 	let menu_shown = $state(false);
 	let button_element: HTMLButtonElement;

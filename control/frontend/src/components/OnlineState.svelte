@@ -1,12 +1,16 @@
 <script lang="ts">
-	import { type DisplayStatus } from "../ts/types";
-	import { display_status_to_info } from "../ts/utils";
+	import { type DisplayStatus } from '../ts/types';
+	import { display_status_to_info } from '../ts/utils';
 
-	let { selected, status, className = "" } = $props<{
+	let {
+		selected,
+		status,
+		className = ''
+	}: {
 		selected: boolean;
 		status: DisplayStatus;
-        className?: string;
-	}>();
+		className?: string;
+	} = $props();
 
 	function get_text_color(selected: boolean, status: DisplayStatus) {
 		switch (status) {

@@ -30,10 +30,13 @@
 	import HighlightedText from './HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
 
-	let { handle_display_deletion, handle_display_editing } = $props<{
+	let {
+		handle_display_deletion,
+		handle_display_editing
+	}: {
 		handle_display_deletion: (display_id: string) => void;
 		handle_display_editing: (display_id: string) => void;
-	}>();
+	} = $props();
 
 	let displays_scroll_box: HTMLElement;
 	let pinned_display: Observable<Display | null> = liveQuery(() =>

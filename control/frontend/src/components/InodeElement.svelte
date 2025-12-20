@@ -26,10 +26,7 @@
 	import { get_thumbnail_url } from '../ts/stores/thumbnails';
 	import { liveQuery } from 'dexie';
 
-	let { file, not_interactable = false } = $props<{
-		file: Inode;
-		not_interactable?: boolean;
-	}>();
+	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
 
 	let missing_colliding_displays_ids = liveQuery(() =>
 		get_missing_colliding_display_ids(file, $selected_display_ids)
@@ -81,7 +78,7 @@
 
 	function onclick(e: Event) {
 		if (not_interactable) return;
-		select(selected_file_ids, file.id, "toggle");
+		select(selected_file_ids, file.id, 'toggle');
 		e.stopPropagation();
 	}
 

@@ -16,7 +16,7 @@
 		extension = null,
 		enter_mode = 'none',
 		enter_function = null
-	} = $props<{
+	}: {
 		current_value: string;
 		current_valid: boolean;
 		className?: string;
@@ -28,7 +28,7 @@
 		extension?: string | null;
 		enter_mode?: 'none' | 'focus_next' | 'submit';
 		enter_function?: (() => void) | null;
-	}>();
+	} = $props();
 
 	let focus_bg = get_shifted_color(bg, 100);
 	let focused: boolean = $state(false);

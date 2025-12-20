@@ -8,9 +8,11 @@
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 
-	let { bg = 'bg-stone-700' } = $props<{
+	let {
+		bg = 'bg-stone-700'
+	}: {
 		bg?: string;
-	}>();
+	} = $props();
 
 	let outside_container: HTMLDivElement;
 	let inside_container: HTMLDivElement;
@@ -117,7 +119,10 @@
 						await open_path(0, $current_file_path);
 					}}
 				>
-					<House class="size-full transition-all duration-100" strokeWidth={$current_file_path === '/' ? 2.7 : 2}/>
+					<House
+						class="size-full transition-all duration-100"
+						strokeWidth={$current_file_path === '/' ? 2.7 : 2}
+					/>
 				</Button>
 			</div>
 			{#if cut_folders !== 0}

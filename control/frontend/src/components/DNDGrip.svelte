@@ -2,10 +2,10 @@
 	import { GripHorizontal } from 'lucide-svelte';
 	import { dragHandle } from 'svelte-dnd-action';
 
-	let { bg, className = "" } = $props<{
+	let { bg, className = "" }: {
 		bg: string;
-        className?: string;
-	}>();
+		className?: string;
+	}  = $props();
 </script>
 
 <div

@@ -12,16 +12,20 @@
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 	import { screenshot_loop } from '../ts/stores/displays';
 
-	let { display, get_display_menu_options, close_pinned_display } = $props<{
+	let {
+		display,
+		get_display_menu_options,
+		close_pinned_display
+	}: {
 		display: Display;
 		get_display_menu_options: (display_id: string) => MenuOption[];
 		close_pinned_display: () => void;
-	}>();
+	} = $props();
 
 	let hovering_unselectable = $state(false);
 
 	function onclick(e: Event) {
-		select(selected_display_ids, display.id, "toggle");
+		select(selected_display_ids, display.id, 'toggle');
 		e.stopPropagation();
 	}
 
