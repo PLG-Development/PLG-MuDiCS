@@ -57,7 +57,7 @@ export async function delete_and_deselect_unique_files_from_display(display_id: 
 async function remove_file_from_display(display_id: string, file_primary_key: string) {
 	const found = await db.files_on_display.get([display_id, file_primary_key]);
 	if (!found) return;
-	select(selected_file_ids, file_primary_key, false);
+	select(selected_file_ids, file_primary_key, 'deselect');
 	await db.files_on_display.delete([display_id, file_primary_key]);
 }
 

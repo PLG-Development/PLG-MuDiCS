@@ -81,7 +81,7 @@
 
 	function onclick(e: Event) {
 		if (not_interactable) return;
-		select(selected_file_ids, file.id);
+		select(selected_file_ids, file.id, "toggle");
 		e.stopPropagation();
 	}
 

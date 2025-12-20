@@ -21,7 +21,7 @@
 	let hovering_unselectable = $state(false);
 
 	function onclick(e: Event) {
-		select(selected_display_ids, display.id);
+		select(selected_display_ids, display.id, "toggle");
 		e.stopPropagation();
 	}
 

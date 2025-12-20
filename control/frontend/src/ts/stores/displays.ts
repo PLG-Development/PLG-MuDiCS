@@ -61,7 +61,7 @@ export async function edit_display_data(
 }
 
 export async function remove_display(display_id: string) {
-	select(selected_display_ids, display_id, false);
+	select(selected_display_ids, display_id, 'deselect');
 	await delete_and_deselect_unique_files_from_display(display_id);
 
 	const group_id = (await db.displays.get(display_id))?.group_id;
@@ -98,7 +98,14 @@ export async function select_all_of_group(
 		.equals(display_group_id)
 		.toArray();
 	for (const display of displays_of_group) {
-		select(selected_display_ids, display.id, new_value);
+		let action: string;
+		if (new_value === true) {
+			action = 'select';
+		} else {
+			action = 'deselect';
+		}
+
+		select(selected_display_ids, display.id, action as 'toggle' | 'select' | 'deselect');
 	}
 }
 
