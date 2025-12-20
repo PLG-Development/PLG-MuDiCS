@@ -6,7 +6,7 @@
 		get_shifted_color
 	} from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import { supported_file_type_icon, type Inode } from '../ts/types';
+	import { supported_file_type_icon, type Inode, get_file_primary_key } from '../ts/types';
 
 	import {
 		is_selected,
@@ -78,7 +78,7 @@
 
 	function onclick(e: Event) {
 		if (not_interactable) return;
-		select(selected_file_ids, file.id, 'toggle');
+		select(selected_file_ids, get_file_primary_key(file), 'toggle');
 		e.stopPropagation();
 	}
 
@@ -148,7 +148,7 @@
 		}}
 		{onclick}
 		class="{get_selectable_color_classes(
-			!not_interactable && is_selected(file.id, $selected_file_ids),
+			!not_interactable && is_selected(get_file_primary_key(file), $selected_file_ids),
 			{
 				bg: true,
 				hover: !not_interactable,
@@ -185,7 +185,7 @@
 		</div>
 		<div
 			class=" p-1 flex flex-row items-center gap-1 pr-1 {get_grayed_out_text_color_strings(
-				is_selected(file.id, $selected_file_ids)
+				is_selected(get_file_primary_key(file), $selected_file_ids)
 			)} duration-200 transition-colors"
 		>
 			<!-- {#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
@@ -223,7 +223,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(file.id, $selected_file_ids)
+					is_selected(get_file_primary_key(file), $selected_file_ids)
 				)} duration-200 transition-colors my-1"
 			></div>
 			<div
@@ -234,7 +234,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(file.id, $selected_file_ids)
+					is_selected(get_file_primary_key(file), $selected_file_ids)
 				)} duration-200 transition-colors"
 			></div>
 			<div
