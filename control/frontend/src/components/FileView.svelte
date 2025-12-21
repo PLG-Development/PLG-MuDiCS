@@ -238,10 +238,6 @@
 	</div>
 {/snippet}
 
-{#snippet clipboard_hover_snippet()}
-	<div></div>
-{/snippet}
-
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
 	<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
 		<span class="text-xl font-bold pl-2 content-center truncate min-w-0">

@@ -6,19 +6,6 @@ import { create_folders, get_file_data, get_file_tree_data } from '../api_handle
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
 import { db, type FileOnDisplay } from '../files_display.db';
 
-// export const all_files: Writable<Record<string, Record<string, FolderElement[]>>> = writable<Record<string, Record<string, FolderElement[]>>>({});
-// {
-// path: {
-//          display_id: FolderElement[]
-//          ...
-//      },
-// path2: {
-//          display_id: FolderElement[]
-//          ...
-//      },
-// ...
-// }
-
 export const current_file_path: Writable<string> = writable<string>('/');
 
 export async function change_file_path(new_path: string) {
@@ -268,76 +255,6 @@ export async function update_folder_elements_recursively(
 		await remove_all_files_without_display();
 	}
 }
-
-// async function old(display: Display, file_path: string = '/'): Promise<number> {
-//     const new_folder_elements = await get_file_data(display.ip, file_path);
-//     if (new_folder_elements === null) return 0;
-//     all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
-//         if (!files.hasOwnProperty(file_path)) {
-//             files[file_path] = {};
-//         }
-//         if (!files[file_path].hasOwnProperty(display.id)) {
-//             files[file_path][display.id] = [];
-//         }
-
-//         const existing_folder_elements = files[file_path].hasOwnProperty(display.id) ? files[file_path][display.id] : [];
-
-//         const diff = get_folder_elements_difference(existing_folder_elements, new_folder_elements);
-//         // Generate Thumbnails:
-//         setTimeout(async () => {
-//             for (const folder_element of diff.new) {
-//                 await generate_thumbnail(display.ip, file_path, folder_element);
-//             }
-//         }, 0)
-
-//         files[file_path][display.id].push(...diff.new);
-//         return remove_folder_elements_recursively(files, display, diff.deleted, file_path);
-//     })
-
-//     let folder_size = 0;
-//     for (const element of new_folder_elements) {
-//         if (element.type === 'inode/directory') {
-//             const folder_content_size = await update_folder_elements_recursively(display, file_path + element.name + '/');
-//             folder_size += folder_content_size;
-//             // Update foldersize
-//             all_files.update((files: Record<string, Record<string, FolderElement[]>>) => {
-//                 for (const current_folder_element of files[file_path][display.id]) {
-//                     if (current_folder_element.id === element.id) {
-//                         current_folder_element.size = folder_content_size;
-//                     }
-//                 }
-//                 return files;
-//             })
-//         } else {
-//             folder_size += element.size;
-//         }
-//     }
-//     return folder_size;
-// }
-
-// function remove_folder_elements_recursively(files: Record<string, Record<string, FolderElement[]>>, display: Display, folder_elements: FolderElement[], file_path: string): Record<string, Record<string, FolderElement[]>> {
-//     if (!files.hasOwnProperty(file_path) || !files[file_path].hasOwnProperty(display.id)) {
-//         console.error("File remove path does not exist:", files, display, folder_elements, file_path);
-//         notifications.push("error", "Fehler beim Aktualisieren der Dateien", `File remove path does not exist: ${file_path} display_ip: ${display.ip}`);
-//         return {};
-//     }
-//     for (const folder_element of folder_elements) {
-//         files[file_path][display.id] = files[file_path][display.id].filter((f) => f.id !== folder_element.id);
-
-//         if (folder_element.type === 'inode/directory') {
-//             const new_file_path = file_path + folder_element.name + '/';
-//             if (!files.hasOwnProperty(new_file_path) || !files[new_file_path].hasOwnProperty(display.id)) {
-//                 console.error("File remove path does not exist (recursion):", files, display, folder_elements, file_path, new_file_path);
-//                 notifications.push("error", "Fehler beim Aktualisieren der Dateien", `File remove path does not exist (recursion): ${new_file_path} display_ip: ${display.ip}`);
-//                 return {};
-//             }
-//             const sub_folder = files[new_file_path][display.id];
-//             remove_folder_elements_recursively(files, display, sub_folder, new_file_path);
-//         }
-//     }
-
-//     return files;
-// }
 
 function get_folder_elements_difference(
 	old_elements: Inode[],

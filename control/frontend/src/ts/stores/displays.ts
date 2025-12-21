@@ -6,11 +6,6 @@ import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../files_display.db';
 
-// export const displays: Writable<DisplayGroup[]> = writable<DisplayGroup[]>([{
-//     id: get_uuid(),
-//     data: []
-// }]);
-
 export async function is_display_name_taken(name: string): Promise<boolean> {
 	const exists = await db.displays.where('name').equals(name).first();
 	return !!exists;
