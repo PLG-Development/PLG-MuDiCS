@@ -67,8 +67,8 @@
 					<div class="size-[50%]">
 						<Pin class="size-full" />
 					</div>
-				{:else if display.preview_url}
-					<img src={display.preview_url} alt="preview" class="w-full object-cover bg-black" />
+				{:else if display.preview.url}
+					<img src={display.preview.url} alt="preview" class="w-full object-cover bg-black" />
 				{:else}
 					<!-- No Signal -->
 					<div class="size-full bg-black flex justify-center items-center">
