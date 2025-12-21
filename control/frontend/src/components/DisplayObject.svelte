@@ -11,6 +11,7 @@
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
 	import { screenshot_loop } from '../ts/stores/displays';
+	import { change_file_path, current_file_path } from '../ts/stores/files';
 
 	let {
 		display,
@@ -24,9 +25,12 @@
 
 	let hovering_unselectable = $state(false);
 
-	function onclick(e: Event) {
-		select(selected_display_ids, display.id, 'toggle');
+	async function onclick(e: Event) {
 		e.stopPropagation();
+		select(selected_display_ids, display.id, 'toggle');
+
+		// force file view update
+		await change_file_path($current_file_path);
 	}
 
 	async function on_preview_click(e: MouseEvent) {
