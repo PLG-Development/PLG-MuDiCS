@@ -5,7 +5,7 @@
 		get_selectable_color_classes,
 		is_display_drag,
 		is_group_drag
-	} from '../ts/stores/ui_behavior';
+	} from '$lib/ts/stores/ui_behavior';
 	import { cubicOut } from 'svelte/easing';
 	import { flip } from 'svelte/animate';
 	import DisplayObject from './DisplayObject.svelte';
@@ -14,11 +14,11 @@
 		get_display_ids_in_group,
 		select_all_of_group,
 		set_new_display_order
-	} from '../ts/stores/displays';
-	import DNDGrip from './DNDGrip.svelte';
+	} from '$lib/ts/stores/displays';
+	import DNDGrip from '$lib/components/DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
-	import type { MenuOption } from '../ts/types';
-	import { selected_display_ids } from '../ts/stores/select';
+	import type { MenuOption } from '$lib/ts/types';
+	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { liveQuery } from 'dexie';
 
 	let {

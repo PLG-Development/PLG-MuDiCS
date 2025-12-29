@@ -5,7 +5,7 @@
 		get_selectable_color_classes,
 		get_shifted_color
 	} from '$lib/ts/stores/ui_behavior';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { supported_file_type_icon, type Inode, get_file_primary_key } from '$lib/ts/types';
 
 	import {

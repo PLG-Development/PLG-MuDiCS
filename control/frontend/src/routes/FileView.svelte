@@ -11,10 +11,10 @@
 		ZoomIn,
 		ZoomOut
 	} from 'lucide-svelte';
-	import { change_height, current_height, next_height_step_size } from '../ts/stores/ui_behavior';
-	import Button from './Button.svelte';
+	import { change_height, current_height, next_height_step_size } from '$lib/ts/stores/ui_behavior';
+	import Button from '$lib/components/Button.svelte';
 	import PathBar from './PathBar.svelte';
-	import { selected_display_ids, selected_file_ids } from '../ts/stores/select';
+	import { selected_display_ids, selected_file_ids } from '$lib/ts/stores/select';
 	import {
 		current_file_path,
 		get_current_folder_elements,
@@ -23,15 +23,15 @@
 		update_current_folder_on_selected_displays,
 		get_displays_where_path_exists,
 		create_folder_on_all_selected_displays
-	} from '../ts/stores/files';
+	} from '$lib/ts/stores/files';
 	import { slide } from 'svelte/transition';
 	import InodeElement from './InodeElement.svelte';
-	import PopUp from './PopUp.svelte';
-	import { get_file_primary_key, type Inode, type PopupContent } from '../ts/types';
-	import TextInput from './TextInput.svelte';
-	import { is_valid_name } from '../ts/utils';
-	import { delete_files, rename_file } from '../ts/api_handler';
-	import HighlightedText from './HighlightedText.svelte';
+	import PopUp from '$lib/components/PopUp.svelte';
+	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
+	import TextInput from '$lib/components/TextInput.svelte';
+	import { is_valid_name } from '$lib/ts/utils';
+	import { delete_files, rename_file } from '$lib/ts/api_handler';
+	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery } from 'dexie';
 
 	let current_name: string = $state('');

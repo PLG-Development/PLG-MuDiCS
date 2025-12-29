@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { get_shifted_color } from '../ts/stores/ui_behavior';
-	import type { MenuOption } from '../ts/types';
+	import { get_shifted_color } from '$lib/ts/stores/ui_behavior';
+	import type { MenuOption } from '$lib/ts/types';
 	import { fade } from 'svelte/transition';
 
 	let {

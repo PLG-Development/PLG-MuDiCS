@@ -6,7 +6,7 @@
 		get_display_groups,
 		select_all_of_group,
 		set_new_display_group_order
-	} from '../ts/stores/displays';
+	} from '$lib/ts/stores/displays';
 	import {
 		change_height,
 		current_height,
@@ -16,18 +16,18 @@
 		is_group_drag,
 		next_height_step_size,
 		pinned_display_id
-	} from '../ts/stores/ui_behavior';
-	import { type Display, type DisplayGroup, type MenuOption } from '../ts/types';
-	import Button from './Button.svelte';
+	} from '$lib/ts/stores/ui_behavior';
+	import { type Display, type DisplayGroup, type MenuOption } from '$lib/ts/types';
+	import Button from '$lib/components/Button.svelte';
 	import OnlineState from './OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { Menu, Pencil, PinOff, Settings, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
-	import { selected_display_ids } from '../ts/stores/select';
+	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from './DisplayGroupObject.svelte';
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
-	import HighlightedText from './HighlightedText.svelte';
+	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
 
 	let {

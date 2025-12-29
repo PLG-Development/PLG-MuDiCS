@@ -1,17 +1,17 @@
 <script lang="ts">
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import {
 		current_height,
 		get_selectable_color_classes,
 		pinned_display_id
-	} from '../ts/stores/ui_behavior';
-	import DNDGrip from './DNDGrip.svelte';
+	} from '$lib/ts/stores/ui_behavior';
+	import DNDGrip from '$lib/components/DNDGrip.svelte';
 	import { Menu, Pin, PinOff, VideoOff } from 'lucide-svelte';
 	import OnlineState from './OnlineState.svelte';
-	import type { Display, MenuOption } from '../ts/types';
-	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
-	import { screenshot_loop } from '../ts/stores/displays';
-	import { change_file_path, current_file_path } from '../ts/stores/files';
+	import type { Display, MenuOption } from '$lib/ts/types';
+	import { is_selected, select, selected_display_ids } from '$lib/ts/stores/select';
+	import { screenshot_loop } from '$lib/ts/stores/displays';
+	import { change_file_path, current_file_path } from '$lib/ts/stores/files';
 
 	let {
 		display,

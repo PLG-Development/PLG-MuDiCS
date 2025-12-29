@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Monitor, Plus, Radio, Settings, Trash2, X } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
-	import FileView from '$lib/components/FileView.svelte';
-	import ControlView from '$lib/components/ControlView.svelte';
-	import DisplayView from '$lib/components/DisplayView.svelte';
+	import FileView from './FileView.svelte';
+	import ControlView from './ControlView.svelte';
+	import DisplayView from './DisplayView.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
 	import { type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';

@@ -12,13 +12,13 @@
 		TrafficCone
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import Button from './Button.svelte';
-	import PopUp from './PopUp.svelte';
-	import type { PopupContent } from '../ts/types';
+	import Button from '$lib/components/Button.svelte';
+	import PopUp from '$lib/components/PopUp.svelte';
+	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
-	import { run_on_all_selected_displays } from '../ts/stores/displays';
-	import { selected_display_ids } from '../ts/stores/select';
+	import { send_keyboard_input, show_blackscreen } from '$lib/ts/api_handler';
+	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 
 	let popup_content: PopupContent = $state({

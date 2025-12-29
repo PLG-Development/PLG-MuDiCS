@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ChevronRight, House } from 'lucide-svelte';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import type { MenuOption } from '$lib/ts/types';
 	import { change_file_path, current_file_path } from '$lib/ts/stores/files';

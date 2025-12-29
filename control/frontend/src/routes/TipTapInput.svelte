@@ -12,7 +12,7 @@
 		QrCode,
 		Strikethrough
 	} from 'lucide-svelte';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { show_html } from '$lib/ts/api_handler';
 	import { get_selectable_color_classes } from '$lib/ts/stores/ui_behavior';

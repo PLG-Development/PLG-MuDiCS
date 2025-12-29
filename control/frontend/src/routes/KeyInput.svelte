@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { get_selectable_color_classes } from '$lib/ts/stores/ui_behavior';
-	import key_map_json from './../../../../../shared/keys.json';
+	import key_map_json from './../../../../shared/keys.json';
 	import { fade } from 'svelte/transition';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { send_keyboard_input } from '$lib/ts/api_handler';

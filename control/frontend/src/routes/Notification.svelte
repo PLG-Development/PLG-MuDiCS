@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { X } from 'lucide-svelte';
 	import { notifications } from '$lib/ts/stores/notification';
 </script>
