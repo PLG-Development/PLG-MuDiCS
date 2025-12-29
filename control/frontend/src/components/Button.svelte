@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { flip } from 'svelte/animate';
 	import { get_shifted_color } from '../ts/stores/ui_behavior';
 	import type { MenuOption } from '../ts/types';
 	import { fade } from 'svelte/transition';
@@ -11,7 +10,7 @@
 		active_bg = get_shifted_color(bg, 200),
 		disabled = false,
 		title = '',
-		click_function = (e: MouseEvent) => {},
+		click_function = () => {},
 		menu_options = null,
 		menu_class = 'right-0',
 		div_class = '',

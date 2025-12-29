@@ -6,7 +6,6 @@
 	import {
 		Baseline,
 		Bold,
-		Code,
 		Highlighter,
 		Italic,
 		PaintBucket,
@@ -154,7 +153,7 @@
 
 <div data-testid="text-popup" class="flex flex-row gap-2 size-full">
 	<div
-		class="rounded-xl size-full flex-shrink min-w-0 flex"
+		class="rounded-xl size-full shrink min-w-0 flex"
 		style="background-color: {color_states.bg.value};"
 	>
 		<div bind:this={element} class="size-full overflow-auto px-3 py-2"></div>

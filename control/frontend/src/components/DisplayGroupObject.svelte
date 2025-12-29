@@ -17,25 +17,25 @@
 	} from '../ts/stores/displays';
 	import DNDGrip from './DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
-	import type { DisplayGroup, MenuOption } from '../ts/types';
+	import type { MenuOption } from '../ts/types';
 	import { selected_display_ids } from '../ts/stores/select';
 	import { liveQuery } from 'dexie';
-	import { onMount } from 'svelte';
 
-	let { display_group_id, get_display_menu_options, close_pinned_display }: {
-
+	let {
+		display_group_id,
+		get_display_menu_options,
+		close_pinned_display
+	}: {
 		display_group_id: string;
 		get_display_menu_options: (display_id: string) => MenuOption[];
 		close_pinned_display: () => void;
-	} = $props
-	();
+	} = $props();
 
 	let all_selected = liveQuery(() =>
 		all_displays_of_group_selected(display_group_id, $selected_display_ids)
 	);
 	let display_ids_in_group = liveQuery(() => get_display_ids_in_group(display_group_id));
 	let hovering_selectable = $state(false);
-
 
 	async function select_all_of_this_group() {
 		const new_value = !(await all_displays_of_group_selected(

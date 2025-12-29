@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
-	import { onDestroy, onMount } from 'svelte';
 	import Button from './Button.svelte';
 	import type { PopupContent } from '../ts/types';
 	import { fade } from 'svelte/transition';

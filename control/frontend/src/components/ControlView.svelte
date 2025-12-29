@@ -18,7 +18,6 @@
 	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { selected_display_ids } from '../ts/stores/select';
-	import { onMount } from 'svelte';
 	import TipTapInput from './TipTapInput.svelte';
 
 	let popup_content: PopupContent = $state({

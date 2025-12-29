@@ -6,7 +6,7 @@
 		pinned_display_id
 	} from '../ts/stores/ui_behavior';
 	import DNDGrip from './DNDGrip.svelte';
-	import { Menu, Pencil, Pin, PinOff, Trash2, VideoOff, X } from 'lucide-svelte';
+	import { Menu, Pin, PinOff, VideoOff } from 'lucide-svelte';
 	import OnlineState from './OnlineState.svelte';
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
@@ -62,7 +62,7 @@
 	<div class="flex flex-row gap-4 min-w-0 flex-1">
 		<!-- Left Preview Screen -->
 		<button
-			class="group relative aspect-16/9 bg-stone-800 h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
+			class="group relative aspect-video bg-stone-800 h-full rounded-lg overflow-hidden cursor-pointer text-stone-200 transition-colors duration-200"
 			onmouseenter={() => (hovering_unselectable = true)}
 			onmouseleave={() => (hovering_unselectable = false)}
 			onclick={on_preview_click}

@@ -3,15 +3,13 @@
 		ClipboardPaste,
 		Download,
 		FolderPlus,
-		Minus,
-		Info,
 		Pen,
 		RefreshCcw,
 		Scissors,
 		Trash2,
 		Upload,
 		ZoomIn,
-		ZoomOut,
+		ZoomOut
 	} from 'lucide-svelte';
 	import { change_height, current_height, next_height_step_size } from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';

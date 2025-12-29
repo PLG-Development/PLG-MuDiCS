@@ -4,7 +4,6 @@
 	import { onDestroy, onMount } from 'svelte';
 	import type { MenuOption } from '../ts/types';
 	import { change_file_path, current_file_path } from '../ts/stores/files';
-	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 

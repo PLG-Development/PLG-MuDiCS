@@ -6,7 +6,6 @@
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { send_keyboard_input } from '../ts/api_handler';
 
-	const bg = 'bg-stone-700';
 	const key_map: Record<string, string> = key_map_json as Record<string, string>;
 
 	let active = $state(false);
