@@ -152,7 +152,7 @@
 	<input type="color" bind:this={color_state.el} bind:value={color_state.value} class="hidden" />
 {/each}
 
-<div class="flex flex-row gap-2 size-full">
+<div data-testid="text-popup" class="flex flex-row gap-2 size-full">
 	<div
 		class="rounded-xl size-full flex-shrink min-w-0 flex"
 		style="background-color: {color_states.bg.value};"

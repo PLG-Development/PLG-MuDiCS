@@ -92,7 +92,7 @@
 	}
 </script>
 
-<div class="flex flex-row h-{$current_height.file} w-full">
+<div data-testid="inode" class="flex flex-row h-{$current_height.file} w-full">
 	{#if !not_interactable}
 		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 			<Button

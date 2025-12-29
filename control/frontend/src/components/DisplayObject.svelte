@@ -45,6 +45,7 @@
 </script>
 
 <div
+	data-testid="display"
 	role="button"
 	tabindex="0"
 	onkeydown={(e) => {
