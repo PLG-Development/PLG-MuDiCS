@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { get_shifted_color } from '../ts/stores/ui_behavior';
+	import { get_shifted_color } from '$lib/ts/stores/ui_behavior';
 	import { onMount } from 'svelte';
-	import { selected_display_ids } from '../ts/stores/select';
+	import { selected_display_ids } from '$lib/ts/stores/select';
 
 	let {
 		current_value = $bindable(),

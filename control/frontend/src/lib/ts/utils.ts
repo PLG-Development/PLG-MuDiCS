@@ -1,5 +1,5 @@
 import type { DisplayStatus, Inode, SupportedFileType } from './types';
-import supported_file_types_json from './../../../../shared/supported_file_types.json';
+import supported_file_types_json from './../../../../../shared/supported_file_types.json';
 
 const supported_file_types: Record<string, SupportedFileType> = supported_file_types_json as Record<
 	string,

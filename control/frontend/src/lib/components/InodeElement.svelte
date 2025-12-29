@@ -4,26 +4,26 @@
 		current_height,
 		get_selectable_color_classes,
 		get_shifted_color
-	} from '../ts/stores/ui_behavior';
+	} from '$lib/ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import { supported_file_type_icon, type Inode, get_file_primary_key } from '../ts/types';
+	import { supported_file_type_icon, type Inode, get_file_primary_key } from '$lib/ts/types';
 
 	import {
 		is_selected,
 		select,
 		selected_display_ids,
 		selected_file_ids
-	} from '../ts/stores/select';
+	} from '$lib/ts/stores/select';
 	import {
 		change_file_path,
 		current_file_path,
 		get_missing_colliding_display_ids
-	} from '../ts/stores/files';
+	} from '$lib/ts/stores/files';
 	import RefreshPlay from './RefreshPlay.svelte';
-	import { get_file_size_display_string, get_file_type } from '../ts/utils';
-	import { open_file } from '../ts/api_handler';
-	import { run_on_all_selected_displays } from '../ts/stores/displays';
-	import { get_thumbnail_url } from '../ts/stores/thumbnails';
+	import { get_file_size_display_string, get_file_type } from '$lib/ts/utils';
+	import { open_file } from '$lib/ts/api_handler';
+	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery } from 'dexie';
 
 	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();

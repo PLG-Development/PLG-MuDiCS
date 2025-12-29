@@ -1,27 +1,26 @@
 <script lang="ts">
 	import { Monitor, Plus, Radio, Settings, Trash2, X } from 'lucide-svelte';
-	import Button from '../components/Button.svelte';
-	import FileView from '../components/FileView.svelte';
-	import ControlView from '../components/ControlView.svelte';
-	import DisplayView from '../components/DisplayView.svelte';
-	import SplashScreen from './../../../../shared/splash_screen.html?raw';
-	import PopUp from '../components/PopUp.svelte';
-	import { type PopupContent } from '../ts/types';
-	import TextInput from '../components/TextInput.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import FileView from '$lib/components/FileView.svelte';
+	import ControlView from '$lib/components/ControlView.svelte';
+	import DisplayView from '$lib/components/DisplayView.svelte';
+	import PopUp from '$lib/components/PopUp.svelte';
+	import { type PopupContent } from '$lib/ts/types';
+	import TextInput from '$lib/components/TextInput.svelte';
 	import {
 		add_display,
 		edit_display_data,
 		get_display_by_id,
 		is_display_name_taken,
 		remove_display
-	} from '../ts/stores/displays';
+	} from '$lib/ts/stores/displays';
 	import { text } from '@sveltejs/kit';
-	import { notifications } from '../ts/stores/notification';
-	import { ping_ip } from '../ts/api_handler';
+	import { notifications } from '$lib/ts/stores/notification';
+	import { ping_ip } from '$lib/ts/api_handler';
 	import { onMount } from 'svelte';
-	import { on_start } from '../ts/main';
-	import { display_status_to_info } from '../ts/utils';
-	import HighlightedText from '../components/HighlightedText.svelte';
+	import { on_start } from '$lib/ts/main';
+	import { display_status_to_info } from '$lib/ts/utils';
+	import HighlightedText from '$lib/components/HighlightedText.svelte';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;

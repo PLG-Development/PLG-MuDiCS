@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import { get_selectable_color_classes } from '../ts/stores/ui_behavior';
-	import key_map_json from './../../../../shared/keys.json';
+	import { get_selectable_color_classes } from '$lib/ts/stores/ui_behavior';
+	import key_map_json from './../../../../../shared/keys.json';
 	import { fade } from 'svelte/transition';
-	import { run_on_all_selected_displays } from '../ts/stores/displays';
-	import { send_keyboard_input } from '../ts/api_handler';
+	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { send_keyboard_input } from '$lib/ts/api_handler';
 
 	const key_map: Record<string, string> = key_map_json as Record<string, string>;
 

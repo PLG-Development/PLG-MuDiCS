@@ -2,7 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import Button from './Button.svelte';
 	import { X } from 'lucide-svelte';
-	import { notifications } from '../ts/stores/notification';
+	import { notifications } from '$lib/ts/stores/notification';
 </script>
 
 <div

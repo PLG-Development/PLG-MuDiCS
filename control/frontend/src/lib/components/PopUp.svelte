@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import Button from './Button.svelte';
-	import type { PopupContent } from '../ts/types';
+	import type { PopupContent } from '$lib/ts/types';
 	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	let {
 		content,

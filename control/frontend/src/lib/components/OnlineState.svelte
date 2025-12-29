@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type DisplayStatus } from '../ts/types';
-	import { display_status_to_info } from '../ts/utils';
+	import { type DisplayStatus } from '$lib/ts/types';
+	import { display_status_to_info } from '$lib/ts/utils';
 
 	let {
 		selected,

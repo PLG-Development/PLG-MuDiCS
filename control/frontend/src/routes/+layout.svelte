@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import Notification from '../components/Notification.svelte';
+	import Notification from '$lib/components/Notification.svelte';
 
 	let { children } = $props();
 </script>

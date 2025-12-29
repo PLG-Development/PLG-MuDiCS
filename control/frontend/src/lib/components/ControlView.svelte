@@ -11,6 +11,7 @@
 		TextAlignStart,
 		TrafficCone
 	} from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import Button from './Button.svelte';
 	import PopUp from './PopUp.svelte';
 	import type { PopupContent } from '../ts/types';

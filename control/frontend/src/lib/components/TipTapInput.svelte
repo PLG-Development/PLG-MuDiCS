@@ -13,9 +13,9 @@
 		Strikethrough
 	} from 'lucide-svelte';
 	import Button from './Button.svelte';
-	import { run_on_all_selected_displays } from '../ts/stores/displays';
-	import { show_html } from '../ts/api_handler';
-	import { get_selectable_color_classes } from '../ts/stores/ui_behavior';
+	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { show_html } from '$lib/ts/api_handler';
+	import { get_selectable_color_classes } from '$lib/ts/stores/ui_behavior';
 	import { TextStyle } from '@tiptap/extension-text-style';
 	import { Color } from '@tiptap/extension-text-style';
 	import Highlight from '@tiptap/extension-highlight';
