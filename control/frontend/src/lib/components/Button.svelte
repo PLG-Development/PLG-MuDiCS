@@ -11,7 +11,7 @@
 		disabled = false,
 		title = '',
 		click_function = () => {},
-		menu_options = null,
+		menu_options = [],
 		menu_class = 'right-0',
 		div_class = '',
 		children
@@ -23,7 +23,7 @@
 		disabled?: boolean;
 		title?: string;
 		click_function?: (e: MouseEvent) => void;
-		menu_options?: MenuOption[] | null;
+		menu_options?: MenuOption[];
 		menu_class?: string;
 		div_class?: string;
 		children?: any;

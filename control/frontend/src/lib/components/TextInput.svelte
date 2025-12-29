@@ -122,7 +122,7 @@
 			onkeydown={handle_keydown}
 			oninput={validate_input}
 			type="text"
-			class=" outline-none py-2 px-3 transition-all duration-100 flex-grow group"
+			class=" outline-none py-2 px-3 transition-all duration-100 grow group"
 			{placeholder}
 		/>
 		{#if extension}

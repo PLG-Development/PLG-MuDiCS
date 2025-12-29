@@ -14,7 +14,6 @@
 		is_display_name_taken,
 		remove_display
 	} from '$lib/ts/stores/displays';
-	import { text } from '@sveltejs/kit';
 	import { notifications } from '$lib/ts/stores/notification';
 	import { ping_ip } from '$lib/ts/api_handler';
 	import { onMount } from 'svelte';

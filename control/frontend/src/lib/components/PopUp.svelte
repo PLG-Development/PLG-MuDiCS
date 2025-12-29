@@ -52,20 +52,20 @@
 			{#if content.title}
 				<div class="font-bold bg-stone-700 p-1.5 flex flex-row justify-between gap-8 w-full">
 					<div
-						class="flex flex-row flex-1 gap-3 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 flex-shrink-0 text-lg {content.title_class ??
+						class="flex flex-row flex-1 gap-3 pl-2 py-1 items-center grow whitespace-nowrap min-w-0 shrink-0 text-lg {content.title_class ??
 							''}"
 					>
 						{#if content.title_icon}
 							{@const Icon = content.title_icon}
-							<Icon strokeWidth="2" class="flex-shrink-0" />
+							<Icon strokeWidth="2" class="shrink-0" />
 						{/if}
-						<div class="flex-shrink-0">
+						<div class="shrink-0">
 							{content.title}
 						</div>
 					</div>
-					<div class="flex aspect-square flex-shrink-0">
+					<div class="flex aspect-square shrink-0">
 						{#if content.closable}
-							<Button className="aspect-square !p-1.5" click_function={try_to_close}>
+							<Button className="aspect-square p-1.5!" click_function={try_to_close}>
 								<X />
 							</Button>
 						{/if}

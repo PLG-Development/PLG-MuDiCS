@@ -246,7 +246,7 @@
 		<div class="flex flex-ro">
 			<Button
 				title="Dateien größer darstellen"
-				className="aspect-square !p-1 rounded-r-none"
+				className="aspect-square p-1! rounded-r-none"
 				bg="bg-stone-600"
 				disabled={!Boolean(next_height_step_size('file', $current_height, 1))}
 				click_function={() => {
@@ -257,7 +257,7 @@
 			</Button>
 			<Button
 				title="Dateien kleiner darstellen"
-				className="aspect-square !p-1 rounded-l-none"
+				className="aspect-square p-1! rounded-l-none"
 				bg="bg-stone-600"
 				disabled={!Boolean(next_height_step_size('file', $current_height, -1))}
 				click_function={() => {
@@ -349,7 +349,7 @@
 								: 'den ausgewählten Bildschirmen'} im aktuellen Ordner. Klicke auf <HighlightedText
 								bg="bg-stone-700"
 								fg="text-stone-400"
-								className="!p-1"><Upload class="inline pb-1" /></HighlightedText
+								className="p-1!"><Upload class="inline pb-1" /></HighlightedText
 							> um Datei(en) hochzuladen.
 						</span>
 					{/if}

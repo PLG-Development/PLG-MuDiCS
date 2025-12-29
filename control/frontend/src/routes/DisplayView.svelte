@@ -150,7 +150,7 @@
 									/>
 								</div>
 								<Button
-									className="aspect-square !p-1"
+									className="aspect-square p-1!"
 									bg="bg-stone-600"
 									click_function={(e) => {
 										e.stopPropagation();
@@ -162,7 +162,7 @@
 
 								<Button
 									title="Bildschirm nicht mehr anpinnen"
-									className="aspect-square !p-1"
+									className="aspect-square p-1!"
 									bg="bg-stone-600"
 									click_function={close_pinned_display}
 								>
@@ -218,7 +218,7 @@
 						<div class="flex flex-row">
 							<Button
 								title="Bildschirme größer darstellen"
-								className="aspect-square !p-1 rounded-r-none"
+								className="aspect-square p-1! rounded-r-none"
 								bg="bg-stone-600"
 								disabled={!Boolean(next_height_step_size('display', $current_height, 1))}
 								click_function={() => {
@@ -229,7 +229,7 @@
 							</Button>
 							<Button
 								title="Bildschirme kleiner darstellen"
-								className="aspect-square !p-1 rounded-l-none"
+								className="aspect-square p-1! rounded-l-none"
 								bg="bg-stone-600"
 								disabled={!Boolean(next_height_step_size('display', $current_height, -1))}
 								click_function={() => {
@@ -263,7 +263,7 @@
 						{#if ($display_groups || []).length === 0}
 							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
 								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
-								<HighlightedText fg="text-stone-450" className="!p-1"
+								<HighlightedText fg="text-stone-450" className="p-1!"
 									><Settings class="inline pb-1" /></HighlightedText
 								>
 								und
