@@ -3,6 +3,7 @@
 		ClipboardPaste,
 		Download,
 		FolderPlus,
+		Minus,
 		Info,
 		Pen,
 		RefreshCcw,
@@ -17,29 +18,32 @@
 	import PathBar from './PathBar.svelte';
 	import { selected_display_ids, selected_file_ids } from '../ts/stores/select';
 	import {
-		all_files,
 		current_file_path,
 		get_current_folder_elements,
-		get_display_ids_where_file_is_missing,
-		get_display_ids_where_path_does_not_exist,
 		get_file_by_id,
-		get_longest_existing_path_and_needed_parts,
 		run_for_selected_files_on_selected_displays,
-		update_current_folder_on_selected_displays
+		update_current_folder_on_selected_displays,
+		get_displays_where_path_exists,
+		create_folder_on_all_selected_displays
 	} from '../ts/stores/files';
 	import { slide } from 'svelte/transition';
-	import FolderElementObject from './FolderElementObject.svelte';
+	import InodeElement from './InodeElement.svelte';
 	import PopUp from './PopUp.svelte';
-	import type { PopupContent } from '../ts/types';
+	import { get_file_primary_key, type Inode, type PopupContent } from '../ts/types';
 	import TextInput from './TextInput.svelte';
 	import { is_valid_name } from '../ts/utils';
-	import { displays, get_display_by_id, run_on_all_selected_displays } from '../ts/stores/displays';
-	import { create_folders, delete_files, rename_file } from '../ts/api_handler';
-	import { get } from 'svelte/store';
+	import { delete_files, rename_file } from '../ts/api_handler';
 	import HighlightedText from './HighlightedText.svelte';
+	import { liveQuery } from 'dexie';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
+
+	let display_names_where_path_does_not_exist: string[] = $state([]);
+	let selected_files = liveQuery(() => get_selected_files($selected_display_ids));
+	let current_folder_elements = liveQuery(() =>
+		get_current_folder_elements($current_file_path, $selected_display_ids)
+	);
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -48,24 +52,26 @@
 		closable: true
 	});
 
+	async function get_selected_files(selected_file_ids: string[]): Promise<Inode[]> {
+		try {
+			const results = await Promise.all(selected_file_ids.map((id) => get_file_by_id(id)));
+			return results.filter((element) => element !== null);
+		} catch (e: unknown) {
+			console.error('Error on generating selected_files');
+			return [];
+		}
+	}
+
 	function popup_close_function() {
 		popup_content.open = false;
 	}
 
 	async function create_new_folder() {
-		for (const display_id of $selected_display_ids) {
-			const display = get_display_by_id(display_id, $displays);
-			if (!display) continue;
-			const path_data = get_longest_existing_path_and_needed_parts(
-				$current_file_path,
-				display_id,
-				$all_files
-			);
-			await create_folders(display.ip, path_data.existing, [
-				...path_data.needed,
-				current_name.trim()
-			]);
-		}
+		await create_folder_on_all_selected_displays(
+			current_name.trim(),
+			$current_file_path,
+			$selected_display_ids
+		);
 		await update_current_folder_on_selected_displays();
 		popup_close_function();
 	}
@@ -82,8 +88,8 @@
 		popup_close_function();
 	}
 
-	const show_edit_file_popup = () => {
-		const file = get_file_by_id($selected_file_ids[0], $all_files, $current_file_path);
+	const show_edit_file_popup = async () => {
+		const file = await get_file_by_id($selected_file_ids[0]);
 		if (!file) return;
 		const is_folder = file.type === 'inode/directory';
 		const extension = is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
@@ -99,9 +105,12 @@
 		};
 	};
 
-	const show_new_folder_popup = () => {
+	const show_new_folder_popup = async () => {
 		current_name = '';
 		current_valid = false;
+		display_names_where_path_does_not_exist = (
+			await get_displays_where_path_exists($current_file_path, $selected_display_ids, true)
+		).map((display) => display.name);
 		popup_content = {
 			open: true,
 			snippet: new_folder_popup,
@@ -123,22 +132,18 @@
 </script>
 
 {#snippet new_folder_popup()}
-	{#if get_display_ids_where_path_does_not_exist($current_file_path, $selected_display_ids, $all_files).length > 0}
+	{#if display_names_where_path_does_not_exist.length > 0}
 		<span class="leading-relaxed"
 			>Der aktuelle Pfad <HighlightedText
 				>{$current_file_path.slice(0, $current_file_path.length - 1)}</HighlightedText
-			> existiert nicht auf {get_display_ids_where_path_does_not_exist(
-				$current_file_path,
-				$selected_display_ids,
-				$all_files
-			).length === 1
+			> existiert nicht auf {display_names_where_path_does_not_exist.length === 1
 				? 'dem Bildschirm'
 				: 'den Bildschirmen'}
-			{#each get_display_ids_where_path_does_not_exist($current_file_path, $selected_display_ids, $all_files) as display_id, i}
+			{#each display_names_where_path_does_not_exist as display_name, i}
 				{#if i !== 0}
 					,
 				{/if}
-				<HighlightedText>{get_display_by_id(display_id, $displays)?.name}</HighlightedText>
+				<HighlightedText>{display_name}</HighlightedText>
 			{/each}. Mit der Erstellung dieses Ordners wird der Pfad automatisch mit leeren Ordnern bis
 			zum aktuellen Pfad aufgefüllt.
 		</span>
@@ -148,14 +153,14 @@
 		bind:current_value={current_name}
 		bind:current_valid
 		title="Ordnername"
-		is_valid_function={(input: string) => {
+		is_valid_function={async (input: string) => {
 			if (input.startsWith('.')) return [false, 'Name darf nicht mit . beginnen'];
 			const trimmed_input = input.trim();
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (
-				get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).some(
+				(await get_current_folder_elements($current_file_path, $selected_display_ids)).some(
 					(e) => e.name === trimmed_input
 				)
 			)
@@ -178,30 +183,28 @@
 		bind:current_value={current_name}
 		bind:current_valid
 		title="Neuer {extension === '' ? 'Ordner' : 'Datei'}name"
-		is_valid_function={(input: string) => {
+		is_valid_function={async (input: string) => {
 			if (input.startsWith('.')) return [false, 'Name darf nicht mit . beginnen'];
 			const trimmed_input = input.trim() + extension;
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (
-				get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).some(
-					(e) =>
-						e.name === trimmed_input &&
-						e.id !== get_file_by_id($selected_file_ids[0], $all_files, $current_file_path)?.id
+				(await get_current_folder_elements($current_file_path, $selected_display_ids)).some(
+					async (e) => e.name === trimmed_input && get_file_primary_key(e) !== $selected_file_ids[0]
 				)
 			)
 				return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
 		enter_mode="submit"
-		enter_function={() => edit_file_name(current_name.trim() + extension)}
+		enter_function={async () => await edit_file_name(current_name.trim() + extension)}
 		{extension}
 	/>
 	<div class="flex flex-row justify-end gap-2">
 		<Button
 			className="px-4 font-bold"
-			click_function={() => edit_file_name(current_name.trim() + extension)}
+			click_function={async () => await edit_file_name(current_name.trim() + extension)}
 			disabled={!current_valid}>{extension === '' ? 'Ordner' : 'Datei'} umbenennen</Button
 		>
 	</div>
@@ -213,10 +216,8 @@
 			>{`${$selected_file_ids.length === 1 ? 'Folgendes Objekt' : `Folgende ${$selected_file_ids.length} Objekte`} löschen? (Wiederherstellung nicht möglich)`}</span
 		>
 		<div class="flex flex-col gap-2 overflow-auto h-full min-h-0 grow-0">
-			{#each $selected_file_ids
-				.map((file_id) => get_file_by_id(file_id, $all_files, $current_file_path))
-				.filter((element) => element !== null) as file}
-				<FolderElementObject {file} not_interactable />
+			{#each $selected_files || [] as file}
+				<InodeElement {file} not_interactable />
 			{/each}
 		</div>
 	</div>
@@ -237,10 +238,6 @@
 			}}>Löschen</Button
 		>
 	</div>
-{/snippet}
-
-{#snippet clipboard_hover_snippet()}
-	<div></div>
 {/snippet}
 
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
@@ -312,7 +309,7 @@
 					>
 					<Button
 						title="Ausgewählte Datei(en) einfügen"
-						className="!p-0 flex relative"
+						className="px-3 flex"
 						disabled={$selected_display_ids.length === 0}
 					>
 						<ClipboardPaste />
@@ -342,12 +339,12 @@
 						Es sind keine Bildschirme ausgewählt.
 					</span>
 				{:else}
-					{#each get_current_folder_elements($all_files, $current_file_path, $selected_display_ids) as folder_element (folder_element.id)}
+					{#each $current_folder_elements || [] as folder_element (get_file_primary_key(folder_element))}
 						<section in:slide={{ duration: 100 }} class="outline-none">
-							<FolderElementObject file={folder_element} />
+							<InodeElement file={folder_element} />
 						</section>
 					{/each}
-					{#if get_current_folder_elements($all_files, $current_file_path, $selected_display_ids).length === 0}
+					{#if ($current_folder_elements || []).length === 0}
 						<span class="text-stone-450 px-10 py-6 leading-relaxed text-center max-w-full">
 							Es existieren keine Dateien auf {$selected_display_ids.length === 1
 								? 'dem ausgewähltem Bildchirm'

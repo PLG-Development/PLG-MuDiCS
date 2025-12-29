@@ -8,9 +8,11 @@
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 
-	let { bg = 'bg-stone-700' } = $props<{
+	let {
+		bg = 'bg-stone-700'
+	}: {
 		bg?: string;
-	}>();
+	} = $props();
 
 	let outside_container: HTMLDivElement;
 	let inside_container: HTMLDivElement;
@@ -79,21 +81,21 @@
 			out.push({
 				name: '  '.repeat(i) + hidden_folders[i],
 				class: 'truncate max-w-80',
-				on_select: () => {
-					open_path(i + 1, path);
+				on_select: async () => {
+					await open_path(i + 1, path);
 				}
 			});
 		}
 		return out;
 	}
 
-	function open_path(index_of_all_folders: number, path: string) {
+	async function open_path(index_of_all_folders: number, path: string) {
 		let new_path = '/';
 		const all_folders = get_folders(path);
 		for (let i = 0; i < index_of_all_folders; i++) {
 			new_path += all_folders[i] + '/';
 		}
-		change_file_path(new_path);
+		await change_file_path(new_path);
 	}
 
 	onMount(() => {
@@ -113,11 +115,14 @@
 				<Button
 					className="py-1 shrink-0 grow-0 w-10"
 					{bg}
-					click_function={(e) => {
-						open_path(0, $current_file_path);
+					click_function={async () => {
+						await open_path(0, $current_file_path);
 					}}
 				>
-					<House class="size-full transition-all duration-100" strokeWidth={$current_file_path === '/' ? 2.7 : 2}/>
+					<House
+						class="size-full transition-all duration-100"
+						strokeWidth={$current_file_path === '/' ? 2.7 : 2}
+					/>
 				</Button>
 			</div>
 			{#if cut_folders !== 0}
@@ -144,8 +149,8 @@
 							? 'max-w-80 font-bold'
 							: 'max-w-30'}"
 						{bg}
-						click_function={(e) => {
-							open_path(cut_folders + i + 1, $current_file_path);
+						click_function={async () => {
+							await open_path(cut_folders + i + 1, $current_file_path);
 						}}
 					>
 						<ChevronRight class="shrink-0 text-stone-500 h-full" />

@@ -10,30 +10,36 @@
 	import OnlineState from './OnlineState.svelte';
 	import type { Display, MenuOption } from '../ts/types';
 	import { is_selected, select, selected_display_ids } from '../ts/stores/select';
-	import { update_screenshot } from '../ts/stores/displays';
-	import { filter_file_selection_for_current_selected_displays } from '../ts/stores/files';
+	import { screenshot_loop } from '../ts/stores/displays';
+	import { change_file_path, current_file_path } from '../ts/stores/files';
 
-	let { display, get_display_menu_options, close_pinned_display } = $props<{
+	let {
+		display,
+		get_display_menu_options,
+		close_pinned_display
+	}: {
 		display: Display;
 		get_display_menu_options: (display_id: string) => MenuOption[];
 		close_pinned_display: () => void;
-	}>();
+	} = $props();
 
 	let hovering_unselectable = $state(false);
 
-	function onclick(e: Event) {
-		select(selected_display_ids, display.id);
-		filter_file_selection_for_current_selected_displays();
+	async function onclick(e: Event) {
 		e.stopPropagation();
+		select(selected_display_ids, display.id, 'toggle');
+
+		// force file view update
+		await change_file_path($current_file_path);
 	}
 
-	function on_preview_click(e: MouseEvent) {
+	async function on_preview_click(e: MouseEvent) {
 		if ($pinned_display_id === display.id) {
 			close_pinned_display();
 		} else {
 			$pinned_display_id = display.id;
 		}
-		update_screenshot(display.id);
+		await screenshot_loop(display.id);
 		e.stopPropagation();
 	}
 </script>
@@ -65,8 +71,8 @@
 					<div class="size-[50%]">
 						<Pin class="size-full" />
 					</div>
-				{:else if display.preview_url}
-					<img src={display.preview_url} alt="preview" class="w-full object-cover bg-black" />
+				{:else if display.preview.url}
+					<img src={display.preview.url} alt="preview" class="w-full object-cover bg-black" />
 				{:else}
 					<!-- No Signal -->
 					<div class="size-full bg-black flex justify-center items-center">

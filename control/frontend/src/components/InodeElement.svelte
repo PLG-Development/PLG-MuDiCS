@@ -1,24 +1,12 @@
 <script lang="ts">
-	import {
-		ArrowRight,
-		Ban,
-		FileIcon,
-		Folder,
-		Play,
-		RefreshCcwDot,
-		TriangleAlert
-	} from 'lucide-svelte';
+	import { ArrowRight, Ban, FileIcon, Folder, Play } from 'lucide-svelte';
 	import {
 		current_height,
 		get_selectable_color_classes,
 		get_shifted_color
 	} from '../ts/stores/ui_behavior';
 	import Button from './Button.svelte';
-	import {
-		supported_file_type_icon,
-		type FolderElement,
-		type SupportedFileType
-	} from '../ts/types';
+	import { supported_file_type_icon, type Inode, get_file_primary_key } from '../ts/types';
 
 	import {
 		is_selected,
@@ -27,39 +15,23 @@
 		selected_file_ids
 	} from '../ts/stores/select';
 	import {
-		all_files,
 		change_file_path,
 		current_file_path,
-		get_display_ids_where_file_is_missing
+		get_missing_colliding_display_ids
 	} from '../ts/stores/files';
 	import RefreshPlay from './RefreshPlay.svelte';
 	import { get_file_size_display_string, get_file_type } from '../ts/utils';
 	import { open_file } from '../ts/api_handler';
-	import {
-		displays,
-		get_display_by_id,
-		run_on_all_selected_displays,
-		update_screenshot
-	} from '../ts/stores/displays';
+	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { get_thumbnail_url } from '../ts/stores/thumbnails';
-	import { db } from '../ts/indexdb/file_thumbnails.db';
-	import { onDestroy, onMount } from 'svelte';
 	import { liveQuery } from 'dexie';
 
-	let { file, not_interactable = false } = $props<{
-		file: FolderElement;
-		not_interactable?: boolean;
-	}>();
+	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
 
-	let thumbnail_url: string | null = $state(null);
-	// Update thumbnail_url automatically if data is available
-	const subscription = liveQuery(() => db.thumbnail_blobs.get(file.hash)).subscribe({
-		next: async () => {
-			thumbnail_url = await get_thumbnail_url(file.hash);
-		},
-		error: (err) => console.error('Dexie subscription error:', err)
-	});
-	onDestroy(() => subscription.unsubscribe());
+	let missing_colliding_displays_ids = liveQuery(() =>
+		get_missing_colliding_display_ids(file, $selected_display_ids)
+	);
+	let thumbnail_url = liveQuery(() => get_thumbnail_url(file));
 
 	const is_folder = file.type === 'inode/directory';
 
@@ -106,13 +78,13 @@
 
 	function onclick(e: Event) {
 		if (not_interactable) return;
-		select(selected_file_ids, file.id);
+		select(selected_file_ids, get_file_primary_key(file), 'toggle');
 		e.stopPropagation();
 	}
 
 	async function open() {
 		if (is_folder) {
-			change_file_path($current_file_path + file.name + '/');
+			await change_file_path($current_file_path + file.name + '/');
 		} else {
 			const path_to_file = $current_file_path + file.name;
 			await run_on_all_selected_displays(open_file, true, path_to_file);
@@ -158,7 +130,7 @@
 			>
 				{#if is_folder}
 					<ArrowRight class="size-full" strokeWidth="3" />
-				{:else if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[0].length !== 0}
+				{:else if $missing_colliding_displays_ids && $missing_colliding_displays_ids.missing.length !== 0}
 					<RefreshPlay className="size-full" />
 				{:else if get_file_type(file) !== null}
 					<Play class="size-full" strokeWidth="3" />
@@ -176,7 +148,7 @@
 		}}
 		{onclick}
 		class="{get_selectable_color_classes(
-			!not_interactable && is_selected(file.id, $selected_file_ids),
+			!not_interactable && is_selected(get_file_primary_key(file), $selected_file_ids),
 			{
 				bg: true,
 				hover: !not_interactable,
@@ -191,9 +163,9 @@
 			<div class="aspect-square rounded-md flex justify-center items-center">
 				{#if is_folder}
 					<Folder class="size-full p-2" />
-				{:else if thumbnail_url}
+				{:else if $thumbnail_url || null}
 					<img
-						src={thumbnail_url}
+						src={$thumbnail_url || null}
 						alt="file_thumbnail"
 						class="object-contain size-full select-none block p-1 rounded-lg"
 						draggable="false"
@@ -213,7 +185,7 @@
 		</div>
 		<div
 			class=" p-1 flex flex-row items-center gap-1 pr-1 {get_grayed_out_text_color_strings(
-				is_selected(file.id, $selected_file_ids)
+				is_selected(get_file_primary_key(file), $selected_file_ids)
 			)} duration-200 transition-colors"
 		>
 			<!-- {#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
@@ -251,7 +223,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(file.id, $selected_file_ids)
+					is_selected(get_file_primary_key(file), $selected_file_ids)
 				)} duration-200 transition-colors my-1"
 			></div>
 			<div
@@ -262,7 +234,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(file.id, $selected_file_ids)
+					is_selected(get_file_primary_key(file), $selected_file_ids)
 				)} duration-200 transition-colors"
 			></div>
 			<div

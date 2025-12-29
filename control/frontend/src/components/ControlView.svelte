@@ -15,7 +15,7 @@
 	import PopUp from './PopUp.svelte';
 	import type { PopupContent } from '../ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen, show_html } from '../ts/api_handler';
+	import { send_keyboard_input, show_blackscreen } from '../ts/api_handler';
 	import { run_on_all_selected_displays } from '../ts/stores/displays';
 	import { selected_display_ids } from '../ts/stores/select';
 	import { onMount } from 'svelte';
@@ -81,16 +81,16 @@
 						title="Vorherige Folie (Pfeil nach Links)"
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
-						click_function={() => {
-							run_on_all_selected_displays(send_keyboard_input, true, 'VK_LEFT');
+						click_function={async () => {
+							await run_on_all_selected_displays(send_keyboard_input, true, 'VK_LEFT');
 						}}><ArrowBigLeft /></Button
 					>
 					<Button
 						title="Nächste Folie (Pfeil nach Rechts)"
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
-						click_function={() => {
-							run_on_all_selected_displays(send_keyboard_input, true, 'VK_RIGHT');
+						click_function={async () => {
+							await run_on_all_selected_displays(send_keyboard_input, true, 'VK_RIGHT');
 						}}><ArrowBigRight /></Button
 					>
 				</div>
@@ -102,8 +102,8 @@
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
-					click_function={() => {
-						run_on_all_selected_displays(show_blackscreen, true);
+					click_function={async () => {
+						await run_on_all_selected_displays(show_blackscreen, true);
 					}}><Presentation />Blackout</Button
 				>
 				<div class="flex flex-row justify-normal">

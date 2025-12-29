@@ -114,11 +114,11 @@
 		};
 	}
 
-	function show_text() {
+	async function show_text() {
 		const html =
 			editor_state.editor?.getHTML() +
 			`<style>:root {--background-color: ${color_states.bg.value} !important;}</style>`;
-		run_on_all_selected_displays(show_html, true, html);
+		await run_on_all_selected_displays(show_html, true, html);
 	}
 
 	onMount(() => {

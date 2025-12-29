@@ -16,28 +16,28 @@
 		extension = null,
 		enter_mode = 'none',
 		enter_function = null
-	} = $props<{
+	}: {
 		current_value: string;
 		current_valid: boolean;
 		className?: string;
 		bg?: string;
 		title: string;
 		placeholder?: string;
-		is_valid_function?: ((input: string) => [boolean, string]) | null;
+		is_valid_function?: ((input: string) => [boolean, string] | Promise<[boolean, string]>) | null;
 		focused_on_start?: boolean;
 		extension?: string | null;
 		enter_mode?: 'none' | 'focus_next' | 'submit';
 		enter_function?: (() => void) | null;
-	}>();
+	} = $props();
 
 	let focus_bg = get_shifted_color(bg, 100);
 	let focused: boolean = $state(false);
 	let current_info = $state('');
 	let input_element: HTMLInputElement;
 
-	function validate_input() {
+	async function validate_input() {
 		if (!is_valid_function) return;
-		[current_valid, current_info] = is_valid_function(current_value.trim());
+		[current_valid, current_info] = await is_valid_function(current_value.trim());
 	}
 
 	function get_highlighting_string(): string {
@@ -72,12 +72,12 @@
 		}
 	}
 
-	onMount(() => {
-		validate_input();
+	onMount(async () => {
+		await validate_input();
 		if (focused_on_start && input_element) input_element.focus();
 
-		selected_display_ids.subscribe(() => {
-			validate_input();
+		selected_display_ids.subscribe(async () => {
+			await validate_input();
 		});
 	});
 </script>

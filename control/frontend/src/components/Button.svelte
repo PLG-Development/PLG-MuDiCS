@@ -16,7 +16,7 @@
 		menu_class = 'right-0',
 		div_class = '',
 		children
-	} = $props<{
+	}: {
 		className?: string;
 		bg?: string;
 		hover_bg?: string;
@@ -28,7 +28,7 @@
 		menu_class?: string;
 		div_class?: string;
 		children?: any;
-	}>();
+	} = $props();
 
 	let menu_shown = $state(false);
 	let button_element: HTMLButtonElement;
@@ -166,8 +166,8 @@
 						? 'text-stone-500 cursor-not-allowed'
 						: 'hover:bg-white/35 active:bg-white/60 cursor-pointer ' +
 							option.class} rounded-lg p-2 transition-colors duration-200 select-none flex flex-row gap-2 items-center"
-					onclick={(e) => {
-						if (option.on_select) option.on_select();
+					onclick={async (e) => {
+						if (option.on_select) await option.on_select();
 						close_menu();
 					}}
 				>

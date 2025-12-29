@@ -10,7 +10,6 @@
 	import TextInput from '../components/TextInput.svelte';
 	import {
 		add_display,
-		displays,
 		edit_display_data,
 		get_display_by_id,
 		is_display_name_taken,
@@ -35,6 +34,7 @@
 		title_class: '!text-xl',
 		closable: true
 	});
+	let remove_display_name = $state('');
 
 	const text_inputs_valid_null_values = {
 		name: { valid: false, value: '' },
@@ -81,7 +81,8 @@
 		};
 	};
 
-	const show_remove_display_popup = (display_id: string) => {
+	const show_remove_display_popup = async (display_id: string) => {
+		remove_display_name = (await get_display_by_id(display_id))?.name || '?';
 		popup_content = {
 			open: true,
 			snippet: remove_display_popup,
@@ -93,8 +94,8 @@
 		};
 	};
 
-	const show_edit_display_popup = (display_id: string) => {
-		const display = get_display_by_id(display_id, $displays);
+	const show_edit_display_popup = async (display_id: string) => {
+		const display = await get_display_by_id(display_id);
 		if (!display) return;
 		// insert existing values in text_inputs_valid
 		for (const key of Object.keys(text_inputs_valid) as (keyof typeof text_inputs_valid)[]) {
@@ -112,17 +113,14 @@
 		};
 	};
 
-	onMount(() => {
-		on_start();
-	});
+	onMount(on_start);
 </script>
 
 {#snippet remove_display_popup(display_id: string)}
 	<div class="max-w-prose px-2">
-		Soll der Bildschirm <HighlightedText
-			>{get_display_by_id(display_id, $displays)?.name || '?'}</HighlightedText
-		> wirklich gelöscht werden? Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation
-		auf dem Gerät bleibt bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
+		Soll der Bildschirm <HighlightedText>{remove_display_name}</HighlightedText> wirklich gelöscht werden?
+		Dadurch wird es von diesem Controller nicht mehr erreichbar. Die Installation auf dem Gerät bleibt
+		bestehen. Mit dem erneuten Hinzufügen des Bildschirms wird er wieder steuerbar.
 	</div>
 	<div class="flex flex-row justify-end gap-2">
 		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
@@ -130,8 +128,8 @@
 			hover_bg="bg-red-400"
 			active_bg="bg-red-500"
 			className="px-4 flex text-red-400 hover:text-stone-100"
-			click_function={() => {
-				remove_display(display_id);
+			click_function={async () => {
+				await remove_display(display_id);
 				popup_close_function();
 			}}>Löschen</Button
 		>
@@ -145,13 +143,13 @@
 		bind:current_valid={text_inputs_valid.name.valid}
 		title="Anzeigename"
 		placeholder="z.B. Beamer vorne links"
-		is_valid_function={(input: string) => {
+		is_valid_function={async (input: string) => {
 			if (!!existing_display_id) {
-				if (input === get_display_by_id(existing_display_id, $displays)?.name)
+				if (input === (await get_display_by_id(existing_display_id))?.name)
 					return [true, 'Gültiger Name'];
 			}
 			if (input.length === 0 || input.length > 50) return [false, 'Ungültige Länge'];
-			if (is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
+			if (await is_display_name_taken(input)) return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
 		enter_mode="focus_next"
@@ -199,8 +197,8 @@
 					: [false, 'Ungültige MAC-Adresse'];
 		}}
 		enter_mode="submit"
-		enter_function={() => {
-			finalize_add_edit_display(existing_display_id);
+		enter_function={async () => {
+			await finalize_add_edit_display(existing_display_id);
 		}}
 	/>
 	<div class="flex flex-row gap-2 justify-end pt-2">
@@ -212,8 +210,8 @@
 			disabled={!all_text_inputs_valid()}
 			className="{!!existing_display_id ? 'px-4' : 'pl-3 pr-4 gap-2'} font-bold"
 			bg="bg-stone-650"
-			click_function={() => {
-				finalize_add_edit_display(existing_display_id);
+			click_function={async () => {
+				await finalize_add_edit_display(existing_display_id);
 			}}
 			>{#if !!existing_display_id}
 				Speichern
