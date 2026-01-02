@@ -38,16 +38,17 @@
 	let current_valid: boolean = $state(false);
 
 	let display_names_where_path_does_not_exist: string[] = $state([]);
-	let selected_files = liveQuery(() => get_selected_files($selected_display_ids));
-
-	let current_folder_elements: Observable<Inode[]> | undefined = $state();
-
+	let selected_files: Observable<Inode[]> | undefined = $state();
 	$effect(() => {
-		const path = $current_file_path, display_ids = $selected_display_ids;
+		const s = $selected_file_ids;
+		selected_files = liveQuery(() => get_selected_files(s));
+	});
+	let current_folder_elements: Observable<Inode[]> | undefined = $state();
+	$effect(() => {
+		const path = $current_file_path,
+			display_ids = $selected_display_ids;
 		current_folder_elements = liveQuery(() => get_current_folder_elements(path, display_ids));
-	})
-
-
+	});
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -163,11 +164,7 @@
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
-			if (
-				(await get_current_folder_elements($current_file_path, $selected_display_ids)).some(
-					(e) => e.name === trimmed_input
-				)
-			)
+			if (($current_folder_elements ?? []).some((e) => e.name === trimmed_input))
 				return [false, 'Name bereits verwendet'];
 			return [true, 'Gültiger Name'];
 		}}
@@ -194,8 +191,8 @@
 				return [false, 'Ungültige Länge'];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (
-				(await get_current_folder_elements($current_file_path, $selected_display_ids)).some(
-					async (e) => e.name === trimmed_input && get_file_primary_key(e) !== $selected_file_ids[0]
+				($current_folder_elements ?? []).some(
+					(e) => e.name === trimmed_input && get_file_primary_key(e) !== $selected_file_ids[0]
 				)
 			)
 				return [false, 'Name bereits verwendet'];

@@ -19,7 +19,7 @@
 	import { fade } from 'svelte/transition';
 	import type { MenuOption } from '$lib/ts/types';
 	import { selected_display_ids } from '$lib/ts/stores/select';
-	import { liveQuery } from 'dexie';
+	import { liveQuery, type Observable } from 'dexie';
 
 	let {
 		display_group_id,
@@ -31,17 +31,16 @@
 		close_pinned_display: () => void;
 	} = $props();
 
-	let all_selected = liveQuery(() =>
-		all_displays_of_group_selected(display_group_id, $selected_display_ids)
-	);
+	let all_selected: Observable<boolean> | undefined = $state();
+	$effect(() => {
+		const sdi = $selected_display_ids;
+		all_selected = liveQuery(() => all_displays_of_group_selected(display_group_id, sdi));
+	});
 	let display_ids_in_group = liveQuery(() => get_display_ids_in_group(display_group_id));
 	let hovering_selectable = $state(false);
 
 	async function select_all_of_this_group() {
-		const new_value = !(await all_displays_of_group_selected(
-			display_group_id,
-			$selected_display_ids
-		));
+		const new_value = !($all_selected || false);
 		await select_all_of_group(display_group_id, new_value);
 	}
 

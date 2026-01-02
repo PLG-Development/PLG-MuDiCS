@@ -39,13 +39,18 @@
 	} = $props();
 
 	let displays_scroll_box: HTMLElement;
-	let pinned_display: Observable<Display | null> = liveQuery(() =>
-		get_display_by_id($pinned_display_id || '')
-	);
+	let pinned_display: Observable<Display | null> | undefined = $state();
+	$effect(() => {
+		const pdi = $pinned_display_id;
+		pinned_display = liveQuery(() => get_display_by_id(pdi || ''));
+	});
 	let display_groups = liveQuery(() => get_display_groups());
-	let all_groups_selected = liveQuery(() =>
-		all_selected($display_groups || [], $selected_display_ids)
-	);
+	let all_groups_selected: Observable<boolean> | undefined = $state();
+	$effect(() => {
+		const d = $display_groups;
+		const sdi = $selected_display_ids;
+		all_groups_selected = liveQuery(() => all_selected(d || [], sdi));
+	});
 
 	let last_pinned_pane_size: number = 45;
 	let pinned_pane_size: number = $state(last_pinned_pane_size);
@@ -75,11 +80,8 @@
 		];
 	}
 
-	async function select_all(
-		current_displays: DisplayGroup[],
-		current_selected_display_ids: string[]
-	) {
-		const new_value = !(await all_selected(current_displays, current_selected_display_ids));
+	async function select_all(current_displays: DisplayGroup[]) {
+		const new_value = !all_groups_selected;
 		for (const display_group of current_displays) {
 			await select_all_of_group(display_group.id, new_value);
 		}
@@ -211,7 +213,7 @@
 									text: true
 								}
 							)}"
-							onclick={async () => await select_all($display_groups || [], $selected_display_ids)}
+							onclick={async () => await select_all($display_groups || [])}
 						>
 							<span>{$all_groups_selected || false ? 'Alle abwählen' : 'Alle auswählen'}</span>
 						</button>

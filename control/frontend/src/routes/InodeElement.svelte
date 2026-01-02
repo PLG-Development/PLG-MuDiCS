@@ -24,13 +24,17 @@
 	import { open_file } from '$lib/ts/api_handler';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
-	import { liveQuery } from 'dexie';
+	import { liveQuery, type Observable } from 'dexie';
 
 	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
 
-	let missing_colliding_displays_ids = liveQuery(() =>
-		get_missing_colliding_display_ids(file, $selected_display_ids)
-	);
+	let missing_colliding_displays_ids:
+		| Observable<{ missing: string[]; colliding: string[] }>
+		| undefined = $state();
+	$effect(() => {
+		const s = $selected_file_ids;
+		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(file, s));
+	});
 	let thumbnail_url = liveQuery(() => get_thumbnail_url(file));
 
 	const is_folder = file.type === 'inode/directory';
