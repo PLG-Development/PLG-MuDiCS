@@ -32,16 +32,22 @@
 	import { is_valid_name } from '$lib/ts/utils';
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
-	import { liveQuery } from 'dexie';
+	import { liveQuery, type Observable } from 'dexie';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
 
 	let display_names_where_path_does_not_exist: string[] = $state([]);
 	let selected_files = liveQuery(() => get_selected_files($selected_display_ids));
-	let current_folder_elements = liveQuery(() =>
-		get_current_folder_elements($current_file_path, $selected_display_ids)
-	);
+
+	let current_folder_elements: Observable<Inode[]> | undefined = $state();
+
+	$effect(() => {
+		const path = $current_file_path, display_ids = $selected_display_ids;
+		current_folder_elements = liveQuery(() => get_current_folder_elements(path, display_ids));
+	})
+
+
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -337,12 +343,12 @@
 						Es sind keine Bildschirme ausgewählt.
 					</span>
 				{:else}
-					{#each $current_folder_elements || [] as folder_element (get_file_primary_key(folder_element))}
+					{#each $current_folder_elements ?? [] as folder_element (get_file_primary_key(folder_element))}
 						<section in:slide={{ duration: 100 }} class="outline-none">
 							<InodeElement file={folder_element} />
 						</section>
 					{/each}
-					{#if ($current_folder_elements || []).length === 0}
+					{#if ($current_folder_elements ?? []).length === 0}
 						<span class="text-stone-450 px-10 py-6 leading-relaxed text-center max-w-full">
 							Es existieren keine Dateien auf {$selected_display_ids.length === 1
 								? 'dem ausgewähltem Bildchirm'
