@@ -19,7 +19,7 @@
 		current_file_path,
 		get_missing_colliding_display_ids
 	} from '$lib/ts/stores/files';
-	import RefreshPlay from './RefreshPlay.svelte';
+	import RefreshPlay from '../svgs/RefreshPlay.svelte';
 	import { get_file_size_display_string, get_file_type } from '$lib/ts/utils';
 	import { open_file } from '$lib/ts/api_handler';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';

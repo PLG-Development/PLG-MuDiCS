@@ -25,7 +25,7 @@
 		create_folder_on_all_selected_displays
 	} from '$lib/ts/stores/files';
 	import { slide } from 'svelte/transition';
-	import InodeElement from './InodeElement.svelte';
+	import InodeElement from '../lib/components/InodeElement.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
 	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';

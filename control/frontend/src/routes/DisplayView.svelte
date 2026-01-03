@@ -19,13 +19,13 @@
 	} from '$lib/ts/stores/ui_behavior';
 	import { type Display, type DisplayGroup, type MenuOption } from '$lib/ts/types';
 	import Button from '$lib/components/Button.svelte';
-	import OnlineState from './OnlineState.svelte';
+	import OnlineState from '../lib/components/OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { Menu, Pencil, PinOff, Settings, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import DisplayGroupObject from './DisplayGroupObject.svelte';
+	import DisplayGroupObject from '../lib/components/DisplayGroupObject.svelte';
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
