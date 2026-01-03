@@ -35,7 +35,7 @@
 	let position_bottom = $state(true);
 
 	function onclick(e: MouseEvent) {
-		if (menu_options !== null) {
+		if (menu_options.length !== 0) {
 			if (menu_shown) {
 				close_menu();
 			} else {
