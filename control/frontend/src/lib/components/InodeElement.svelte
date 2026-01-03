@@ -45,22 +45,31 @@
 	const is_folder = file.type === 'inode/directory';
 
 	function get_created_info(date_mapping: Record<string, Date> | undefined, full_string = false) {
-		if (!date_mapping) return 'undef.';
+		if (!date_mapping) return '';
 
 		const keys = Object.keys(date_mapping);
 
 		if (keys.length === 1) return get_formated_created_string(date_mapping[keys[0]], full_string);
 
-		if (!full_string) return 'versch.';
 		let out = "";
-		for (const key of keys) {
-			if (key !== keys[0]) out += "\n";
-			out += `${key}: ${get_formated_created_string(date_mapping[keys[0]])}`
+		let is_different = false;
+		const first_formated_created_string = get_formated_created_string(date_mapping[keys[0]], full_string);
+		out += `${keys[0]}: ${first_formated_created_string}`;
+
+		for (const key of keys.splice(0, 1)) {
+			const current_formated_created_string = get_formated_created_string(date_mapping[key], full_string);
+			if (!is_different && current_formated_created_string !== first_formated_created_string) is_different = true;
+			out += `\n${key}: ${current_formated_created_string}`
 		}
-		return out;
+
+		if (full_string) {
+			return is_different ? out : first_formated_created_string;
+		} else {
+			return is_different ? "versch." : first_formated_created_string;
+		}
 	}
 
-	function get_formated_created_string(date_object: Date, full_string = true) {
+	function get_formated_created_string(date_object: Date, full_string: boolean) {
 		if (full_string) {
 			return (
 				get_formated_date_string(date_object, true) + ' ' + get_formated_time_string(date_object)
