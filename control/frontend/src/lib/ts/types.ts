@@ -33,7 +33,6 @@ export type Inode = {
 	name: string;
 	size: number;
 	type: string;
-	date_created: Date;
 	thumbnail: Blob | null;
 };
 

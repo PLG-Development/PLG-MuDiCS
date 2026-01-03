@@ -17,6 +17,7 @@
 	import {
 		change_file_path,
 		current_file_path,
+		get_date_mapping,
 		get_missing_colliding_display_ids
 	} from '$lib/ts/stores/files';
 	import RefreshPlay from '../svgs/RefreshPlay.svelte';
@@ -37,13 +38,29 @@
 	});
 	let thumbnail_url = liveQuery(() => get_thumbnail_url(file));
 
+	let date_mapping: Observable<Record<string, Date>> = liveQuery(() =>
+		get_date_mapping(get_file_primary_key(file))
+	);
+
 	const is_folder = file.type === 'inode/directory';
 
-	function get_created_string(date_object: Date | null, full_string = false) {
-		if (!date_object) {
-			return full_string ? 'Verschiedene Daten auf verschiedenen Bildschirmen' : 'versch.';
-		}
+	function get_created_info(date_mapping: Record<string, Date> | undefined, full_string = false) {
+		if (!date_mapping) return 'undef.';
 
+		const keys = Object.keys(date_mapping);
+
+		if (keys.length === 1) return get_formated_created_string(date_mapping[keys[0]], full_string);
+
+		if (!full_string) return 'versch.';
+		let out = "";
+		for (const key of keys) {
+			if (key !== keys[0]) out += "\n";
+			out += `${key}: ${get_formated_created_string(date_mapping[keys[0]])}`
+		}
+		return out;
+	}
+
+	function get_formated_created_string(date_object: Date, full_string = true) {
 		if (full_string) {
 			return (
 				get_formated_date_string(date_object, true) + ' ' + get_formated_time_string(date_object)
@@ -221,9 +238,9 @@
 			{/if} -->
 			<div
 				class="w-14 content-center text-center select-none text-xs whitespace-nowrap"
-				title={get_created_string(file.date_created, true)}
+				title={get_created_info($date_mapping, true)}
 			>
-				{get_created_string(file.date_created)}
+				{get_created_info($date_mapping)}
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(

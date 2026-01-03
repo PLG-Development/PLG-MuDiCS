@@ -378,3 +378,19 @@ export async function create_folder_on_all_selected_displays(
 		}
 	}
 }
+
+
+export async function get_date_mapping(file_primary_key: string): Promise<Record<string, Date>> {
+	const same_file_on_displays: FileOnDisplay[] = await db.files_on_display.where('file_primary_key').equals(file_primary_key).toArray();
+	const displays_with_that_file: Display[] = await db.displays.where('id').anyOf(same_file_on_displays.map((e) => e.display_id)).toArray();
+
+	const out: Record<string, Date> = {};
+	for (const current_file_on_display of same_file_on_displays) {
+		const current_name = displays_with_that_file.find((e) => e.id === current_file_on_display.display_id)?.name;
+		if (!current_name) continue;
+		const current_date = current_file_on_display.date_created;
+		out[current_name] = current_date;
+	}
+
+	return out;
+}
