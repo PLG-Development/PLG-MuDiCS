@@ -29,7 +29,7 @@
 				>
 			</div>
 
-			<span class="whitespace-break-spaces">{n.message}</span>
+			<span class="whitespace-break-spaces max-h-[60vh] overflow-auto">{n.message}</span>
 
 			<div class="absolute inset-x-0 bottom-0 h-1 bg-white/25">
 				<div class="block h-full w-full bg-white/80 origin-left animate-progress-bar"></div>
