@@ -72,16 +72,17 @@
 	}
 
 	async function create_new_folder() {
+		popup_close_function();
 		await create_folder_on_all_selected_displays(
 			current_name.trim(),
 			$current_file_path,
 			$selected_display_ids
 		);
 		await update_current_folder_on_selected_displays();
-		popup_close_function();
 	}
 
 	async function edit_file_name(new_file_name: string) {
+		popup_close_function();
 		await run_for_selected_files_on_selected_displays(async (ip: string, file_names: string[]) => {
 			if (file_names.length !== 1) {
 				console.log('EEEERRRRROOOOOOR', file_names);
@@ -90,7 +91,6 @@
 			await rename_file(ip, $current_file_path, file_names[0], new_file_name);
 		});
 		await update_current_folder_on_selected_displays();
-		popup_close_function();
 	}
 
 	const show_edit_file_popup = async () => {
@@ -229,13 +229,13 @@
 			active_bg="bg-red-500"
 			className="px-4 flex text-red-400 hover:text-stone-100"
 			click_function={async () => {
+				popup_close_function();
 				await run_for_selected_files_on_selected_displays(
 					async (ip: string, file_names: string[]) => {
 						await delete_files(ip, $current_file_path, file_names);
 					}
 				);
 				await update_current_folder_on_selected_displays();
-				popup_close_function();
 			}}>Löschen</Button
 		>
 	</div>

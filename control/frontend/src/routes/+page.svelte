@@ -51,6 +51,7 @@
 	}
 
 	async function finalize_add_edit_display(existing_display_id: string | null) {
+		popup_close_function();
 		const ip = text_inputs_valid.ip.value;
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
@@ -60,7 +61,6 @@
 			const status = await ping_ip(text_inputs_valid.ip.value);
 			await add_display(ip, mac, name, status);
 		}
-		popup_close_function();
 	}
 
 	function popup_close_function() {
@@ -127,8 +127,8 @@
 			active_bg="bg-red-500"
 			className="px-4 flex text-red-400 hover:text-stone-100"
 			click_function={async () => {
-				await remove_display(display_id);
 				popup_close_function();
+				await remove_display(display_id);
 			}}>Löschen</Button
 		>
 	</div>
