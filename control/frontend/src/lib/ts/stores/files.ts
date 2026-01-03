@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from 'svelte/store';
 import { get_file_primary_key, type Display, type Inode, type TreeElement } from '../types';
 import { get_display_by_id } from './displays';
-import { select, selected_display_ids, selected_file_ids } from './select';
+import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
 import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
 import { db, type FileOnDisplay } from '../files_display.db';
@@ -325,17 +325,24 @@ export async function run_for_selected_files_on_selected_displays(
 	action: (ip: string, file_names: string[]) => Promise<void>
 ): Promise<void> {
 	for (const display_id of get(selected_display_ids)) {
-		const file_keys_on_display: [string, string, number, string][] = (
+		const file_key_strings_on_display: string[] = (
 			await db.files_on_display.where('display_id').equals(display_id).toArray()
-		).map((e) => JSON.parse(e.file_primary_key) as [string, string, number, string]);
-		const file_names_on_display: string[] = (
-			await db.files.where('[path+name+size+type]').anyOf(file_keys_on_display).toArray()
+		).map((e) => e.file_primary_key);
+
+		const selected_file_keys_on_display: [string, string, number, string][] =
+			file_key_strings_on_display.filter((primary_key_string) => is_selected(primary_key_string, get(selected_file_ids))).map(
+				(primary_key_string) => JSON.parse(primary_key_string) as [string, string, number, string]
+			);
+		if (selected_file_keys_on_display.length === 0) continue;
+
+		const selected_file_names_on_display: string[] = (
+			await db.files.where('[path+name+size+type]').anyOf(selected_file_keys_on_display).toArray()
 		).map((e) => e.name);
 
 		const display = await get_display_by_id(display_id);
 		if (!display) continue;
 
-		await action(display.ip, file_names_on_display);
+		await action(display.ip, selected_file_names_on_display);
 	}
 }
 
