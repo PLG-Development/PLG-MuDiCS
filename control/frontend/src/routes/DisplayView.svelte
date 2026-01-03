@@ -220,25 +220,25 @@
 						<div class="flex flex-row">
 							<Button
 								title="Bildschirme größer darstellen"
-								className="aspect-square p-1! rounded-r-none"
+								className="aspect-square p-1.5! pr-1! rounded-r-none"
 								bg="bg-stone-600"
 								disabled={!Boolean(next_height_step_size('display', $current_height, 1))}
 								click_function={() => {
 									change_height('display', 1);
 								}}
 							>
-								<ZoomIn />
+								<ZoomIn class="size-full" />
 							</Button>
 							<Button
 								title="Bildschirme kleiner darstellen"
-								className="aspect-square p-1! rounded-l-none"
+								className="aspect-square p-1.5! pl-1! rounded-l-none"
 								bg="bg-stone-600"
 								disabled={!Boolean(next_height_step_size('display', $current_height, -1))}
 								click_function={() => {
 									change_height('display', -1);
 								}}
 							>
-								<ZoomOut />
+								<ZoomOut class="size-full" />
 							</Button>
 						</div>
 					</div>

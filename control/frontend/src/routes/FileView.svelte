@@ -246,28 +246,28 @@
 		<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
 			Dateien anzeigen und verwalten
 		</span>
-		<div class="flex flex-ro">
+		<div class="flex flex-row">
 			<Button
 				title="Dateien größer darstellen"
-				className="aspect-square p-1! rounded-r-none"
+				className="aspect-square p-1.5! pr-1! rounded-r-none"
 				bg="bg-stone-600"
 				disabled={!Boolean(next_height_step_size('file', $current_height, 1))}
 				click_function={() => {
 					change_height('file', 1);
 				}}
 			>
-				<ZoomIn />
+				<ZoomIn class="size-full" />
 			</Button>
 			<Button
 				title="Dateien kleiner darstellen"
-				className="aspect-square p-1! rounded-l-none"
+				className="aspect-square p-1.5! pl-1! rounded-l-none"
 				bg="bg-stone-600"
 				disabled={!Boolean(next_height_step_size('file', $current_height, -1))}
 				click_function={() => {
 					change_height('file', -1);
 				}}
 			>
-				<ZoomOut />
+				<ZoomOut class="size-full"/>
 			</Button>
 		</div>
 	</div>
