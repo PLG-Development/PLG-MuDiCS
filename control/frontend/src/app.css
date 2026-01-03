@@ -12,6 +12,11 @@
 	--color-stone-850: oklch(0.242 0.0065 45.171);
 }
 
+main {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-stone-300) transparent;
+}
+
 /* Splitpanes */
 .splitpanes.mudics-stone-theme {
 	.splitpanes__pane {
