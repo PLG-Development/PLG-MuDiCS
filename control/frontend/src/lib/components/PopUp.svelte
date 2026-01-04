@@ -38,7 +38,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="absolute inset-0 backdrop-blur flex justify-center items-center {className}"
+		class="absolute inset-0 backdrop-blur flex justify-center items-center z-50 {className}"
 		onclick={try_to_close}
 		transition:fade={{ duration: 100 }}
 	>
