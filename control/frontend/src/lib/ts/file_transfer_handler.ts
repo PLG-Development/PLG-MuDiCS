@@ -1,4 +1,3 @@
-import { dev } from '$app/environment';
 import { db } from './files_display.db';
 import { get_display_by_id } from './stores/displays';
 import {
@@ -117,10 +116,6 @@ async function start_task_loop() {
 				break;
 			case 'sync':
 				break;
-		}
-
-		if (dev) {
-			console.debug('AKTUELL IN TASKS', tasks.length);
 		}
 		tasks.shift(); // Remove current_task from tasks
 	}
