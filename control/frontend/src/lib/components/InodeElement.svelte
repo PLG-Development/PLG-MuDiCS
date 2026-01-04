@@ -36,7 +36,8 @@
 		const s = $selected_file_ids;
 		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(file, s));
 	});
-	let thumbnail_url = liveQuery(() => get_thumbnail_url(file));
+
+	let thumbnail_url = liveQuery(() => get_thumbnail_url(get_file_primary_key(file)));
 
 	let date_mapping: Observable<Record<string, Date>> = liveQuery(() =>
 		get_date_mapping(get_file_primary_key(file))
@@ -46,8 +47,8 @@
 
 	function get_created_info(date_mapping: Record<string, Date> | undefined, full_string = false) {
 		if (!date_mapping) return '';
-
 		const keys = Object.keys(date_mapping);
+		if (keys.length === 0) return '';
 
 		if (keys.length === 1) return get_formated_created_string(date_mapping[keys[0]], full_string);
 

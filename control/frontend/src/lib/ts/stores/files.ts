@@ -1,10 +1,16 @@
 import { get, writable, type Writable } from 'svelte/store';
-import { get_file_primary_key, type Display, type Inode, type TreeElement } from '../types';
+import {
+	get_file_primary_key,
+	type Display,
+	type FileOnDisplay,
+	type Inode,
+	type TreeElement
+} from '../types';
 import { get_display_by_id } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
 import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
-import { db, type FileOnDisplay } from '../files_display.db';
+import { db } from '../files_display.db';
 
 export const current_file_path: Writable<string> = writable<string>('/');
 
@@ -41,14 +47,14 @@ export async function delete_and_deselect_unique_files_from_display(display_id: 
 	await remove_all_files_without_display();
 }
 
-async function remove_file_from_display(display_id: string, file_primary_key: string) {
+export async function remove_file_from_display(display_id: string, file_primary_key: string) {
 	const found = await db.files_on_display.get([display_id, file_primary_key]);
 	if (!found) return;
 	select(selected_file_ids, file_primary_key, 'deselect');
 	await db.files_on_display.delete([display_id, file_primary_key]);
 }
 
-async function remove_all_files_without_display() {
+export async function remove_all_files_without_display() {
 	const existing_file_id_strings: string[] = (await db.files_on_display
 		.orderBy('file_primary_key')
 		.uniqueKeys()) as string[];
@@ -330,9 +336,11 @@ export async function run_for_selected_files_on_selected_displays(
 		).map((e) => e.file_primary_key);
 
 		const selected_file_keys_on_display: [string, string, number, string][] =
-			file_key_strings_on_display.filter((primary_key_string) => is_selected(primary_key_string, get(selected_file_ids))).map(
-				(primary_key_string) => JSON.parse(primary_key_string) as [string, string, number, string]
-			);
+			file_key_strings_on_display
+				.filter((primary_key_string) => is_selected(primary_key_string, get(selected_file_ids)))
+				.map(
+					(primary_key_string) => JSON.parse(primary_key_string) as [string, string, number, string]
+				);
 		if (selected_file_keys_on_display.length === 0) continue;
 
 		const selected_file_names_on_display: string[] = (
@@ -379,14 +387,21 @@ export async function create_folder_on_all_selected_displays(
 	}
 }
 
-
 export async function get_date_mapping(file_primary_key: string): Promise<Record<string, Date>> {
-	const same_file_on_displays: FileOnDisplay[] = await db.files_on_display.where('file_primary_key').equals(file_primary_key).toArray();
-	const displays_with_that_file: Display[] = await db.displays.where('id').anyOf(same_file_on_displays.map((e) => e.display_id)).toArray();
+	const same_file_on_displays: FileOnDisplay[] = await db.files_on_display
+		.where('file_primary_key')
+		.equals(file_primary_key)
+		.toArray();
+	const displays_with_that_file: Display[] = await db.displays
+		.where('id')
+		.anyOf(same_file_on_displays.map((e) => e.display_id))
+		.toArray();
 
 	const out: Record<string, Date> = {};
 	for (const current_file_on_display of same_file_on_displays) {
-		const current_name = displays_with_that_file.find((e) => e.id === current_file_on_display.display_id)?.name;
+		const current_name = displays_with_that_file.find(
+			(e) => e.id === current_file_on_display.display_id
+		)?.name;
 		if (!current_name) continue;
 		const current_date = current_file_on_display.date_created;
 		out[current_name] = current_date;

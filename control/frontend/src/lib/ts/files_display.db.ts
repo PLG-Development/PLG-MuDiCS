@@ -1,13 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Display, DisplayGroup, Inode } from './types';
-
-export interface FileOnDisplay {
-	display_id: string;
-	file_primary_key: string; // JSON.stringify([string, string, number, string])
-	date_created: Date;
-	is_loading: boolean;
-	percentage: number;
-}
+import type { Display, DisplayGroup, FileOnDisplay, Inode } from './types';
 
 export class FileDatabase extends Dexie {
 	files!: Table<Inode, [string, string, number, string]>;

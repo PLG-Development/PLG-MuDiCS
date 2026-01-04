@@ -29,10 +29,11 @@
 	import PopUp from '$lib/components/PopUp.svelte';
 	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
-	import { is_valid_name } from '$lib/ts/utils';
+	import { first_letter_is_valid, get_accepted_file_type_string, is_valid_name } from '$lib/ts/utils';
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
+	import { add_upload } from '$lib/ts/file_transfer_handler';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -56,6 +57,8 @@
 		title: '',
 		closable: true
 	});
+
+	let file_input: HTMLInputElement;
 
 	async function get_selected_files(selected_file_ids: string[]): Promise<Inode[]> {
 		try {
@@ -159,10 +162,10 @@
 		bind:current_valid
 		title="Ordnername"
 		is_valid_function={async (input: string) => {
-			if (input.startsWith('.')) return [false, 'Name darf nicht mit . beginnen'];
 			const trimmed_input = input.trim();
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
+			if (!first_letter_is_valid(trimmed_input)) return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (($current_folder_elements ?? []).some((e) => e.name === trimmed_input))
 				return [false, 'Name bereits verwendet'];
@@ -185,10 +188,10 @@
 		bind:current_valid
 		title="Neuer {extension === '' ? 'Ordner' : 'Datei'}name"
 		is_valid_function={async (input: string) => {
-			if (input.startsWith('.')) return [false, 'Name darf nicht mit . beginnen'];
 			const trimmed_input = input.trim() + extension;
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
+			if (!first_letter_is_valid(trimmed_input)) return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (
 				($current_folder_elements ?? []).some(
@@ -241,6 +244,15 @@
 	</div>
 {/snippet}
 
+<input
+	class="hidden"
+	type="file"
+	bind:this={file_input}
+	multiple
+	accept={get_accepted_file_type_string()}
+	onchange={(e) => add_upload((e.target as HTMLInputElement).files!, $selected_display_ids, $current_file_path)}
+/>
+
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
 	<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
 		<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
@@ -267,7 +279,7 @@
 					change_height('file', -1);
 				}}
 			>
-				<ZoomOut class="size-full"/>
+				<ZoomOut class="size-full" />
 			</Button>
 		</div>
 	</div>
@@ -286,6 +298,9 @@
 					<Button
 						title="Datei(en) hochladen"
 						className="px-3 flex"
+						click_function={() => {
+							if (file_input) file_input.click();
+						}}
 						disabled={$selected_display_ids.length === 0}><Upload /></Button
 					>
 					<Button

@@ -3,6 +3,7 @@ import { get_thumbnail_blob } from '../api_handler';
 import { type Inode } from '../types';
 import { db } from '../files_display.db';
 import { get_file_type } from '../utils';
+import { get_file_by_id } from './files';
 
 export const active_thumbnail_urls: Writable<string[]> = writable<string[]>([]);
 
@@ -22,8 +23,9 @@ export async function generate_thumbnail(
 	await db.files.put(folder_element); // save
 }
 
-export async function get_thumbnail_url(file: Inode): Promise<string | null> {
-	if (!file.thumbnail) return null;
+export async function get_thumbnail_url(file_primary_key: string): Promise<string | null> {
+	const file: Inode | null = await get_file_by_id(file_primary_key);
+	if (!file || !file.thumbnail) return null;
 	const new_url = URL.createObjectURL(file.thumbnail);
 	active_thumbnail_urls.update((current: string[]) => {
 		current.push(new_url);

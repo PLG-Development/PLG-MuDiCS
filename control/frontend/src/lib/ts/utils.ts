@@ -6,6 +6,27 @@ const supported_file_types: Record<string, SupportedFileType> = supported_file_t
 	SupportedFileType
 >;
 
+const invalid_first_regex = /^[^a-zA-ZäöüßÄÖÜ0-9_]/u;
+const invalid_rest_regex = /[^a-zA-ZäöüßÄÖÜ0-9 _\-()$${}.,+$€!?%&=/]/gu;
+
+export function is_valid_name(input: string): boolean {
+	return !invalid_rest_regex.test(input) && first_letter_is_valid(input);
+}
+
+export function first_letter_is_valid(input: string): boolean {
+	if (input.length === 0) return false;
+	return !invalid_first_regex.test(input);
+}
+
+export function make_valid_name(input: string): string {
+	const s = input.normalize("NFC");
+	if (s.length === 0) return 'Datei';
+	let out = s.replace(invalid_rest_regex, "_");
+  	out = out.replace(invalid_first_regex, "_");
+
+	return out;
+}
+
 export function get_file_type(file: Inode): SupportedFileType | null {
 	for (const key of Object.keys(supported_file_types)) {
 		if (file.type === supported_file_types[key].mime_type) {
@@ -20,6 +41,10 @@ export function get_file_type(file: Inode): SupportedFileType | null {
 		}
 	}
 	return null;
+}
+
+export function get_accepted_file_type_string(): string {
+	return Object.values(supported_file_types).map((e) => e.mime_type).join(',');
 }
 
 export function get_uuid(): string {
@@ -63,10 +88,6 @@ export async function image_content_hash(blob: Blob, size = 32): Promise<number>
 
 	bitmap.close(); // GPU-Ressourcen freigeben
 	return hash >>> 0; // unsigned int
-}
-
-export function is_valid_name(input: string): boolean {
-	return /^[\p{L}\p{N}\p{M}\-_.+,()[\]{}@!§$%&=~^ ]+$/u.test(input);
 }
 
 export function display_status_to_info(status: DisplayStatus): string {
