@@ -8,6 +8,7 @@ import {
 	type TreeElement
 } from './types';
 import { dev } from '$app/environment';
+import { get_sanitized_file_url } from './utils';
 
 export async function get_screenshot(ip: string): Promise<Blob | null> {
 	const options = { method: 'PATCH' };
@@ -18,7 +19,7 @@ export async function get_screenshot(ip: string): Promise<Blob | null> {
 
 export async function open_file(ip: string, path_to_file: string): Promise<void> {
 	const options = { method: 'PATCH', headers: { 'content-type': 'application/octet-stream' } };
-	await request_display(ip, `/file${path_to_file}`, options);
+	await request_display(ip, get_sanitized_file_url(path_to_file), options);
 }
 
 export async function send_keyboard_input(ip: string, key: string): Promise<void> {
@@ -165,7 +166,7 @@ export async function show_blackscreen(ip: string): Promise<void> {
 export async function get_thumbnail_blob(ip: string, path_to_file: string): Promise<Blob | null> {
 	const raw_response = await request_display(
 		ip,
-		`/file/preview${path_to_file}`,
+		get_sanitized_file_url(path_to_file, true),
 		{ method: 'GET' },
 		[415]
 	);

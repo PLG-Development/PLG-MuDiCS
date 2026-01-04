@@ -1,7 +1,11 @@
 import { dev } from '$app/environment';
 import { db } from './files_display.db';
 import { get_display_by_id } from './stores/displays';
-import { remove_all_files_without_display, remove_file_from_display } from './stores/files';
+import {
+	get_current_folder_elements,
+	remove_all_files_without_display,
+	remove_file_from_display
+} from './stores/files';
 import { notifications } from './stores/notification';
 import { generate_thumbnail } from './stores/thumbnails';
 import {
@@ -10,7 +14,7 @@ import {
 	type FileTransferTask,
 	type Inode
 } from './types';
-import { get_uuid, make_valid_name } from './utils';
+import { get_sanitized_file_url, get_uuid, make_valid_name } from './utils';
 
 let is_processing: boolean = false;
 const tasks: FileTransferTask[] = [];
@@ -22,8 +26,14 @@ export async function add_upload(
 ) {
 	if (file_list.length === 0) return;
 
+	const used_file_names: string[] = await (
+		await get_current_folder_elements(current_file_path, selected_display_ids)
+	).map((e) => e.name);
+
 	for (const file of file_list) {
-		const file_name = make_valid_name(file.name);
+		const file_name = generate_valid_file_name(file.name, used_file_names);
+		used_file_names.push(file_name);
+
 		const db_file: Inode = {
 			path: current_file_path,
 			name: file_name,
@@ -67,6 +77,28 @@ export async function add_upload(
 	await start_task_processing();
 }
 
+function generate_valid_file_name(original_file_name: string, used_file_names: string[]): string {
+	const regex = /\s\((\d{1,3})\)$/;
+
+	let name: string = make_valid_name(original_file_name);
+	while (used_file_names.includes(name)) {
+		const last_dot = name.lastIndexOf('.');
+		let name_without_extension = last_dot > 0 ? name.slice(0, last_dot) : name;
+		const extension = last_dot > 0 ? name.slice(last_dot) : '';
+		if (!regex.test(name_without_extension)) {
+			name_without_extension += ' (1)';
+		} else {
+			const match = name_without_extension.match(regex);
+			const current_number: number = match ? Number(match[1]) : 0;
+			console.log("current", current_number)
+			name_without_extension = name_without_extension.replace(regex, ` (${current_number + 1})`);
+		}
+		name = name_without_extension + extension;
+		console.log(name)
+	}
+	return name;
+}
+
 async function start_task_processing() {
 	if (!is_processing) {
 		is_processing = tasks.length !== 0;
@@ -94,9 +126,6 @@ async function start_task_loop() {
 	}
 }
 
-function file_url(ip: string, path: string, file_name: string) {
-	return `http://${ip}:1323/api/file${path}${encodeURIComponent(file_name)}`;
-}
 
 async function upload(task: FileTransferTask): Promise<void> {
 	if (task.type !== 'upload' || !task.file) return;
@@ -108,7 +137,7 @@ async function upload(task: FileTransferTask): Promise<void> {
 
 	return new Promise<void>((resolve) => {
 		const xhr = new XMLHttpRequest();
-		xhr.open('POST', file_url(task.display_ip, task.path, task.file_name), true);
+		xhr.open('POST', `http://${task.display_ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`, true);
 		xhr.setRequestHeader('content-type', 'application/octet-stream');
 
 		xhr.upload.onprogress = (e) => {
@@ -152,7 +181,7 @@ async function upload(task: FileTransferTask): Promise<void> {
 			if (!!inode_element && inode_element.thumbnail === null) {
 				await generate_thumbnail(task.display_ip, task.path, inode_element);
 			}
-		}, 0);
+		}, 10);
 	});
 }
 

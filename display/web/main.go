@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -146,12 +147,20 @@ func qrRoute(c echo.Context) error {
 
 func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		pathParam := ctx.Param("path")
-		fullPath, exists, err := pkg.ResolveStorageFilePath(pathParam)
+		raw := ctx.Param("path")
+
+		decoded, err := url.PathUnescape(raw)
 		if err != nil {
-			slog.Warn("Failed to validate file path", "path", pathParam, "error", err)
+			slog.Warn("Invalid path encoding", "path", raw, "error", err)
 			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: "Invalid file path"})
 		}
+
+		fullPath, exists, err := pkg.ResolveStorageFilePath(decoded)
+		if err != nil {
+			slog.Warn("Failed to validate file path", "path", decoded, "error", err)
+			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: "Invalid file path"})
+		}
+
 		ctx.Set("fullPath", fullPath)
 		ctx.Set("fileExists", exists)
 		return next(ctx)

@@ -7,7 +7,7 @@ const supported_file_types: Record<string, SupportedFileType> = supported_file_t
 >;
 
 const invalid_first_regex = /^[^a-zA-ZäöüßÄÖÜ0-9_]/u;
-const invalid_rest_regex = /[^a-zA-ZäöüßÄÖÜ0-9 _\-()$${}.,+$€!?%&=/]/gu;
+const invalid_rest_regex = /[^a-zA-ZäöüßÄÖÜ0-9 _\-()$${}.,+$€!=/]/gu;
 
 export function is_valid_name(input: string): boolean {
 	return !invalid_rest_regex.test(input) && first_letter_is_valid(input);
@@ -19,10 +19,10 @@ export function first_letter_is_valid(input: string): boolean {
 }
 
 export function make_valid_name(input: string): string {
-	const s = input.normalize("NFC");
+	const s = input.normalize('NFC');
 	if (s.length === 0) return 'Datei';
-	let out = s.replace(invalid_rest_regex, "_");
-  	out = out.replace(invalid_first_regex, "_");
+	let out = s.replace(invalid_rest_regex, '_');
+	out = out.replace(invalid_first_regex, '_');
 
 	return out;
 }
@@ -44,7 +44,9 @@ export function get_file_type(file: Inode): SupportedFileType | null {
 }
 
 export function get_accepted_file_type_string(): string {
-	return Object.values(supported_file_types).map((e) => e.mime_type).join(',');
+	return Object.values(supported_file_types)
+		.map((e) => e.mime_type)
+		.join(',');
 }
 
 export function get_uuid(): string {
@@ -101,4 +103,13 @@ export function display_status_to_info(status: DisplayStatus): string {
 		case null:
 			return '???';
 	}
+}
+
+export function get_sanitized_file_url(file_path: string, is_preview = false) {
+	const pathSegments = file_path
+		.split('/')
+		.filter(Boolean)
+		.map((seg) => encodeURIComponent(seg));
+
+	return `/file/${is_preview ? 'preview/' : ''}${[...pathSegments].join('/')}`;
 }
