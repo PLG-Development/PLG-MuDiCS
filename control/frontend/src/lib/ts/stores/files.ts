@@ -29,7 +29,7 @@ export async function change_file_path(new_path: string) {
 	for (const display of displays) {
 		const changed_paths = await get_changed_directory_paths(display, new_path);
 		if (!changed_paths) continue;
-		console.log('Update file system from', display.name, ':', changed_paths);
+		console.debug('Update file system from', display.name, ':', changed_paths);
 		for (const path of changed_paths) {
 			await update_folder_elements_recursively(display, path);
 		}

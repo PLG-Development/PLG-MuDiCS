@@ -5,6 +5,7 @@ import { get_uuid, image_content_hash } from '../utils';
 import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../files_display.db';
+import { dev } from '$app/environment';
 
 export async function is_display_name_taken(name: string): Promise<boolean> {
 	const exists = await db.displays.where('name').equals(name).first();
@@ -23,11 +24,15 @@ export async function add_display(
 	let group_id: string;
 	if (group) {
 		group_id = group.id;
-		console.log('DISPLAYGROUP WURDE NICHT ERSTELLT');
+		if (dev) {
+			console.debug('DISPLAYGROUP WURDE NICHT ERSTELLT');
+		}
 	} else {
 		group_id = get_uuid();
 		await db.display_groups.put({ id: group_id, position: 0 });
-		console.log('DISPLAYGROUP WURDE ERSTELLT');
+		if (dev) {
+			console.info('DISPLAYGROUP WURDE ERSTELLT');
+		}
 	}
 	const element_count_in_group = (await db.displays.where('group_id').equals(group_id).toArray())
 		.length;

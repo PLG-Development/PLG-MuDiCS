@@ -29,7 +29,11 @@
 	import PopUp from '$lib/components/PopUp.svelte';
 	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
-	import { first_letter_is_valid, get_accepted_file_type_string, is_valid_name } from '$lib/ts/utils';
+	import {
+		first_letter_is_valid,
+		get_accepted_file_type_string,
+		is_valid_name
+	} from '$lib/ts/utils';
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
@@ -88,7 +92,7 @@
 		popup_close_function();
 		await run_for_selected_files_on_selected_displays(async (ip: string, file_names: string[]) => {
 			if (file_names.length !== 1) {
-				console.log('EEEERRRRROOOOOOR', file_names);
+				console.error(file_names);
 				return; // Error
 			}
 			await rename_file(ip, $current_file_path, file_names[0], new_file_name);
@@ -165,7 +169,8 @@
 			const trimmed_input = input.trim();
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
-			if (!first_letter_is_valid(trimmed_input)) return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
+			if (!first_letter_is_valid(trimmed_input))
+				return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (($current_folder_elements ?? []).some((e) => e.name === trimmed_input))
 				return [false, 'Name bereits verwendet'];
@@ -191,7 +196,8 @@
 			const trimmed_input = input.trim() + extension;
 			if (trimmed_input.length === 0 || trimmed_input.length > 50)
 				return [false, 'Ungültige Länge'];
-			if (!first_letter_is_valid(trimmed_input)) return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
+			if (!first_letter_is_valid(trimmed_input))
+				return [false, `Name darf nicht mit ${trimmed_input[0]} beginnen`];
 			if (!is_valid_name(trimmed_input)) return [false, 'Name enthält ungültige Zeichen'];
 			if (
 				($current_folder_elements ?? []).some(
@@ -250,7 +256,8 @@
 	bind:this={file_input}
 	multiple
 	accept={get_accepted_file_type_string()}
-	onchange={(e) => add_upload((e.target as HTMLInputElement).files!, $selected_display_ids, $current_file_path)}
+	onchange={(e) =>
+		add_upload((e.target as HTMLInputElement).files!, $selected_display_ids, $current_file_path)}
 />
 
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">

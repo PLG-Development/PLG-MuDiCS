@@ -1,3 +1,4 @@
+import { dev } from '$app/environment';
 import { db } from './files_display.db';
 import { get_display_by_id } from './stores/displays';
 import { remove_all_files_without_display, remove_file_from_display } from './stores/files';
@@ -86,7 +87,9 @@ async function start_task_loop() {
 				break;
 		}
 
-		console.log('AKTUELL IN TASKS', tasks.length);
+		if (dev) {
+			console.debug('AKTUELL IN TASKS', tasks.length);
+		}
 		tasks.shift(); // Remove current_task from tasks
 	}
 }
@@ -164,6 +167,6 @@ async function show_error(
 		`Datei: "${task.file_name}", Display-IP: ${task.display_ip}\nFehler: ${error}`
 	);
 	if (type === 'download') return;
-    await remove_file_from_display(task.display_id, task.file_primary_key);
+	await remove_file_from_display(task.display_id, task.file_primary_key);
 	await remove_all_files_without_display();
 }

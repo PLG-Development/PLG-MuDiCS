@@ -7,6 +7,7 @@ import {
 	type ShellCommandResponse,
 	type TreeElement
 } from './types';
+import { dev } from '$app/environment';
 
 export async function get_screenshot(ip: string): Promise<Blob | null> {
 	const options = { method: 'PATCH' };
@@ -62,7 +63,7 @@ export async function get_file_data(
         echo
         done
     `;
-	const raw_response = await run_shell_command(ip, command, true);
+	const raw_response = await run_shell_command(ip, command);
 	if (!raw_response.ok || !raw_response.json) return null;
 	const json_response = raw_response.json as ShellCommandResponse;
 	if (json_response.exitCode === 0 && json_response.stdout.trim() === '') return [];
@@ -93,7 +94,7 @@ export async function get_file_data(
 
 export async function get_file_tree_data(ip: string, path: string): Promise<TreeElement[] | null> {
 	const command = `cd ".${path}" && tree -Js`;
-	const raw_response = await run_shell_command(ip, command, true);
+	const raw_response = await run_shell_command(ip, command);
 
 	if (!raw_response.ok || !raw_response.json) return null;
 	const json_response = raw_response.json as ShellCommandResponse;
@@ -166,7 +167,6 @@ export async function get_thumbnail_blob(ip: string, path_to_file: string): Prom
 		ip,
 		`/file/preview${path_to_file}`,
 		{ method: 'GET' },
-		true,
 		[415]
 	);
 	if (!raw_response.ok || !raw_response.blob) return null;
@@ -188,11 +188,10 @@ async function request_display(
 	ip: string,
 	api_route: string,
 	options: { method: string; headers?: Record<string, string>; body?: string },
-	log_in_debug: boolean = false,
 	supress_error_handling_http_codes: number[] = []
 ): Promise<RequestResponse> {
 	const url = `http://${ip}:1323/api${api_route}`;
-	return await request(url, options, log_in_debug, supress_error_handling_http_codes);
+	return await request(url, options, supress_error_handling_http_codes);
 }
 
 async function request_control(
@@ -206,15 +205,12 @@ async function request_control(
 async function request(
 	url: string,
 	options: { method: string; headers?: Record<string, string>; body?: string },
-	log_in_debug: boolean = false,
 	supress_error_handling_http_codes: number[] = []
 ): Promise<RequestResponse> {
 	try {
 		const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
-		if (log_in_debug) {
-			console.debug(url + cache_buster, options.body);
-		} else {
-			console.log(url + cache_buster, options.body);
+		if (dev) {
+			console.debug('Sending request: ', url + cache_buster, 'with', options.body ?? 'none');
 		}
 		const response = await fetch(url + cache_buster, options);
 		if (response.ok || supress_error_handling_http_codes.includes(response.status)) {
@@ -227,10 +223,8 @@ async function request(
 				const json: Record<string, unknown> = await response.json();
 				request_response = { ok: response.ok, http_code: response.status, json: json };
 			}
-			if (log_in_debug) {
+			if (dev) {
 				console.debug(request_response);
-			} else {
-				console.log(request_response);
 			}
 			return request_response;
 		}
@@ -250,7 +244,9 @@ async function request(
 		);
 	} catch (error: unknown) {
 		if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
-			console.log('Request failed - Is the targeted device online?');
+			if (dev) {
+				console.warn('Request failed - Is the targeted device online?');
+			}
 		} else {
 			console.error(url, error);
 			notifications.push('error', `Fataler Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
@@ -271,7 +267,9 @@ function handle_shell_error(
 			shell_response.stderr &&
 			/bash: line \d+: cd: .+: No such file or directory/.test(shell_response.stderr)
 		) {
-			console.log('current file_path does not exist on display:', ip);
+			if (dev) {
+				console.debug('current file_path does not exist on display:', ip);
+			}
 			return true;
 		}
 		console.error(shell_response);
@@ -286,11 +284,7 @@ function handle_shell_error(
 	return false;
 }
 
-async function run_shell_command(
-	ip: string,
-	command: string,
-	log_in_debug: boolean = false
-): Promise<RequestResponse> {
+async function run_shell_command(ip: string, command: string): Promise<RequestResponse> {
 	const options = {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
@@ -298,5 +292,5 @@ async function run_shell_command(
 			command: command
 		})
 	};
-	return await request_display(ip, '/shellCommand', options, log_in_debug);
+	return await request_display(ip, '/shellCommand', options);
 }
