@@ -233,7 +233,7 @@ export async function update_folder_elements_recursively(
 				display_id: display.id,
 				file_primary_key: get_file_primary_key(new_element.folder_element),
 				is_loading: false,
-				percentage: 0,
+				percentage: 100,
 				date_created: new_element.date_created
 			};
 			await db.files_on_display.put(file_on_display);
