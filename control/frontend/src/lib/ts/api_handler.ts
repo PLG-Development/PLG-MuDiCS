@@ -229,19 +229,16 @@ async function request(
 			return request_response;
 		}
 
-		let error_description: string;
-		try {
-			const json: { description: string } = await response.json();
-			error_description = json.description;
-		} catch (error_on_json_parsing: unknown) {
-			error_description = `unknown error: ${error_on_json_parsing}`;
+		let error_description = url;
+		if (response.headers.get('content-type')?.includes('application/json')) {
+			try {
+				const json: { description: string } = await response.json();
+				error_description += '\n' + json.description;
+			} catch {
+				error_description += '\nCould not parse error description';
+			}
 		}
-		console.error(url, error_description);
-		notifications.push(
-			'error',
-			`Fehler ${response.status} bei API-Anfrage`,
-			`${url}\nFehler: ${error_description}`
-		);
+		notifications.push('error', `Fehler ${response.status} bei API-Anfrage`, error_description);
 	} catch (error: unknown) {
 		if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
 			if (dev) {
