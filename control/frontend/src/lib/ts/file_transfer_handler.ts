@@ -89,11 +89,11 @@ function generate_valid_file_name(original_file_name: string, used_file_names: s
 		} else {
 			const match = name_without_extension.match(regex);
 			const current_number: number = match ? Number(match[1]) : 0;
-			console.log("current", current_number)
+			console.log('current', current_number);
 			name_without_extension = name_without_extension.replace(regex, ` (${current_number + 1})`);
 		}
 		name = name_without_extension + extension;
-		console.log(name)
+		console.log(name);
 	}
 	return name;
 }
@@ -121,28 +121,27 @@ async function start_task_loop() {
 	}
 }
 
-
 async function upload(task: FileTransferTask): Promise<void> {
 	if (task.type !== 'upload' || !task.file) return;
 
-	await db.files_on_display
-		.where('[display_id+file_primary_key]')
-		.equals([task.display_id, task.file_primary_key])
-		.modify({ percentage: 1 });
+	await db.files_on_display.update([task.display_id, task.file_primary_key], { percentage: 1 });
 
 	return new Promise<void>((resolve) => {
 		const xhr = new XMLHttpRequest();
-		xhr.open('POST', `http://${task.display_ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`, true);
+		xhr.open(
+			'POST',
+			`http://${task.display_ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`,
+			true
+		);
 		xhr.setRequestHeader('content-type', 'application/octet-stream');
 
 		xhr.upload.onprogress = (e) => {
 			const total = e.lengthComputable ? e.total : task.bytes_total;
 			const current_percentage = total > 0 ? Math.round((e.loaded / total) * 100) : 1;
 			const apply = async () => {
-				await db.files_on_display
-					.where('[display_id+file_primary_key]')
-					.equals([task.display_id, task.file_primary_key])
-					.modify({ percentage: current_percentage });
+				await db.files_on_display.update([task.display_id, task.file_primary_key], {
+					percentage: current_percentage
+				});
 			};
 			apply();
 		};
@@ -155,10 +154,10 @@ async function upload(task: FileTransferTask): Promise<void> {
 		xhr.onreadystatechange = async () => {
 			if (xhr.readyState === 4) {
 				if (xhr.status == 200) {
-					await db.files_on_display
-						.where('[display_id+file_primary_key]')
-						.equals([task.display_id, task.file_primary_key])
-						.modify({ percentage: 100, is_loading: false });
+					await db.files_on_display.update([task.display_id, task.file_primary_key], {
+						percentage: 100,
+						is_loading: false
+					});
 				} else {
 					await show_error('upload', `HTTP ${xhr.status}`, task);
 				}
