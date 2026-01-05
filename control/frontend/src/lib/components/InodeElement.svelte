@@ -10,7 +10,8 @@
 		supported_file_type_icon,
 		type Inode,
 		get_file_primary_key,
-		type FileOnDisplay
+		type FileOnDisplay,
+		type FileLoadingData
 	} from '$lib/ts/types';
 
 	import {
@@ -47,7 +48,8 @@
 		| Observable<{
 				is_loading: boolean;
 				total_percentage: number;
-				display_data: { is_loading: boolean; percentage: number }[];
+				total_seconds_until_finish: number;
+				display_data: FileLoadingData[];
 		  }>
 		| undefined = $state();
 	$effect(() => {
@@ -198,7 +200,8 @@
 	): Promise<{
 		is_loading: boolean;
 		total_percentage: number;
-		display_data: { is_loading: boolean; percentage: number }[];
+		total_seconds_until_finish: number;
+		display_data: FileLoadingData[];
 	}> {
 		const file_on_display_data: FileOnDisplay[] = await db.files_on_display
 			.where('file_primary_key')
@@ -209,30 +212,40 @@
 			return {
 				is_loading: true,
 				total_percentage: 0,
+				total_seconds_until_finish: -1,
 				display_data: []
 			};
 		}
 		const display_data = [];
 		let is_loading = false;
 		let percentage_sum = 0;
+		let total_seconds_until_finish = 0;
 		for (const fod of file_on_display_data) {
-			if (!is_loading) is_loading = fod.is_loading;
-			percentage_sum += fod.percentage;
-			display_data.push({
-				is_loading: fod.is_loading,
-				percentage: fod.percentage
-			});
+			if (!!fod.loading_data) {
+				if (!is_loading) is_loading = true;
+				percentage_sum += fod.loading_data.percentage;
+				total_seconds_until_finish += fod.loading_data.seconds_until_finish;
+				display_data.push(fod.loading_data);
+			} else {
+				percentage_sum += 100;
+			}
 		}
 		let total_percentage = percentage_sum / display_data.length;
 		return {
 			is_loading,
 			total_percentage,
+			total_seconds_until_finish,
 			display_data
 		};
 	}
 </script>
 
-<div data-testid="inode" class="flex flex-row h-{$current_height.file} w-full {loading_finished ? 'scale-105' : ''} transition-[scale] duration-300">
+<div
+	data-testid="inode"
+	class="flex flex-row h-{$current_height.file} w-full {loading_finished
+		? 'scale-105'
+		: ''} transition-[scale] duration-300"
+>
 	{#if !not_interactable}
 		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 			<Button

@@ -13,7 +13,7 @@ import {
 	type FileTransferTask,
 	type Inode
 } from './types';
-import { get_sanitized_file_url, get_uuid, make_valid_name } from './utils';
+import { get_sanitized_file_url, make_valid_name } from './utils';
 
 let is_processing: boolean = false;
 const tasks: FileTransferTask[] = [];
@@ -51,20 +51,27 @@ export async function add_upload(
 				display_id,
 				file_primary_key,
 				date_created: new Date(),
-				is_loading: true,
-				percentage: 0
+				loading_data: {
+					type: 'upload',
+					percentage: 0,
+					bytes_per_second: 0,
+					seconds_until_finish: -1
+				}
 			};
 			await db.files_on_display.put(db_file_on_display);
 
 			return {
-				id: get_uuid(),
-				type: 'upload' as const,
-				display_id,
-				display_ip,
+				data: {
+					type: 'upload' as const,
+					file
+				},
+				display: {
+					id: display_id,
+					ip: display_ip
+				},
 				path: current_file_path,
 				file_name: file_name,
 				file_primary_key,
-				file,
 				bytes_total: file.size
 			};
 		});
@@ -108,7 +115,7 @@ async function start_task_processing() {
 async function start_task_loop() {
 	while (tasks.length > 0) {
 		const current_task = tasks[0];
-		switch (current_task.type) {
+		switch (current_task.data.type) {
 			case 'upload':
 				await upload(current_task);
 				break;
@@ -123,15 +130,16 @@ async function start_task_loop() {
 }
 
 async function upload(task: FileTransferTask): Promise<void> {
-	if (task.type !== 'upload' || !task.file) return;
+	const task_data = task.data;
+	if (task_data.type !== 'upload' || !task_data.file) return;
 
-	await db.files_on_display.update([task.display_id, task.file_primary_key], { percentage: 1 });
+	const start_time = new Date();
 
 	return new Promise<void>((resolve) => {
 		const xhr = new XMLHttpRequest();
 		xhr.open(
 			'POST',
-			`http://${task.display_ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`,
+			`http://${task.display.ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`,
 			true
 		);
 		xhr.setRequestHeader('content-type', 'application/octet-stream');
@@ -140,33 +148,39 @@ async function upload(task: FileTransferTask): Promise<void> {
 			const total = e.lengthComputable ? e.total : task.bytes_total;
 			const current_percentage = total > 0 ? Math.round((e.loaded / total) * 100) : 1;
 			const apply = async () => {
-				await db.files_on_display.update([task.display_id, task.file_primary_key], {
-					percentage: current_percentage
+				const prognosed_data = get_prognosed_data(start_time, e.loaded, total);
+
+				await db.files_on_display.update([task.display.id, task.file_primary_key], {
+					loading_data: {
+						type: 'upload',
+						percentage: current_percentage,
+						bytes_per_second: prognosed_data.bytes_per_second,
+						seconds_until_finish: prognosed_data.seconds_until_finish
+					}
 				});
 			};
 			apply();
 		};
 
 		xhr.onerror = async (e: ProgressEvent) => {
-			await show_error('upload', e, task);
+			await show_error(task, e);
 			resolve();
 		};
 
 		xhr.onreadystatechange = async () => {
 			if (xhr.readyState === 4) {
 				if (xhr.status == 200) {
-					await db.files_on_display.update([task.display_id, task.file_primary_key], {
-						percentage: 100,
-						is_loading: false
-					});
+					await db.files_on_display.update([task.display.id, task.file_primary_key], {
+						loading_data: null
+					}); // TODO: Stattdessen update machen und gucken, ob die Datei wirklich da ist
 				} else {
-					await show_error('upload', `HTTP ${xhr.status}`, task);
+					await show_error(task, `HTTP ${xhr.status}`);
 				}
 				resolve();
 			}
 		};
 
-		xhr.send(task.file);
+		xhr.send(task_data.file);
 	}).then(() => {
 		// Generate Thumbnail if not done already
 		setTimeout(async () => {
@@ -174,23 +188,39 @@ async function upload(task: FileTransferTask): Promise<void> {
 				JSON.parse(task.file_primary_key) as [string, string, number, string]
 			);
 			if (!!inode_element && inode_element.thumbnail === null) {
-				await generate_thumbnail(task.display_ip, task.path, inode_element);
+				await generate_thumbnail(task.display.ip, task.path, inode_element);
 			}
 		}, 10);
 	});
 }
 
-async function show_error(
-	type: 'upload' | 'download' | 'sync',
-	error: ProgressEvent | string,
-	task: FileTransferTask
-) {
+
+function get_prognosed_data(
+	start_time: Date,
+	bytes_done: number,
+	bytes_total: number
+): { bytes_per_second: number; seconds_until_finish: number } {
+	const diff_seconds = (Date.now() - start_time.getTime()) / 1000;
+	const bytes_per_second = bytes_done / diff_seconds;
+
+	const seconds_until_finish = bytes_total / bytes_per_second;
+	return { bytes_per_second, seconds_until_finish };
+}
+
+async function show_error(task: FileTransferTask, error: ProgressEvent | string) {
+	const task_data = task.data;
 	notifications.push(
 		'error',
-		`Fehler beim ${type === 'upload' ? 'Dateiupload' : type === 'download' ? 'Dateidownload' : 'Sychronisieren von Dateien'}`,
-		`Datei: "${task.file_name}", Display-IP: ${task.display_ip}\nFehler: ${error}`
+		`Fehler beim ${task_data.type === 'upload' ? 'Dateiupload' : task_data.type === 'download' ? 'Dateidownload' : 'Sychronisieren von Dateien'}`,
+		`Datei: "${task.file_name}", Display-IP: ${task.display.ip}\nFehler: ${error}`
 	);
-	if (type === 'download') return;
-	await remove_file_from_display(task.display_id, task.file_primary_key);
-	await remove_all_files_without_display();
+	if (task_data.type === 'upload') {
+		await remove_file_from_display(task.display.id, task.file_primary_key);
+		await remove_all_files_without_display();
+	} else if (task_data.type === 'sync') {
+		for (const display_id of task_data.destination_displays.map((e) => e.id)) {
+			await remove_file_from_display(display_id, task.file_primary_key);
+		}
+		await remove_all_files_without_display();
+	}
 }
