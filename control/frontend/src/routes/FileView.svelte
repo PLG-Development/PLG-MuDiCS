@@ -321,7 +321,7 @@
 						title="Ausgewählte Datei herunterladen"
 						className="px-3 flex"
 						click_function={() => (add_download($selected_file_ids[0]))}
-						disabled={!$one_file_selected ?? true}><Download /></Button
+						disabled={!$one_file_selected}><Download /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
