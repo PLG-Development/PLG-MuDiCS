@@ -55,6 +55,20 @@
 		loading_data = liveQuery(() => get_loading_data(get_file_primary_key(file), d));
 	});
 
+	let loading_finished = $state(false);
+	$effect(() => {
+		if (!loading_data) return;
+		let prev: boolean | undefined;
+		const sub = loading_data.subscribe((v) => {
+			if (prev === true && v.is_loading === false) {
+				loading_finished = true;
+				setTimeout(() => (loading_finished = false), 200);
+			}
+			prev = v.is_loading;
+		});
+		return () => sub.unsubscribe();
+	});
+
 	let thumbnail_url = liveQuery(() => get_thumbnail_url(get_file_primary_key(file)));
 	let date_mapping: Observable<Record<string, Date>> = liveQuery(() =>
 		get_date_mapping(get_file_primary_key(file))
@@ -151,7 +165,9 @@
 	function get_main_classes(): string {
 		let out = '';
 
-		if ($loading_data?.is_loading) {
+		if (loading_finished) {
+			out += 'bg-stone-500 text-white/30';
+		} else if ($loading_data?.is_loading) {
 			out += 'bg-stone-700 text-white/30';
 		} else {
 			out += get_selectable_color_classes(
@@ -216,7 +232,7 @@
 	}
 </script>
 
-<div data-testid="inode" class="flex flex-row h-{$current_height.file} w-full">
+<div data-testid="inode" class="flex flex-row h-{$current_height.file} w-full {loading_finished ? 'scale-105' : ''} transition-[scale] duration-300">
 	{#if !not_interactable}
 		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 			<Button
@@ -275,10 +291,10 @@
 	>
 		{#if $loading_data?.is_loading}
 			<!-- <div class="pointer-events-none absolute inset-0"> -->
-				<div
-					class="absolute pointer-events-none inset-y-0 left-0 transition-[width] duration-200 bg-stone-600 rounded-r-lg"
-					style={`width: ${$loading_data.total_percentage}%;`}
-				></div>
+			<div
+				class="absolute pointer-events-none inset-y-0 left-0 transition-[width] duration-200 bg-stone-600 rounded-r-lg"
+				style={`width: ${$loading_data.total_percentage}%;`}
+			></div>
 			<!-- </div> -->
 		{/if}
 		<div class="flex flex-row gap-2 min-w-0 w-full z-10">
