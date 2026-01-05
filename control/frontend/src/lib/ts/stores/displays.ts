@@ -151,12 +151,11 @@ export async function run_on_all_selected_displays<T extends unknown[]>(
 	...args: T
 ) {
 	for (const display_id of get(selected_display_ids)) {
-		const display_ip = (await get_display_by_id(display_id))?.ip;
-		if (display_ip) {
-			await run_function(display_ip, ...args);
-			if (update_screenshot_afterwards) {
-				await screenshot_loop(display_id);
-			}
+		const display = await get_display_by_id(display_id);
+		if (!display || !display.ip || display.status !== 'app_online') continue;
+		await run_function(display.ip, ...args);
+		if (update_screenshot_afterwards) {
+			await screenshot_loop(display_id);
 		}
 	}
 }
