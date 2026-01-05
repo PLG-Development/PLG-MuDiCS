@@ -37,7 +37,7 @@
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
-	import { add_upload } from '$lib/ts/file_transfer_handler';
+	import { add_download, add_upload } from '$lib/ts/file_transfer_handler';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -54,6 +54,13 @@
 			display_ids = $selected_display_ids;
 		current_folder_elements = liveQuery(() => get_current_folder_elements(path, display_ids));
 	});
+	let one_file_selected: Observable<boolean> | undefined = $state();
+	$effect(() => {
+		const s = $selected_file_ids;
+		one_file_selected = liveQuery(async () => {
+			return s.length === 1 && (await get_file_by_id(s[0]))?.type !== 'inode/directory';
+		})
+	})
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -311,9 +318,10 @@
 						disabled={$selected_display_ids.length === 0}><Upload /></Button
 					>
 					<Button
-						title="Ausgewählte Datei(en) herunterladen"
+						title="Ausgewählte Datei herunterladen"
 						className="px-3 flex"
-						disabled={$selected_file_ids.length === 0}><Download /></Button
+						click_function={() => (add_download($selected_file_ids[0]))}
+						disabled={!$one_file_selected ?? true}><Download /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button

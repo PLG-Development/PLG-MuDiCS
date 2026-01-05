@@ -2,6 +2,7 @@ import { db } from './files_display.db';
 import { get_display_by_id } from './stores/displays';
 import {
 	get_current_folder_elements,
+	get_file_by_id,
 	remove_all_files_without_display,
 	remove_file_from_display
 } from './stores/files';
@@ -83,6 +84,39 @@ export async function add_upload(
 	await start_task_processing();
 }
 
+export async function add_download(selected_file_id: string) {
+	const active_displays = await db.displays.toArray(); //TODO: where('status').equals('app_online').toArray();
+	const active_display_ids = active_displays.map((e) => e.id);
+
+	const file_on_display = await db.files_on_display
+		.where('file_primary_key')
+		.equals(selected_file_id)
+		.filter((e) => active_display_ids.includes(e.display_id))
+		.first();
+	if (!file_on_display) return;
+
+	const display_ip = active_displays.find((e) => e.id === file_on_display.display_id)?.ip;
+	if (!display_ip) return;
+	const file = await get_file_by_id(selected_file_id);
+	if (!file) return;
+
+	tasks.push({
+		data: {
+			type: 'download'
+		},
+		display: {
+			id: file_on_display.display_id,
+			ip: display_ip
+		},
+		path: file.path,
+		file_name: file.name,
+		file_primary_key: selected_file_id,
+		bytes_total: file.size
+	});
+
+	await start_task_processing();
+}
+
 function generate_valid_file_name(original_file_name: string, used_file_names: string[]): string {
 	const regex = /\s\((\d{1,3})\)$/;
 
@@ -96,37 +130,11 @@ function generate_valid_file_name(original_file_name: string, used_file_names: s
 		} else {
 			const match = name_without_extension.match(regex);
 			const current_number: number = match ? Number(match[1]) : 0;
-			console.log('current', current_number);
 			name_without_extension = name_without_extension.replace(regex, ` (${current_number + 1})`);
 		}
 		name = name_without_extension + extension;
-		console.log(name);
 	}
 	return name;
-}
-
-async function start_task_processing() {
-	if (!is_processing) {
-		is_processing = tasks.length !== 0;
-		await start_task_loop();
-	}
-}
-
-async function start_task_loop() {
-	while (tasks.length > 0) {
-		const current_task = tasks[0];
-		switch (current_task.data.type) {
-			case 'upload':
-				await upload(current_task);
-				break;
-			case 'download':
-				break;
-			case 'sync':
-				break;
-		}
-		tasks.shift(); // Remove current_task from tasks
-	}
-	is_processing = false;
 }
 
 async function upload(task: FileTransferTask): Promise<void> {
@@ -194,6 +202,51 @@ async function upload(task: FileTransferTask): Promise<void> {
 	});
 }
 
+async function download(task: FileTransferTask): Promise<void> {
+	if (task.data.type !== 'download') return;
+
+	try {
+		// TODO: Update File_on_display.loading_data -> start
+		const url = `http://${task.display.ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`;
+
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = task.file_name; // Hint für den Browser (Server-Header ist trotzdem besser)
+		a.rel = 'noopener';
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		// TODO: Update File_on_display.loading_data -> finish
+	} catch (e) {
+		show_error(task, String(e));
+	}
+}
+
+async function start_task_processing() {
+	if (!is_processing) {
+		is_processing = tasks.length !== 0;
+		await start_task_loop();
+	}
+}
+
+async function start_task_loop() {
+	while (tasks.length > 0) {
+		console.log('NOCH', tasks.length, 'ZU TUN');
+		const current_task = tasks[0];
+		switch (current_task.data.type) {
+			case 'upload':
+				await upload(current_task);
+				break;
+			case 'download':
+				await download(current_task);
+				break;
+			case 'sync':
+				break;
+		}
+		tasks.shift(); // Remove current_task from tasks
+	}
+	is_processing = false;
+}
 
 function get_prognosed_data(
 	start_time: Date,
