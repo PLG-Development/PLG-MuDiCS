@@ -12,7 +12,7 @@
 	import {
 		all_displays_of_group_selected,
 		get_display_ids_in_group,
-		select_all_of_group,
+		set_select_for_group,
 		set_new_display_order
 	} from '$lib/ts/stores/displays';
 	import DNDGrip from '$lib/components/DNDGrip.svelte';
@@ -41,7 +41,7 @@
 
 	async function select_all_of_this_group() {
 		const new_value = !($all_selected || false);
-		await select_all_of_group(display_group_id, new_value);
+		await set_select_for_group(display_group_id, new_value);
 	}
 
 	async function handle_consider(e: CustomEvent) {

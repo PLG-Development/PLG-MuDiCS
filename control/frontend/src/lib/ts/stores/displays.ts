@@ -82,10 +82,7 @@ export async function all_displays_of_group_selected(
 	return true;
 }
 
-export async function select_all_of_group(
-	display_group_id: string,
-	new_value: boolean | null = null
-) {
+export async function set_select_for_group(display_group_id: string, new_value: boolean) {
 	const displays_of_group: Display[] = await db.displays
 		.where('group_id')
 		.equals(display_group_id)

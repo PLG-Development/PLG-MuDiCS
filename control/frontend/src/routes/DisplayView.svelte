@@ -4,14 +4,13 @@
 		all_displays_of_group_selected,
 		get_display_by_id,
 		get_display_groups,
-		select_all_of_group,
+		set_select_for_group,
 		set_new_display_group_order
 	} from '$lib/ts/stores/displays';
 	import {
 		change_height,
 		current_height,
 		dnd_flip_duration_ms,
-		get_selectable_color_classes,
 		is_display_drag,
 		is_group_drag,
 		next_height_step_size,
@@ -80,10 +79,10 @@
 		];
 	}
 
-	async function select_all(current_displays: DisplayGroup[]) {
-		const new_value = !all_groups_selected;
+	async function toggle_all_selected_displays(current_displays: DisplayGroup[]) {
+		const new_value = !$all_groups_selected;
 		for (const display_group of current_displays) {
-			await select_all_of_group(display_group.id, new_value);
+			await set_select_for_group(display_group.id, new_value);
 		}
 	}
 
@@ -204,16 +203,8 @@
 					</span>
 					<div class="flex flex-row gap-1">
 						<button
-							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors {get_selectable_color_classes(
-								$all_groups_selected || false,
-								{
-									bg: true,
-									hover: true,
-									active: true,
-									text: true
-								}
-							)}"
-							onclick={async () => await select_all($display_groups || [])}
+							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors bg-stone-600"
+							onclick={async () => await toggle_all_selected_displays($display_groups)}
 						>
 							<span>{$all_groups_selected || false ? 'Alle abwählen' : 'Alle auswählen'}</span>
 						</button>
