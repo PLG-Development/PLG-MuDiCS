@@ -227,7 +227,6 @@
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
 		<Button
 			className="aspect-square"
-			bg="bg-stone-800"
 			div_class="aspect-square"
 			menu_options={[
 				{
