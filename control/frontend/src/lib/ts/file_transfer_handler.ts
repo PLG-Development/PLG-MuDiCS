@@ -119,6 +119,7 @@ async function start_task_loop() {
 		}
 		tasks.shift(); // Remove current_task from tasks
 	}
+	is_processing = false;
 }
 
 async function upload(task: FileTransferTask): Promise<void> {
