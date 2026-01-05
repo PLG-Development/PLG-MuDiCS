@@ -15,7 +15,7 @@
 	import PopUp from '$lib/components/PopUp.svelte';
 	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen } from '$lib/ts/api_handler';
+	import { send_keyboard_input, show_blackscreen, shutdown } from '$lib/ts/api_handler';
 	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
@@ -65,7 +65,33 @@
 			return 'mixed';
 		}
 	}
+
+	async function ask_shutdonw() {
+		popup_content = {
+			open: true,
+			snippet: ask_shutdonw_popup,
+			title: 'PC Herunterfahren',
+			title_icon: PowerOff,
+			closable: true
+		};
+	}
+
+	async function shutdown_action() {
+		popup_content.open = false;
+		await run_on_all_selected_displays((ip) => shutdown(ip), false);
+	}
 </script>
+
+{#snippet ask_shutdonw_popup()}
+	<p>Bist du sicher, dass du alle ausgewählten Displays herunterfahren möchtest?</p>
+
+	<div class="flex flex-row justify-end gap-2">
+		<Button className="button space" click_function={() => (popup_content.open = false)}>
+			Abbrechen
+		</Button>
+		<Button click_function={shutdown_action} className="button error space">Herunterfahren</Button>
+	</div>
+{/snippet}
 
 {#snippet send_keys_popup()}
 	<div class="overflow-hidden flex flex-col gap-2">
@@ -146,6 +172,7 @@
 						<Button
 							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 							disabled={all === 'off' || $selected_display_ids.length === 0}
+							click_function={ask_shutdonw}
 						>
 							<PowerOff /> PC herunterfahren</Button
 						>

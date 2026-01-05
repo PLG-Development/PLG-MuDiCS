@@ -12,6 +12,20 @@
 	--color-stone-850: oklch(0.242 0.0065 45.171);
 }
 
+.button {
+	&.space {
+		@apply px-4;
+	}
+
+	&.error {
+		@apply text-red-400 hover:text-stone-100;
+
+		&:hover {
+			@apply bg-red-400;
+		}
+	}
+}
+
 main {
 	scrollbar-width: thin;
 	scrollbar-color: var(--color-stone-300) transparent;

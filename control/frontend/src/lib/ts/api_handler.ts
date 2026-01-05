@@ -292,3 +292,7 @@ async function run_shell_command(ip: string, command: string): Promise<RequestRe
 	};
 	return await request_display(ip, '/shellCommand', options);
 }
+
+export async function shutdown(ip: string): Promise<void> {
+	await run_shell_command(ip, 'shutdown -h now');
+}
