@@ -16,7 +16,7 @@
 	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
 	import { send_keyboard_input, show_blackscreen } from '$lib/ts/api_handler';
-	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 
@@ -51,6 +51,20 @@
 			window_class: 'size-full'
 		};
 	};
+
+	async function all_state(selected_display_ids: string[]): Promise<'on' | 'off' | 'mixed'> {
+		const selected_displays = await Promise.all(
+			selected_display_ids.map(async (id) => await get_display_by_id(id))
+		);
+		const selected_display_states = selected_displays.map((display) => display?.status ?? '');
+		if (selected_display_states.every((state) => state === 'app_online')) {
+			return 'on';
+		} else if (selected_display_states.every((state) => state !== 'app_online')) {
+			return 'off';
+		} else {
+			return 'mixed';
+		}
+	}
 </script>
 
 {#snippet send_keys_popup()}
@@ -121,14 +135,21 @@
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
 				<div class="flex flex-col gap-2">
-					<Button
-						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$selected_display_ids.length === 0}><Power /> PC hochfahren</Button
-					>
-					<Button
-						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$selected_display_ids.length === 0}><PowerOff /> PC herunterfahren</Button
-					>
+					{#await all_state($selected_display_ids) then all}
+						<Button
+							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+							disabled={all === 'on' || $selected_display_ids.length === 0}
+						>
+							<Power /> PC hochfahren
+						</Button>
+
+						<Button
+							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+							disabled={all === 'off' || $selected_display_ids.length === 0}
+						>
+							<PowerOff /> PC herunterfahren</Button
+						>
+					{/await}
 				</div>
 				<Button
 					className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
