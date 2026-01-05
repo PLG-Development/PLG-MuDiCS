@@ -239,11 +239,11 @@
 		</div>
 	</div>
 	<div class="flex flex-row justify-end gap-2">
-		<Button className="px-4 font-bold" click_function={popup_close_function}>Abbrechen</Button>
+		<Button className="button space font-bold" click_function={popup_close_function}>
+			Abbrechen
+		</Button>
 		<Button
-			hover_bg="bg-red-400"
-			active_bg="bg-red-500"
-			className="px-4 flex text-red-400 hover:text-stone-100"
+			className="button error space"
 			click_function={async () => {
 				popup_close_function();
 				await run_for_selected_files_on_selected_displays(
