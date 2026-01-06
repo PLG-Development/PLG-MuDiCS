@@ -147,14 +147,21 @@ export async function run_on_all_selected_displays(
 	update_screenshot_afterwards: boolean = true,
 	ignore_offline: boolean = true
 ) {
-	for (const display_id of get(selected_display_ids)) {
-		const display = await get_display_by_id(display_id);
-		if (!display || (ignore_offline && display.status === 'host_offline')) continue;
-		await run_function(display);
-		if (update_screenshot_afterwards) {
-			await screenshot_loop(display_id);
-		}
-	}
+	const maybe_displays: (Display | null)[] = await Promise.all(
+		// fails when only a single promis fails
+		get(selected_display_ids).map(async (id) => await get_display_by_id(id))
+	);
+	const displays: Display[] = maybe_displays.filter((d): d is Display => d !== null);
+
+	Promise.all(
+		displays.map(async (display) => {
+			if (!display || (ignore_offline && display.status === 'host_offline')) return;
+			await run_function(display);
+			if (update_screenshot_afterwards) {
+				await screenshot_loop(display.id);
+			}
+		})
+	);
 }
 
 export async function get_display_groups(): Promise<DisplayGroup[]> {
