@@ -4,7 +4,7 @@ import { is_selected, select, selected_display_ids } from './select';
 import { get_uuid, image_content_hash } from '../utils';
 import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
-import { db } from '../files_display.db';
+import { db } from '../database';
 
 export async function is_display_name_taken(name: string): Promise<boolean> {
 	const exists = await db.displays.where('name').equals(name).first();

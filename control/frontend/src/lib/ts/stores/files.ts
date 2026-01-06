@@ -10,7 +10,7 @@ import { get_display_by_id } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
 import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
-import { db } from '../files_display.db';
+import { db } from '../database';
 
 export const current_file_path: Writable<string> = writable<string>('/');
 

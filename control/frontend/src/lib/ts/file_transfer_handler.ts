@@ -1,4 +1,4 @@
-import { db } from './files_display.db';
+import { db } from './database';
 import { get_display_by_id } from './stores/displays';
 import {
 	get_current_folder_elements,

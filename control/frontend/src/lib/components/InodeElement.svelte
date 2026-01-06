@@ -32,7 +32,7 @@
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery, type Observable } from 'dexie';
-	import { db } from '$lib/ts/files_display.db';
+	import { db } from '$lib/ts/database';
 
 	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
 

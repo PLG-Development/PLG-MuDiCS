@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from 'svelte/store';
 import { get_thumbnail_blob } from '../api_handler';
 import { type Inode } from '../types';
-import { db } from '../files_display.db';
+import { db } from '../database';
 import { get_file_type } from '../utils';
 import { get_file_by_id } from './files';
 

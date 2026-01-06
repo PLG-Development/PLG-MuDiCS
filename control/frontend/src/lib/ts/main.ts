@@ -2,7 +2,7 @@ import { screenshot_loop } from './stores/displays';
 import { ping_ip } from './api_handler';
 import type { Display } from './types';
 import { update_folder_elements_recursively } from './stores/files';
-import { db } from './files_display.db';
+import { db } from './database';
 
 const update_display_status_interval_seconds = 20;
 
