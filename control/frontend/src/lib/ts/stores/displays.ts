@@ -144,11 +144,12 @@ export async function screenshot_loop(display_id: string, initial_retry_count: n
 
 export async function run_on_all_selected_displays(
 	run_function: (display: Display) => void | Promise<void>,
-	update_screenshot_afterwards: boolean = true
+	update_screenshot_afterwards: boolean = true,
+	ignore_offline: boolean = true
 ) {
 	for (const display_id of get(selected_display_ids)) {
 		const display = await get_display_by_id(display_id);
-		if (!display || !display.ip || display.status !== 'app_online') continue;
+		if (!display || (ignore_offline && display.status === 'host_offline')) continue;
 		await run_function(display);
 		if (update_screenshot_afterwards) {
 			await screenshot_loop(display_id);
