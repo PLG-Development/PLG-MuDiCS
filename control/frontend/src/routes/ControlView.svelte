@@ -79,11 +79,10 @@
 
 	async function shutdown_action() {
 		popup_content.open = false;
-		await run_on_all_selected_displays((d) => shutdown(d.ip), false); // no await here because we want to be fast
-		// await run_on_all_selected_displays((d) => {
-		// 	shutdown(d.ip); // no await here because we want to be fast
-		// 	db.displays.update(d.id, { status: 'app_offline' });
-		// }, false);
+		await run_on_all_selected_displays((d) => {
+			shutdown(d.ip); // no await here because we want to be fast
+			db.displays.update(d.id, { status: 'app_offline' });
+		}, false);
 	}
 </script>
 
