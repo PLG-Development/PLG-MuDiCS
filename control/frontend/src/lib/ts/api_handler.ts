@@ -293,12 +293,12 @@ async function run_shell_command(ip: string, command: string): Promise<RequestRe
 	return await request_display(ip, '/shellCommand', options);
 }
 
-export async function shutdown(ip: string): Promise<void> {
-	await run_shell_command(ip, 'shutdown -h now');
+export async function shutdown(ip: string): Promise<RequestResponse> {
+	return await run_shell_command(ip, 'shutdown -h now');
 }
 
-export async function startup(mac: string): Promise<void> {
-	await request_control(`/wakeOnLan`, {
+export async function startup(mac: string): Promise<RequestResponse> {
+	return await request_control(`/wakeOnLan`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({ mac_address: mac })
