@@ -199,7 +199,7 @@ async function request_control(
 	api_route: string,
 	options: { method: string; headers?: Record<string, string>; body?: string }
 ): Promise<RequestResponse> {
-	const url = `${window.location.origin}/api${api_route}`;
+	const url = `http://127.0.0.1:8080/api${api_route}`;
 	return await request(url, options);
 }
 
@@ -295,4 +295,12 @@ async function run_shell_command(ip: string, command: string): Promise<RequestRe
 
 export async function shutdown(ip: string): Promise<void> {
 	await run_shell_command(ip, 'shutdown -h now');
+}
+
+export async function startup(mac: string): Promise<void> {
+	await request_control(`/wakeOnLan`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ mac_address: mac })
+	});
 }

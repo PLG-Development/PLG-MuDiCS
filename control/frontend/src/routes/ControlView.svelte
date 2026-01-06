@@ -15,7 +15,7 @@
 	import PopUp from '$lib/components/PopUp.svelte';
 	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen, shutdown } from '$lib/ts/api_handler';
+	import { send_keyboard_input, show_blackscreen, shutdown, startup } from '$lib/ts/api_handler';
 	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
@@ -83,6 +83,18 @@
 			shutdown(d.ip); // no await here because we want to be fast
 			db.displays.update(d.id, { status: 'app_offline' });
 		}, false);
+	}
+
+	async function startup_action() {
+		await run_on_all_selected_displays(
+			async (d) => {
+				if (!d.mac) return;
+				startup(d.mac); // no await here because we want to be fast
+				db.displays.update(d.id, { status: 'app_offline' });
+			},
+			false,
+			false
+		);
 	}
 </script>
 
@@ -169,6 +181,7 @@
 						<Button
 							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 							disabled={all === 'on' || $selected_display_ids.length === 0}
+							click_function={startup_action}
 						>
 							<Power /> PC hochfahren
 						</Button>
