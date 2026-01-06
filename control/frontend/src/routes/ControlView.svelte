@@ -19,6 +19,7 @@
 	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
+	import { db } from '$lib/ts/database';
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -78,7 +79,11 @@
 
 	async function shutdown_action() {
 		popup_content.open = false;
-		await run_on_all_selected_displays((ip) => shutdown(ip), false);
+		await run_on_all_selected_displays((d) => shutdown(d.ip), false); // no await here because we want to be fast
+		// await run_on_all_selected_displays((d) => {
+		// 	shutdown(d.ip); // no await here because we want to be fast
+		// 	db.displays.update(d.id, { status: 'app_offline' });
+		// }, false);
 	}
 </script>
 
@@ -121,7 +126,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={async () => {
-							await run_on_all_selected_displays(send_keyboard_input, true, 'VK_LEFT');
+							await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, 'VK_LEFT'));
 						}}><ArrowBigLeft /></Button
 					>
 					<Button
@@ -129,7 +134,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={async () => {
-							await run_on_all_selected_displays(send_keyboard_input, true, 'VK_RIGHT');
+							await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, 'VK_RIGHT'));
 						}}><ArrowBigRight /></Button
 					>
 				</div>
@@ -142,7 +147,7 @@
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
 					click_function={async () => {
-						await run_on_all_selected_displays(show_blackscreen, true);
+						await run_on_all_selected_displays((d) => show_blackscreen(d.ip));
 					}}><Presentation />Blackout</Button
 				>
 				<div class="flex flex-row justify-normal">

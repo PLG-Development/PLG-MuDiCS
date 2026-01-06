@@ -142,15 +142,14 @@ export async function screenshot_loop(display_id: string, initial_retry_count: n
 	await db.displays.update(display.id, { preview: display.preview });
 }
 
-export async function run_on_all_selected_displays<T extends unknown[]>(
-	run_function: (ip: string, ...args: T) => void | Promise<void>,
-	update_screenshot_afterwards: boolean,
-	...args: T
+export async function run_on_all_selected_displays(
+	run_function: (display: Display) => void | Promise<void>,
+	update_screenshot_afterwards: boolean = true
 ) {
 	for (const display_id of get(selected_display_ids)) {
 		const display = await get_display_by_id(display_id);
 		if (!display || !display.ip || display.status !== 'app_online') continue;
-		await run_function(display.ip, ...args);
+		await run_function(display);
 		if (update_screenshot_afterwards) {
 			await screenshot_loop(display_id);
 		}

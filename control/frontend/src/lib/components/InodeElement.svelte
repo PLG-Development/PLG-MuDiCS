@@ -160,7 +160,7 @@
 			await change_file_path($current_file_path + file.name + '/');
 		} else {
 			const path_to_file = $current_file_path + file.name;
-			await run_on_all_selected_displays(open_file, true, path_to_file);
+			await run_on_all_selected_displays((d) => open_file(d.ip, path_to_file));
 		}
 	}
 

@@ -31,7 +31,7 @@
 		add_to_last_keys(e.code);
 		if (e.repeat) return;
 
-		await run_on_all_selected_displays(send_keyboard_input, true, id);
+		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, id));
 	}
 </script>
 
