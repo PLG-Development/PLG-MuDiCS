@@ -24,8 +24,7 @@ export class FileDatabase extends Dexie {
         display_id,
         file_primary_key,
         date_created,
-        is_loading,
-        percentage
+        loading_data
       `,
 			displays: `
         id,
