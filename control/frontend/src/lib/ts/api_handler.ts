@@ -22,12 +22,12 @@ export async function open_file(ip: string, path_to_file: string): Promise<void>
 	await request_display(ip, get_sanitized_file_url(path_to_file), options);
 }
 
-export async function send_keyboard_input(ip: string, key: string): Promise<void> {
+export async function send_keyboard_input(ip: string, inputs: { key: string; action: 'press' | 'release'}[]): Promise<void> {
 	const options = {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
-			key: key
+			inputs
 		})
 	};
 	await request_display(ip, '/keyboardInput', options);

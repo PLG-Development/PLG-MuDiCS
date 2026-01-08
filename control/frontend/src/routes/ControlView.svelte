@@ -96,6 +96,19 @@
 			false
 		);
 	}
+
+	async function send_single_key_press(key: string) {
+		await run_on_all_selected_displays((d) =>
+			send_keyboard_input(d.ip, [{ key, action: 'press' }])
+		);
+		setTimeout(
+			async () =>
+				await run_on_all_selected_displays((d) =>
+					send_keyboard_input(d.ip, [{ key, action: 'release' }])
+				),
+			10
+		);
+	}
 </script>
 
 {#snippet ask_shutdonw_popup()}
@@ -137,7 +150,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={async () => {
-							await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, 'VK_LEFT'));
+							await send_single_key_press('VK_LEFT');
 						}}><ArrowBigLeft /></Button
 					>
 					<Button
@@ -145,7 +158,7 @@
 						className="px-9"
 						disabled={$selected_display_ids.length === 0}
 						click_function={async () => {
-							await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, 'VK_RIGHT'));
+							await send_single_key_press('VK_RIGHT');
 						}}><ArrowBigRight /></Button
 					>
 				</div>

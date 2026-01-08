@@ -9,6 +9,7 @@
 	const key_map: Record<string, string> = key_map_json as Record<string, string>;
 
 	let active = $state(false);
+	const current_keys: string[] = $state([]);
 	let last_keys: { id: number; key: string }[] = $state([]);
 
 	let el: HTMLDivElement;
@@ -21,17 +22,46 @@
 		}, 1500);
 	}
 
-	async function on_key_down(e: KeyboardEvent) {
+	async function on_key(e: KeyboardEvent, key_down: boolean) {
 		if (!active) return;
 		const id = key_map[e.code];
 		if (!id) return;
+
+		if (key_down) {
+			if (current_keys.includes(e.code)) return;
+			current_keys.push(e.code);
+		} else {
+			const index = current_keys.indexOf(e.code);
+			if (index === -1) return;
+			current_keys.splice(index, 1);
+		}
+
+		if (e.repeat) return;
+
 		e.preventDefault();
 		e.stopPropagation();
 
-		add_to_last_keys(e.code);
-		if (e.repeat) return;
+		const action: 'press' | 'release' = key_down ? 'press' : 'release';
 
-		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, id));
+		add_to_last_keys(action.toUpperCase() + ' ' + e.code);
+
+		await run_on_all_selected_displays(
+			(d) => send_keyboard_input(d.ip, [{ key: id, action }]),
+			true
+		);
+	}
+
+	async function release_all_pressed_keys() {
+		const inputs: {key: string; action: 'press' | 'release' }[] = [];
+		for (let i = current_keys.length - 1; i >= 0; i--) {
+			inputs.push({key: current_keys[i], action: 'release'})
+			current_keys.splice(i, 1);
+		}
+
+		await run_on_all_selected_displays(
+			(d) => send_keyboard_input(d.ip, inputs),
+			true
+		);
 	}
 </script>
 
@@ -47,8 +77,12 @@
 			active = true;
 		}
 	}}
-	onblur={() => (active = false)}
-	onkeydown={on_key_down}
+	onblur={async () => {
+		active = false;
+		await release_all_pressed_keys();
+	}}
+	onkeydown={(e) => on_key(e, true)}
+	onkeyup={(e) => on_key(e, false)}
 	class="relative flex justify-center items-center h-15 w-full cursor-pointer rounded-xl transition-colors duration-200 select-none {get_selectable_color_classes(
 		active,
 		{
