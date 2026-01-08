@@ -44,8 +44,9 @@ Even when the command itself fails.
 
 ### Request Body
 
-- `key`: string for key
-- `action`: "press" or "release"
+- `inputs`: list
+  - `key`: string for key
+  - `action`: "press" or "release"
 
 ## PATCH `/showHTML`
 
