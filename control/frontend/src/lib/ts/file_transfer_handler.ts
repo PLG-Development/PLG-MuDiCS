@@ -26,7 +26,7 @@ export async function add_upload(
 	selected_display_ids: string[],
 	current_file_path: string
 ) {
-	if (file_list.length === 0) return;
+	if (file_list.length === 0) return console.warn('Upload canceled: no selected files');
 
 	const used_file_names: string[] = await (
 		await get_current_folder_elements(current_file_path, selected_display_ids)
@@ -91,7 +91,7 @@ export async function add_sync(selected_file_id: string, selected_display_ids: s
 		selected_file_id,
 		selected_display_ids
 	);
-	if (!file_data) return;
+	if (!file_data) return console.warn('Sync canceled: no file_data');
 
 	tasks.push({
 		data: {
@@ -199,7 +199,7 @@ function generate_valid_file_name(original_file_name: string, used_file_names: s
 
 async function upload(task: FileTransferTask): Promise<void> {
 	const task_data = task.data;
-	if (task_data.type !== 'upload' || !task_data.file) return;
+	if (task_data.type !== 'upload' || !task_data.file) return console.warn('Task cancelled: wrong task type:', task);
 
 	await upload_file_via_xhr(task, task.display, task_data.file);
 
@@ -215,7 +215,7 @@ async function upload(task: FileTransferTask): Promise<void> {
 }
 
 export async function sync(task: FileTransferTask) {
-	if (task.data.type !== 'sync') return;
+	if (task.data.type !== 'sync') return console.warn('Task cancelled: wrong task type:', task);
 
 	const hasOPFS =
 		typeof navigator !== 'undefined' &&
@@ -271,7 +271,7 @@ export async function download_file(selected_file_id: string, selected_display_i
 		selected_file_id,
 		selected_display_ids
 	);
-	if (!file_data || file_data.file.type === 'inode/directory') return;
+	if (!file_data || file_data.file.type === 'inode/directory') return console.warn('Download cancelled: is folder');
 
 	try {
 		const url = `http://${file_data.short_display_with_file.ip}:1323/api${get_sanitized_file_url(file_data.file.path + file_data.file.name)}`;
@@ -383,6 +383,7 @@ function get_prognosed_data(
 
 async function show_error(task: FileTransferTask, error: ProgressEvent | string) {
 	const task_data = task.data;
+	console.error('Error in File-Transfer-Handler:', error, task);
 	notifications.push(
 		'error',
 		`Fehler beim ${task_data.type === 'upload' ? 'Dateiupload' : 'Sychronisieren von Dateien'}`,
