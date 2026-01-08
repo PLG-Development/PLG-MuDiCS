@@ -1,7 +1,3 @@
-// TODO:
-// 1. Download von tasks trennen
-// 2. Sync hinzufügen
-
 import { db } from './database';
 import { get_display_by_id } from './stores/displays';
 import {
@@ -123,7 +119,7 @@ async function find_file_data_on_active_selected_display(
 	const active_selected_displays = await db.displays
 		.where('id')
 		.anyOf(selected_display_ids)
-		// .filter((d) => d.status === 'app_online') DEBUG
+		.filter((d) => d.status === 'app_online')
 		.toArray();
 	const active_selected_display_ids = active_selected_displays.map((d) => d.id);
 
