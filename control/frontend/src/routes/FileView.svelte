@@ -37,7 +37,7 @@
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
-	import { add_download, add_upload } from '$lib/ts/file_transfer_handler';
+	import { download_file, add_upload } from '$lib/ts/file_transfer_handler';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -320,7 +320,7 @@
 					<Button
 						title="Ausgewählte Datei herunterladen"
 						className="px-3 flex"
-						click_function={() => (add_download($selected_file_ids[0]))}
+						click_function={() => (download_file($selected_file_ids[0], $selected_display_ids))}
 						disabled={!$one_file_selected}><Download /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>

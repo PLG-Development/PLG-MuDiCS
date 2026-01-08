@@ -1,3 +1,7 @@
+// TODO:
+// 1. Download von tasks trennen
+// 2. Sync hinzufügen
+
 import { db } from './database';
 import { get_display_by_id } from './stores/displays';
 import {
@@ -12,7 +16,8 @@ import {
 	get_file_primary_key,
 	type FileOnDisplay,
 	type FileTransferTask,
-	type Inode
+	type Inode,
+	type ShortDisplay
 } from './types';
 import { get_sanitized_file_url, make_valid_name } from './utils';
 
@@ -84,37 +89,74 @@ export async function add_upload(
 	await start_task_processing();
 }
 
-export async function add_download(selected_file_id: string) {
-	const active_displays = await db.displays.toArray(); //TODO: where('status').equals('app_online').toArray();
-	const active_display_ids = active_displays.map((e) => e.id);
-
-	const file_on_display = await db.files_on_display
-		.where('file_primary_key')
-		.equals(selected_file_id)
-		.filter((e) => active_display_ids.includes(e.display_id))
-		.first();
-	if (!file_on_display) return;
-
-	const display_ip = active_displays.find((e) => e.id === file_on_display.display_id)?.ip;
-	if (!display_ip) return;
-	const file = await get_file_by_id(selected_file_id);
-	if (!file) return;
+export async function add_sync(selected_file_id: string, selected_display_ids: string[]) {
+	const file_data = await find_file_data_on_active_selected_display(
+		selected_file_id,
+		selected_display_ids
+	);
+	if (!file_data) return;
 
 	tasks.push({
 		data: {
-			type: 'download'
+			type: 'sync',
+			destination_displays: file_data.short_displays_without_file
 		},
-		display: {
-			id: file_on_display.display_id,
-			ip: display_ip
-		},
-		path: file.path,
-		file_name: file.name,
+		display: file_data.short_display_with_file,
+		path: file_data.file.path,
+		file_name: file_data.file.name,
 		file_primary_key: selected_file_id,
-		bytes_total: file.size
+		bytes_total: file_data.file.size
 	});
 
 	await start_task_processing();
+}
+
+async function find_file_data_on_active_selected_display(
+	selected_file_id: string,
+	selected_display_ids: string[]
+): Promise<{
+	file_on_display: FileOnDisplay;
+	file: Inode;
+	short_display_with_file: ShortDisplay;
+	short_displays_without_file: ShortDisplay[];
+} | null> {
+	const active_selected_displays = await db.displays
+		.where('id')
+		.anyOf(selected_display_ids)
+		// .filter((d) => d.status === 'app_online') DEBUG
+		.toArray();
+	const active_selected_display_ids = active_selected_displays.map((d) => d.id);
+
+	const fods = await db.files_on_display
+		.where('file_primary_key')
+		.equals(selected_file_id)
+		.filter((e) => active_selected_display_ids.includes(e.display_id))
+		.toArray();
+	if (fods.length < 0) return null;
+	const fod_with_file = fods[0];
+	const display_ids_with_file = fods.map((f) => f.display_id);
+
+	const ip = active_selected_displays.find((e) => e.id === fod_with_file.display_id)?.ip;
+	if (!ip) return null;
+
+	const short_displays_without_file: ShortDisplay[] = selected_display_ids
+		.filter((d) => !display_ids_with_file.includes(d))
+		.map((id) => {
+			const ip = active_selected_displays.find((d) => d.id === id)?.ip;
+			if (!ip) return null;
+			return { id, ip };
+		})
+		.filter((sd) => !!sd);
+
+	const inode = await get_file_by_id(selected_file_id);
+	if (!inode) return null;
+
+	return {
+		file_on_display: fod_with_file,
+		file: inode,
+		short_display_with_file: { id: fod_with_file.display_id, ip },
+		short_displays_without_file
+	};
 }
 
 function generate_valid_file_name(original_file_name: string, used_file_names: string[]): string {
@@ -202,23 +244,29 @@ async function upload(task: FileTransferTask): Promise<void> {
 	});
 }
 
-async function download(task: FileTransferTask): Promise<void> {
-	if (task.data.type !== 'download') return;
+export async function download_file(selected_file_id: string, selected_display_ids: string[]) {
+	const file_data = await find_file_data_on_active_selected_display(
+		selected_file_id,
+		selected_display_ids
+	);
+	if (!file_data || file_data.file.type === 'inode/directory') return;
 
 	try {
-		// TODO: Update File_on_display.loading_data -> start
-		const url = `http://${task.display.ip}:1323/api${get_sanitized_file_url(task.path + task.file_name)}`;
+		const url = `http://${file_data.short_display_with_file.ip}:1323/api${get_sanitized_file_url(file_data.file.path + file_data.file.name)}`;
 
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = task.file_name; // Hint für den Browser (Server-Header ist trotzdem besser)
+		a.download = file_data.file.name; // Hint für den Browser (Server-Header ist trotzdem besser)
 		a.rel = 'noopener';
 		document.body.appendChild(a);
 		a.click();
 		a.remove();
-		// TODO: Update File_on_display.loading_data -> finish
 	} catch (e) {
-		show_error(task, String(e));
+		notifications.push(
+			'error',
+			'Fehler beim Dateidownload',
+			`Datei: "${file_data.file.name}", Display-IP: ${file_data.short_display_with_file.ip}\nFehler: ${e}`
+		);
 	}
 }
 
@@ -233,16 +281,11 @@ async function start_task_loop() {
 	while (tasks.length > 0) {
 		console.log('NOCH', tasks.length, 'ZU TUN');
 		const current_task = tasks[0];
-		switch (current_task.data.type) {
-			case 'upload':
-				await upload(current_task);
-				break;
-			case 'download':
-				await download(current_task);
-				break;
-			case 'sync':
-				break;
+		if (current_task.data.type === 'upload') {
+			await upload(current_task);
 		}
+		// else if (current_task.data.type === 'sync') {
+		// }
 		tasks.shift(); // Remove current_task from tasks
 	}
 	is_processing = false;
@@ -264,7 +307,7 @@ async function show_error(task: FileTransferTask, error: ProgressEvent | string)
 	const task_data = task.data;
 	notifications.push(
 		'error',
-		`Fehler beim ${task_data.type === 'upload' ? 'Dateiupload' : task_data.type === 'download' ? 'Dateidownload' : 'Sychronisieren von Dateien'}`,
+		`Fehler beim ${task_data.type === 'upload' ? 'Dateiupload' : 'Sychronisieren von Dateien'}`,
 		`Datei: "${task.file_name}", Display-IP: ${task.display.ip}\nFehler: ${error}`
 	);
 	if (task_data.type === 'upload') {

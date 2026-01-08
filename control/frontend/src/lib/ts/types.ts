@@ -41,8 +41,6 @@ export type FileTransferTaskData = {
 	type: 'upload',
 	file: File,
 } | {
-	type: 'download',
-} | {
 	type: "sync",
 	destination_displays: ShortDisplay[],
 }
