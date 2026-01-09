@@ -325,7 +325,6 @@ func openFileRoute(ctx echo.Context) error {
 	err = resetView()
 	if err != nil {
 		slog.Error("Failed to reset view", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to reset view"})
 	}
 
 	mType, err := mimetype.DetectFile(fullPath)
@@ -372,7 +371,6 @@ func showHTMLRoute(ctx echo.Context) error {
 	err := resetView()
 	if err != nil {
 		slog.Error("Failed to reset view", "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to reset view"})
 	}
 
 	sseConnection <- request.HTML
