@@ -112,7 +112,7 @@ func wakeOnLanRoute(ctx echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to create Wake-on-LAN client"})
 	}
-	if err := client.Wake("255.255.255.255", mac); err != nil {
+	if err := client.Wake("255.255.255.255:7", mac); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send Wake-on-LAN packet"})
 	}
 
