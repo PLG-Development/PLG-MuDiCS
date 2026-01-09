@@ -162,11 +162,13 @@
 						}}><ArrowBigRight /></Button
 					>
 				</div>
+
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
 					click_function={show_text_popup}><TextAlignStart /> Text anzeigen</Button
 				>
+
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
@@ -174,14 +176,14 @@
 						await run_on_all_selected_displays((d) => show_blackscreen(d.ip));
 					}}><Presentation />Blackout</Button
 				>
+
 				<div class="flex flex-row justify-normal">
-					<Button
-						className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal"
-						disabled={$selected_display_ids.length === 0}
-						><TrafficCone /> Fallback-Bild anzeigen</Button
-					>
-					<Button className="rounded-l-none flex grow-0 w-10"><ChevronDown /></Button>
+					<Button className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal" disabled>
+						<TrafficCone /> Fallback-Bild anzeigen
+					</Button>
+					<Button className="rounded-l-none flex grow-0 w-10" disabled><ChevronDown /></Button>
 				</div>
+
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
@@ -208,11 +210,10 @@
 						>
 					{/await}
 				</div>
-				<Button
-					className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
-					><SquareTerminal /> Shell-Befehl ausführen</Button
-				>
+				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal" disabled>
+					<SquareTerminal />
+					Shell-Befehl ausführen
+				</Button>
 			</div>
 		</div>
 		<PopUp
