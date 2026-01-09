@@ -5,6 +5,7 @@ import { get_uuid, image_content_hash } from '../utils';
 import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../database';
+import { dev } from '$app/environment';
 
 export async function is_display_name_taken(name: string): Promise<boolean> {
 	const exists = await db.displays.where('name').equals(name).first();
@@ -190,8 +191,10 @@ export async function set_new_display_group_order(new_ordered_items: DisplayGrou
 	}
 }
 
-setTimeout(add_testing_displays, 0);
-async function add_testing_displays() {
-	await add_display('127.0.0.1', '00:1A:2B:3C:4D:5E', 'PC', 'host_offline');
-	// await add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "host_offline");
+if (dev) {
+	setTimeout(add_testing_displays, 0);
+	async function add_testing_displays() {
+		await add_display('127.0.0.1', '00:1A:2B:3C:4D:5E', 'PC', 'host_offline');
+		// await add_display("192.168.178.111", "D4:81:D7:C0:DF:3C", "Laptop", "host_offline");
+	}
 }
