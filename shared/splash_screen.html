@@ -1,267 +1,470 @@
 <div id="splash">
-	<svg id="splash-svg" viewBox="0 0 950 550">
-		<!-- Paths -->
-		<!-- Disabled Paths -->
-		<path class="splash-stroke" d="M 385 350 V 270 H 100 V 112.5" />
-		<path class="splash-stroke" d="M 445 350 V 210 H 350 V 112.5" />
-		<path class="splash-stroke" d="M 505 350 V 210 H 600 V 112.5" />
-		<path class="splash-stroke" d="M 565 350 V 270 H 850 V 112.5" />
-		<!-- Masks -->
-		<defs>
-			<mask id="m1" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-				<path class="splash-mask" pathLength="100" d="M 385 350 V 270 H 100 V 112.5" />
-			</mask>
-			<mask id="m2" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-				<path class="splash-mask" pathLength="100" d="M 445 350 V 210 H 350 V 112.5" />
-			</mask>
-			<mask id="m3" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-				<path class="splash-mask" pathLength="100" d="M 505 350 V 210 H 600 V 112.5" />
-			</mask>
-			<mask id="m4" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-				<path class="splash-mask" pathLength="100" d="M 565 350 V 270 H 850 V 112.5" />
-			</mask>
-		</defs>
-		<!-- Active Paths -->
-		<path class="splash-stroke-active" mask="url(#m1)" d="M 385 350 V 270 H 100 V 112.5" />
-		<path class="splash-stroke-active" mask="url(#m2)" d="M 445 350 V 210 H 350 V 112.5" />
-		<path class="splash-stroke-active" mask="url(#m3)" d="M 505 350 V 210 H 600 V 112.5" />
-		<path class="splash-stroke-active" mask="url(#m4)" d="M 565 350 V 270 H 850 V 112.5" />
+  <svg id="splash-svg" class="fade-in" viewBox="0 0 950 550">
+    <!-- Paths -->
+    <!-- Disabled Paths -->
+    <path class="splash-stroke" d="M 385 350 V 270 H 100 V 112.5" />
+    <path class="splash-stroke" d="M 445 350 V 210 H 350 V 112.5" />
+    <path class="splash-stroke" d="M 505 350 V 210 H 600 V 112.5" />
+    <path class="splash-stroke" d="M 565 350 V 270 H 850 V 112.5" />
+    <!-- Masks -->
+    <defs>
+      <mask
+        id="m1"
+        maskUnits="userSpaceOnUse"
+        maskContentUnits="userSpaceOnUse"
+      >
+        <path
+          class="splash-mask"
+          pathLength="100"
+          d="M 385 350 V 270 H 100 V 112.5"
+        />
+      </mask>
+      <mask
+        id="m2"
+        maskUnits="userSpaceOnUse"
+        maskContentUnits="userSpaceOnUse"
+      >
+        <path
+          class="splash-mask"
+          pathLength="100"
+          d="M 445 350 V 210 H 350 V 112.5"
+        />
+      </mask>
+      <mask
+        id="m3"
+        maskUnits="userSpaceOnUse"
+        maskContentUnits="userSpaceOnUse"
+      >
+        <path
+          class="splash-mask"
+          pathLength="100"
+          d="M 505 350 V 210 H 600 V 112.5"
+        />
+      </mask>
+      <mask
+        id="m4"
+        maskUnits="userSpaceOnUse"
+        maskContentUnits="userSpaceOnUse"
+      >
+        <path
+          class="splash-mask"
+          pathLength="100"
+          d="M 565 350 V 270 H 850 V 112.5"
+        />
+      </mask>
+    </defs>
+    <!-- Active Paths -->
+    <path
+      class="splash-stroke-active"
+      mask="url(#m1)"
+      d="M 385 350 V 270 H 100 V 112.5"
+    />
+    <path
+      class="splash-stroke-active"
+      mask="url(#m2)"
+      d="M 445 350 V 210 H 350 V 112.5"
+    />
+    <path
+      class="splash-stroke-active"
+      mask="url(#m3)"
+      d="M 505 350 V 210 H 600 V 112.5"
+    />
+    <path
+      class="splash-stroke-active"
+      mask="url(#m4)"
+      d="M 565 350 V 270 H 850 V 112.5"
+    />
 
-		<!-- Displays -->
-		<rect x="0" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor" />
-		<rect x="250" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor" />
-		<rect x="500" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor" />
-		<rect x="750" y="0" width="200" height="112.5" rx="8" ry="8" class="splash-monitor" />
+    <!-- Displays -->
+    <rect
+      x="0"
+      y="0"
+      width="200"
+      height="112.5"
+      rx="8"
+      ry="8"
+      class="splash-monitor"
+    />
+    <rect
+      x="250"
+      y="0"
+      width="200"
+      height="112.5"
+      rx="8"
+      ry="8"
+      class="splash-monitor"
+    />
+    <rect
+      x="500"
+      y="0"
+      width="200"
+      height="112.5"
+      rx="8"
+      ry="8"
+      class="splash-monitor"
+    />
+    <rect
+      x="750"
+      y="0"
+      width="200"
+      height="112.5"
+      rx="8"
+      ry="8"
+      class="splash-monitor"
+    />
 
-		<!-- Text -->
-		<text class="splash-text" x="100" y="66.25" font-size="90">Mu</text>
-		<text class="splash-text" x="350" y="66.25" font-size="90">Di</text>
-		<text class="splash-text" x="600" y="66.25" font-size="90">C</text>
-		<text class="splash-text" x="850" y="66.25" font-size="90">S</text>
+    <!-- Text -->
+    <text class="splash-text" x="100" y="66.25" font-size="90">Mu</text>
+    <text class="splash-text" x="350" y="66.25" font-size="90">Di</text>
+    <text class="splash-text" x="600" y="66.25" font-size="90">C</text>
+    <text class="splash-text" x="850" y="66.25" font-size="90">S</text>
 
-		<!-- Controller -->
-		<rect x="325" y="350" width="300" height="168.75" rx="8" ry="8" class="splash-control-monitor" />
-		<rect x="335" y="390" width="135" height="120" rx="8" ry="8" class="splash-other-button" />
-		<rect x="480" y="390" width="135" height="55" rx="8" ry="8" class="splash-other-button" />
-		<rect x="480" y="455" width="135" height="55" rx="8" ry="8" class="splash-start-button" />
+    <!-- Controller -->
+    <rect
+      x="325"
+      y="350"
+      width="300"
+      height="168.75"
+      rx="8"
+      ry="8"
+      class="splash-control-monitor"
+    />
+    <rect
+      x="335"
+      y="390"
+      width="135"
+      height="120"
+      rx="8"
+      ry="8"
+      class="splash-other-button"
+    />
+    <rect
+      x="480"
+      y="390"
+      width="135"
+      height="55"
+      rx="8"
+      ry="8"
+      class="splash-other-button"
+    />
+    <rect
+      x="480"
+      y="455"
+      width="135"
+      height="55"
+      rx="8"
+      ry="8"
+      class="splash-start-button"
+    />
 
-		<!-- Window Controls -->
-		<path class="window-controls" d="M 600 360 L 615 375" />
-		<path class="window-controls" d="M 600 375 L 615 360" />
-		<path class="window-controls" fill="none" d="M 575 360 H 590 V 375 H 575 V 360" />
-		<path class="window-controls" d="M 550 375 H 565" />
-
-		<svg class="cursor" width="50" height="50" viewBox="0 0 24 24" x="510" y="480" aria-hidden="true">
-			<g stroke="#ffffff" fill="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path stroke="#000000" d="M 6.5 10 H 18 V 19 H 6" />
-				<path d="M22 14a8 8 0 0 1-8 8" />
-				<path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
-				<path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1" />
-				<path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10" />
-				<path
-					d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
-			</g>
-		</svg>
-	</svg>
+    <!-- Window Controls -->
+    <path class="window-controls" d="M 600 360 l 15 15" />
+    <path class="window-controls" d="M 600 375 l 15 -15" />
+    <path
+      class="window-controls"
+      fill="none"
+      d="M 575 360 h 15 v 15 h -15 v -15"
+    />
+    <path class="window-controls" d="M 550 375 h 15" />
+  </svg>
+  <div class="fade-in">
+    <div
+      class="cursor-x"
+      style="
+        position: absolute;
+        left: calc(50cqw + var(--mouse-start-x));
+        top: calc(50cqh + var(--mouse-start-y));
+      "
+    >
+      <svg class="cursor-y" width="50" height="50" viewBox="0 0 24 24">
+        <g
+          stroke="#ffffff"
+          fill="#000000"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path stroke="#000000" d="M 6.5 10 H 18 V 19 H 6" />
+          <path d="M22 14a8 8 0 0 1-8 8" />
+          <path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+          <path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1" />
+          <path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10" />
+          <path
+            d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"
+          />
+        </g>
+      </svg>
+    </div>
+  </div>
 </div>
 
 <style>
-	:root {
-		--splash-fade-out-delay: 0s;
-		--splash-fade-out-state: running;
+  :root {
+    --splash-fade-out-delay: 3.5s;
+    --splash-fade-out-state: running;
 
-		--base-stroke: #444444;
-		--base-stroke-active: #109e00;
+    --base-stroke: #444444;
+    --base-stroke-active: #109e00;
 
-		--splash-bg: oklch(21.6% 0.006 56.043);
-		--monitor-dark: #000000;
-		--monitor-active: #ffffff;
-		--window-controls: #cccccc;
-		--start-button-inactive: #cccccc;
-		--start-button-hover: #77a3b1;
-		--start-button-active: #2c819b;
-		--other-button: oklch(55.3% 0.013 58.071);
-		--splash-control-monitor: oklch(44.4% 0.011 73.639);
+    --splash-bg: oklch(21.6% 0.006 56.043);
+    --monitor-dark: #000000;
+    --monitor-active: #ffffff;
+    --window-controls: #cccccc;
+    --start-button-inactive: #cccccc;
+    --start-button-hover: #77a3b1;
+    --start-button-active: #2c819b;
+    --other-button: oklch(55.3% 0.013 58.071);
+    --splash-control-monitor: oklch(44.4% 0.011 73.639);
 
-		--stroke-strength: 8;
-		--dash: 16;
-		--gap: 20;
-	}
+    --mouse-size: 50px;
+    --mouse-bounce-delay: 5s;
+    --mouse-start-x: calc((35 * 100vw) / 1920);
+    --mouse-start-y: calc((60 * 100vh) / 1080);
 
+    --dur-x: 16s;
+    --dur-y: 9s;
 
-	#splash {
-		position: fixed;
-		inset: 0;
-		background: var(--splash-bg);
-		color: white;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 9999;
-		/* animation: splash-fade 1s ease 4s forwards; */
-		height: 100vh;
-		width: 100vw;
+    --stroke-strength: 8;
+    --dash: 16;
+    --gap: 20;
+  }
 
-		animation-name: splash-fade;
-		animation-duration: 1s;
-		animation-timing-function: ease;
-		animation-fill-mode: forwards;
-		animation-delay: var(--splash-fade-out-delay);
-		animation-play-state: var(--splash-fade-out-state);
-	}
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: var(--splash-bg);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    height: 100vh;
+    width: 100vw;
 
-	#splash-svg {
-		max-height: 50vh;
-		max-width: 80vw;
-		opacity: 0;
-		animation: fade-in 1s ease 500ms forwards;
-	}
+    animation-name: splash-fade;
+    animation-duration: 1s;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+    animation-delay: var(--splash-fade-out-delay);
+    animation-play-state: var(--splash-fade-out-state);
+  }
 
-	.splash-monitor {
-		aspect-ratio: 16/9;
-		rx: 8;
-		ry: 8;
-		width: 200;
-		fill: var(--monitor-dark);
-	}
+  #splash-svg {
+    max-height: 50vh;
+    max-width: 80vw;
+    transform: translateY(-12cqh);
+  }
 
-	.splash-control-monitor {
-		fill: var(--splash-control-monitor);
-	}
+  .fade-in {
+    opacity: 0;
+    animation: fade-in 1s ease 500ms forwards;
+  }
 
-	.splash-other-button {
-		fill: var(--other-button);
-	}
+  .splash-monitor {
+    aspect-ratio: 16/9;
+    rx: 8;
+    ry: 8;
+    width: 200;
+    fill: var(--monitor-dark);
+  }
 
-	.splash-stroke,
-	.splash-stroke-active {
-		fill: none;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		stroke-width: var(--stroke-strength);
-		stroke-dasharray: var(--dash) var(--gap);
-	}
+  .splash-control-monitor {
+    fill: var(--splash-control-monitor);
+  }
 
-	.window-controls {
-		stroke: var(--window-controls);
-		stroke-width: 3;
-	}
+  .splash-other-button {
+    fill: var(--other-button);
+  }
 
-	.splash-stroke {
-		stroke: var(--base-stroke);
-	}
+  .splash-stroke,
+  .splash-stroke-active {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: var(--stroke-strength);
+    stroke-dasharray: var(--dash) var(--gap);
+  }
 
-	.splash-stroke-active {
-		stroke: var(--base-stroke-active);
-	}
+  .window-controls {
+    stroke: var(--window-controls);
+    stroke-width: 3;
+  }
 
-	.splash-mask {
-		fill: none;
-		stroke: #fff;
-		stroke-linecap: round;
-		stroke-width: var(--stroke-strength);
-		stroke-dasharray: 100;
-		stroke-dashoffset: 100;
-		animation: draw 1s ease-in-out 1.35s forwards;
-	}
+  .splash-stroke {
+    stroke: var(--base-stroke);
+  }
 
-	.splash-text {
-		text-anchor: middle;
-		dominant-baseline: middle;
-		fill: var(--monitor-dark);
-		user-select: none;
-		font-family: sans-serif;
-	}
+  .splash-stroke-active {
+    stroke: var(--base-stroke-active);
+  }
 
-	.splash-monitor {
-		fill: var(--monitor-dark);
-		animation: activate-monitor 0ms ease 2.35s forwards;
-	}
+  .splash-mask {
+    fill: none;
+    stroke: #fff;
+    stroke-linecap: round;
+    stroke-width: var(--stroke-strength);
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: draw 1s ease-in-out 1.35s forwards;
+  }
 
-	.splash-start-button {
-		fill: var(--start-button-inactive);
-		animation: start-button-hover-press 1s ease-in-out 450ms forwards;
-	}
+  .splash-text {
+    text-anchor: middle;
+    dominant-baseline: middle;
+    fill: var(--monitor-dark);
+    user-select: none;
+    font-family: sans-serif;
+  }
 
-	.cursor {
-		animation: move-mouse 1s ease-in-out 0ms forwards;
-	}
+  .splash-monitor {
+    fill: var(--monitor-dark);
+    animation: activate-monitor 0ms ease 2.35s forwards;
+  }
 
-	@keyframes fade-in {
-		to {
-			opacity: 1;
-		}
-	}
+  .splash-start-button {
+    fill: var(--start-button-inactive);
+    animation: start-button-hover-press 1s ease-in-out 450ms forwards;
+  }
 
-	@keyframes move-mouse {
-		0% {
-			transform: translateX(-100px);
-		}
+  .cursor-x {
+    animation-name: move-mouse, mouse-bounceX;
+    animation-duration: 1s, var(--dur-x);
+    animation-delay: 0s, var(--mouse-bounce-delay);
+    animation-iteration-count: 1, infinite;
+    animation-direction: normal, normal;
+    animation-timing-function: ease-in-out, linear;
+    animation-fill-mode: both, none;
+    will-change: transform;
+  }
 
-		50% {
-			transform: translateX(-100px);
-		}
+  .cursor-y {
+    animation-name: mouse-bounceY;
+    animation-duration: var(--dur-y);
+    animation-delay: var(--mouse-bounce-delay);
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-timing-function: linear;
+    animation-fill-mode: none;
+    will-change: transform;
+  }
 
-		100% {
-			transform: translateX(0px);
-		}
-	}
+  @keyframes fade-in {
+    to {
+      opacity: 1;
+    }
+  }
 
-	@keyframes start-button-hover-press {
-		0% {
-			fill: var(--start-button-inactive);
-		}
+  @keyframes move-mouse {
+    0% {
+      transform: translateX(-100px);
+    }
 
-		30% {
-			fill: var(--start-button-inactive);
-		}
+    50% {
+      transform: translateX(-100px);
+    }
 
-		40% {
-			fill: var(--start-button-hover);
-		}
+    100% {
+      transform: translateX(0px);
+    }
+  }
 
-		70% {
-			fill: var(--start-button-hover);
-		}
+  @keyframes mouse-bounceX {
+    0% {
+      transform: translateX(0);
+    }
 
-		80% {
-			fill: var(--start-button-active);
-		}
+    26% {
+      transform: translateX(calc(-50cqw - var(--mouse-start-x)));
+    }
 
-		90% {
-			fill: var(--start-button-active);
-		}
+    76% {
+      transform: translateX(
+        calc(50cqw - var(--mouse-size) - var(--mouse-start-x))
+      );
+    }
+  }
 
-		100% {
-			fill: var(--start-button-hover);
-		}
-	}
+  @keyframes mouse-bounceY {
+    0% {
+      transform: translateY(0);
+    }
 
-	@keyframes draw {
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
+    27% {
+      transform: translateY(calc(-50cqh - var(--mouse-start-y)));
+    }
 
-	@keyframes activate-monitor {
-		to {
-			fill: var(--monitor-active);
-		}
-	}
+    77% {
+      transform: translateY(
+        calc(50cqh - var(--mouse-size) - var(--mouse-start-y))
+      );
+    }
+  }
 
-	@keyframes splash-fade {
-		to {
-			opacity: 0;
-			visibility: hidden;
-		}
-	}
+  @keyframes start-button-hover-press {
+    0% {
+      fill: var(--start-button-inactive);
+    }
 
-	rect {
-		vector-effect: non-scaling-stroke;
-	}
+    30% {
+      fill: var(--start-button-inactive);
+    }
 
-	/* verhindert, dass die Linien beim Skalieren dicker werden */
-	.cursor * {
-		vector-effect: non-scaling-stroke;
-	}
+    40% {
+      fill: var(--start-button-hover);
+    }
+
+    70% {
+      fill: var(--start-button-hover);
+    }
+
+    80% {
+      fill: var(--start-button-active);
+    }
+
+    90% {
+      fill: var(--start-button-active);
+    }
+
+    100% {
+      fill: var(--start-button-hover);
+    }
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes activate-monitor {
+    to {
+      fill: var(--monitor-active);
+    }
+  }
+
+  @keyframes splash-fade {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  rect {
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* verhindert, dass die Linien beim Skalieren dicker werden */
+  .cursor * {
+    vector-effect: non-scaling-stroke;
+  }
 </style>
+
+<script>
+  const r =
+    Math.random() < 0.01
+      ? 9 / 15.039473684
+      : 0.55 + (Math.random() - 0.5) * 0.18;
+  const tx = 13 + Math.random() * 5;
+  document.documentElement.style.setProperty("--dur-x", tx + "s");
+  document.documentElement.style.setProperty("--dur-y", tx * r + "s");
+</script>
