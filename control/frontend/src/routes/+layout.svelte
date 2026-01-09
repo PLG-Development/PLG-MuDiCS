@@ -5,6 +5,10 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<title>PLG MuDiCS Control</title>
+</svelte:head>
+
 {@render children()}
 
 <Notification />
