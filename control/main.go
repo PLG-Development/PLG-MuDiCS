@@ -105,14 +105,17 @@ func wakeOnLanRoute(ctx echo.Context) error {
 	}
 	mac, err := net.ParseMAC(data.MACAddress)
 	if err != nil {
+		slog.Warn("Invalid MAC address provided", "mac_address", data.MACAddress, "error", err)
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: "Invalid MAC address"})
 	}
 
 	client, err := wol.NewClient()
 	if err != nil {
+		slog.Error("Failed to create Wake-on-LAN client", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to create Wake-on-LAN client"})
 	}
 	if err := client.Wake("255.255.255.255:7", mac); err != nil {
+		slog.Error("Failed to send Wake-on-LAN packet", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send Wake-on-LAN packet"})
 	}
 
