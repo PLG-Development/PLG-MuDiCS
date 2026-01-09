@@ -195,38 +195,51 @@ func shellCommandRoute(ctx echo.Context) error {
 
 func keyboardInputRoute(ctx echo.Context) error {
 	var request struct {
-		Key    string `json:"key"`
-		Action string `json:"action"`
+		Inputs []struct {
+			Key    string `json:"key"`
+			Action string `json:"action"`
+		} `json:"inputs"`
 	}
 	if err := ctx.Bind(&request); err != nil {
 		slog.Error("Failed to parse keyboard input", "error", err)
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
-	if request.Action != "press" && request.Action != "release" {
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
+
+	var inputs []pkg.Input
+
+	for _, input := range request.Inputs {
+		if input.Action != "press" && input.Action != "release" {
+			slog.Error("Invalid keyboard action", "action", input.Action)
+			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Invalid action: %s", input.Action)})
+		}
+
+		code, ok := pkg.KeyboardEvents[input.Key]
+		if !ok {
+			slog.Error("Unsupported key", "key", input.Key)
+			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Unsupported key: %s", input.Key)})
+		}
+
+		var action pkg.KeyAction
+		if input.Action == "press" {
+			action = pkg.KeyPress
+		}
+		if input.Action == "release" {
+			action = pkg.KeyRelease
+		}
+
+		inputs = append(inputs, pkg.Input{
+			Key:    code,
+			Action: action,
+		})
 	}
 
-	code, ok := pkg.KeyboardEvents[request.Key]
-	if !ok {
-		slog.Error("Unsupported key", "key", request.Key)
-		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Unsupported key: %s", request.Key)})
-	}
-
-	var action pkg.KeyAction
-	if request.Action == "press" {
-		action = pkg.KeyPress
-	}
-	if request.Action == "release" {
-		action = pkg.KeyRelease
-	}
-
-	err := pkg.KeyboardInput(code, action)
+	err := pkg.KeyboardInput(inputs)
 	if err != nil {
-		slog.Error("Failed to send keyboard input", "key", request.Key, "error", err)
+		slog.Error("Failed to send keyboard input", "inputs", inputs, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to send keyboard input"})
 	}
 
-	slog.Info("Keyboard input sent", "key", request.Key)
+	slog.Info("Keyboard input sent")
 	return ctx.JSON(http.StatusOK, struct{}{})
 }
 
