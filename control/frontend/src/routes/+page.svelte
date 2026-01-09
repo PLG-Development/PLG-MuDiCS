@@ -223,7 +223,7 @@
 {/snippet}
 
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
-	{#if dev}
+	{#if !dev}
 		{@html SplashScreen}
 	{/if}
 
