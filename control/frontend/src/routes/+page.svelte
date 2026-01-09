@@ -185,7 +185,7 @@
 	<TextInput
 		bind:current_value={text_inputs_valid.mac.value}
 		bind:current_valid={text_inputs_valid.mac.valid}
-		title="MAC-Adresse (optional)"
+		title="MAC-Adresse (optional, wird zum aufwecken des Displays benötigt)"
 		placeholder="z.B. D4:81:A6:C4:BF:3F"
 		is_valid_function={(input: string) => {
 			return input === ''
