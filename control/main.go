@@ -37,6 +37,9 @@ func main() {
 
 	e := echo.New()
 
+	// Allow requests from everywhere
+	e.Use(middleware.CORS())
+
 	// Serve the embedded SvelteKit frontend
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: http.FS(frontend.BuildDirFS),
