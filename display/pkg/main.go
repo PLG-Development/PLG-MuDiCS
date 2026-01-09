@@ -3,7 +3,6 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net"
 	"os"
 	"os/exec"
@@ -100,7 +99,6 @@ func TakeScreenshot() (string, error) {
 		if commandOutput.ExitCode == 0 {
 			return tempFilePath, nil
 		}
-		slog.Warn("Screenshot error", "error", commandOutput.Stderr)
 	}
 	return "", errors.New("no screenshot utility found or all failed")
 }
