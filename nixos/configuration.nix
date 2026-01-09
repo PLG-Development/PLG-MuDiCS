@@ -94,6 +94,8 @@
     unzip
     iputils
     xreader
+    tree
+    jq
 
     # Libraries
     imagemagick
