@@ -22,7 +22,10 @@ export async function open_file(ip: string, path_to_file: string): Promise<void>
 	await request_display(ip, get_sanitized_file_url(path_to_file), options);
 }
 
-export async function send_keyboard_input(ip: string, inputs: { key: string; action: 'press' | 'release'}[]): Promise<void> {
+export async function send_keyboard_input(
+	ip: string,
+	inputs: { key: string; action: 'press' | 'release' }[]
+): Promise<void> {
 	const options = {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
@@ -294,7 +297,7 @@ async function run_shell_command(ip: string, command: string): Promise<RequestRe
 }
 
 export async function shutdown(ip: string): Promise<RequestResponse> {
-	return await run_shell_command(ip, 'shutdown -h now');
+	return await run_shell_command(ip, 'xfce4-session-logout --halt');
 }
 
 export async function startup(mac: string): Promise<RequestResponse> {
