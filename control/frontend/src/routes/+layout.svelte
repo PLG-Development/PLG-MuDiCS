@@ -2,9 +2,12 @@
 	import '../app.css';
 	import Notification from './Notification.svelte';
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
+	import version from './../../../../shared/version.txt?raw';
 	import { dev } from '$app/environment';
 
 	let { children } = $props();
+
+	let versionSplashScreen = SplashScreen.replaceAll('%%APP-VERSION%%', version.trim());
 </script>
 
 <svelte:head>
@@ -12,7 +15,7 @@
 </svelte:head>
 
 {#if !dev}
-	{@html SplashScreen}
+	{@html versionSplashScreen}
 {/if}
 
 {@render children()}

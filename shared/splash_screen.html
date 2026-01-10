@@ -167,6 +167,7 @@
     />
     <path class="window-controls" d="M 550 375 h 15" />
   </svg>
+
   <div class="fade-in">
     <div
       class="cursor-x"
@@ -196,6 +197,8 @@
       </svg>
     </div>
   </div>
+
+  <span id="version-label" aria-label="Version">%%APP-VERSION%%</span>
 </div>
 
 <style>
@@ -216,6 +219,8 @@
     --other-button: oklch(55.3% 0.013 58.071);
     --splash-control-monitor: oklch(44.4% 0.011 73.639);
 
+    --version-color: oklch(55.3% 0.013 58.071);
+
     --mouse-size: 50px;
     --mouse-bounce-delay: 5s;
     --mouse-start-x: calc((35 * 100vw) / 1920);
@@ -227,6 +232,17 @@
     --stroke-strength: 8;
     --dash: 16;
     --gap: 20;
+  }
+
+  #version-label {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    display: block;
+    color: var(--version-color);
+    padding: 0.4rem 0.8rem;
+    font-size: 1.4rem;
+    text-align: right;
   }
 
   #splash {
