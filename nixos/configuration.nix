@@ -86,7 +86,7 @@
   environment.systemPackages = with pkgs; [
     # Programs
     libreoffice
-    #rustdesk
+    rustdesk
     ungoogled-chromium
     xfce.thunar-archive-plugin
     git
