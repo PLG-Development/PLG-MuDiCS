@@ -6,14 +6,7 @@ Open source solution for advanced remote control and coordination of one or more
 
 ## Display Requirements
 
-- Linux
-- Bash
-- Chromium
-- LibreOffice (optional, presentation view)
-- Xreader (optional, pdf view)
-- ImageMagick (optional, image preview)
-- ffmpeg (optional, video preview)
-- Ghostscript (optional, pdf preview)
+See [packages in the NixOS config](https://github.com/PLG-Development/PLG-MuDiCS/blob/b0a57f9c679e8c483d1a81cb3c749cf8555785f6/nixos/configuration.nix#L86).
 
 ## Contributing
 
