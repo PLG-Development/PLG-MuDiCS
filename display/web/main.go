@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	shared "plg-mudics/shared"
+	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
@@ -35,7 +36,9 @@ func StartWebServer(v string, port string) {
 	e.GET("/", indexRoute)
 	e.GET("/sse", sseRoute)
 	e.GET("/splash", func(ctx echo.Context) error {
-		return ctx.HTML(http.StatusOK, shared.SplashScreenTemplate)
+		html := shared.SplashScreenTemplate
+		html = strings.ReplaceAll(html, "%%APP-VERSION%%", version)
+		return ctx.HTML(http.StatusOK, html)
 	})
 	e.GET("/qr", qrRoute)
 
