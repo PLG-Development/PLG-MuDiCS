@@ -1,16 +1,15 @@
 package web
 
 templ indexTemplate() {
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>PLG Connect Display</title>
-	<script src="/static/htmx.min.js"></script>
-	<script src="/static/htmx-ext-sse.min.js"></script>
-	<style>
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>PLG Connect Display</title>
+			<script src="/static/htmx.min.js"></script>
+			<script src="/static/htmx-ext-sse.min.js"></script>
+			<style>
 		:root {
 			--background-color: black;
 			--foreground-color: oklch(92.3% 0.003 48.717);
@@ -33,6 +32,7 @@ templ indexTemplate() {
 			background-color: var(--background-color);
 			color: var(--foreground-color);
 			font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+			cursor: none;
 		}
 
 		video,
@@ -60,7 +60,7 @@ templ indexTemplate() {
 			padding-left: calc(var(--font-size)*1.5);
 		}
 	</style>
-	<script>
+			<script>
 		document.addEventListener('keydown', function (event) {
 			if (event.code === 'Space') {
 				event.preventDefault();
@@ -75,42 +75,45 @@ templ indexTemplate() {
 			}
 		});
 	</script>
-</head>
-<bod>
-	<div hx-get="/splash" hx-trigger="load"></div>
-	<main hx-ext="sse" sse-connect="/sse" sse-swap="message"></main>
-</bod>
-
-</html>
+		</head>
+		<bod>
+			<div hx-get="/splash" hx-trigger="load"></div>
+			<main hx-ext="sse" sse-connect="/sse" sse-swap="message"></main>
+		</bod>
+	</html>
 }
 
 templ videoTemplate(path string) {
-<video autoplay>
-	<source src={ "/api/file/" + path } type="video/mp4" />
-</video>
+	<video autoplay>
+		<source src={ "/api/file/" + path } type="video/mp4"/>
+	</video>
 }
 
 templ imageTemplate(path string) {
-<img src={ "/api/file/" + path } />
+	<img src={ "/api/file/" + path }/>
 }
 
 templ deviceInfoTemplate(ip string, mac string, showQR bool) {
-<div style="width: 100vw; height: 100vh; display: flex; flex-direction: row; justify-content: space-between;">
-	<div
-		style="display: flex; flex-direction: column; gap: 1rem; justify-content: end; padding: 2rem; font-size: 4rem;">
-		{ ip }
-		<span style="text-transform: uppercase;">{ mac }</span>
-	</div>
-	if showQR {
-	<div style="display: flex; justify-content: end; align-items: end; padding: 2rem;">
-		<div style="padding: 1rem; background-color: var(--foreground-color); border-radius: 1rem;">
-			<img style="height: 30vh; width: auto; image-rendering: pixelated; image-rendering: crisp-edges;"
-				src={ "/qr?data=http://" + ip + ":8080" } alt="QR-Code" />
+	<div style="width: 100vw; height: 100vh; display: flex; flex-direction: row; justify-content: space-between;">
+		<div
+			style="display: flex; flex-direction: column; gap: 1rem; justify-content: end; padding: 2rem; font-size: 4rem;"
+		>
+			{ ip }
+			<span style="text-transform: uppercase;">{ mac }</span>
 		</div>
+		if showQR {
+			<div style="display: flex; justify-content: end; align-items: end; padding: 2rem;">
+				<div style="padding: 1rem; background-color: var(--foreground-color); border-radius: 1rem;">
+					<img
+						style="height: 30vh; width: auto; image-rendering: pixelated; image-rendering: crisp-edges;"
+						src={ "/qr?data=http://" + ip + ":8080" }
+						alt="QR-Code"
+					/>
+				</div>
+			</div>
+		}
 	</div>
-	}
-</div>
-<style>
+	<style>
 	:root {
 		--splash-bg: transparent !important;
 		--splash-fade-out-state: paused !important;
