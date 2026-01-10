@@ -139,6 +139,7 @@
     environment = {
       DISPLAY = ":0";
       XDG_RUNTIME_DIR = "/run/user/1000";
+      XDG_DATA_DIRS = "/run/current-system/sw/share";
     };
   };
 
