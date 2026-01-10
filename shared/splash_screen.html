@@ -198,7 +198,7 @@
     </div>
   </div>
 
-  <div id="version-label" aria-label="Version">%%APP-VERSION%%</div>
+  <span id="version-label" aria-label="Version">%%APP-VERSION%%</span>
 </div>
 
 <style>
@@ -236,12 +236,13 @@
 
   #version-label {
     position: absolute;
-    right: 0;
-    top: 0;
+    right: 1rem;
+    top: 1rem;
     display: block;
     color: var(--version-color);
     padding: 0.4rem 0.8rem;
     font-size: 1.4rem;
+    text-align: right;
   }
 
   #splash {
