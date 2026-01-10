@@ -4,11 +4,10 @@
 	import SplashScreen from './../../../../shared/splash_screen.html?raw';
 	import version_txt from './../../../../shared/version.txt?raw';
 	import { dev } from '$app/environment';
-	import { onMount } from 'svelte';
 
 	let { children } = $props();
-	
-	let CompletedSplashScreen = SplashScreen.replaceAll("%%APP-VERSION%%", version_txt.trim());
+
+	let versionSplashScreen = SplashScreen.replaceAll('%%APP-VERSION%%', version_txt.trim());
 </script>
 
 <svelte:head>
@@ -16,7 +15,7 @@
 </svelte:head>
 
 {#if !dev}
-	{@html SplashScreen}
+	{@html versionSplashScreen}
 {/if}
 
 {@render children()}
