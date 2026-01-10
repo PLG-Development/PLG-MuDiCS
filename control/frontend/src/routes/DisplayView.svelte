@@ -20,7 +20,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import OnlineState from '../lib/components/OnlineState.svelte';
 	import { cubicOut } from 'svelte/easing';
-	import { Menu, Pencil, PinOff, Settings, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
+	import { Menu, Pencil, PinOff, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
@@ -256,9 +256,9 @@
 						{#if ($display_groups || []).length === 0}
 							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
 								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
-								<HighlightedText fg="text-stone-450" className="p-1!"
-									><Settings class="inline pb-1" /></HighlightedText
-								>
+								<HighlightedText fg="text-stone-450" className="p-1!">
+									<Menu class="inline pb-1" />
+								</HighlightedText>
 								und
 								<HighlightedText fg="text-stone-450">Neuen Bildschirm hinzufügen</HighlightedText>.
 							</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Monitor, Plus, Radio, Settings, Trash2, X } from 'lucide-svelte';
+	import { Monitor, Plus, Radio, Settings, Trash2, Menu } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import FileView from './FileView.svelte';
 	import ControlView from './ControlView.svelte';
@@ -238,7 +238,7 @@
 				}
 			]}
 		>
-			<Settings></Settings>
+			<Menu />
 		</Button>
 	</div>
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] grid grid-cols-2 gap-2">
