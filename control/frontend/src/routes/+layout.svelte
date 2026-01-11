@@ -21,3 +21,9 @@
 {@render children()}
 
 <Notification />
+
+<style>
+	:root {
+		--splash-fade-out-delay: 3.5s !important;
+	}
+</style>
