@@ -363,7 +363,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="min-h-0 h-full overflow-y-auto bg-stone-750 rounded-xl">
+		<div class="min-h-0 h-full overflow-y-auto overflow-x-hidden bg-stone-750 rounded-xl">
 			<div class="flex flex-col gap-2 p-2 min-h-0 max-w-full">
 				{#if $selected_display_ids.length === 0}
 					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
