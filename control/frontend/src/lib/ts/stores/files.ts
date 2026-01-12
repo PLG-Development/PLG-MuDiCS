@@ -211,17 +211,30 @@ export async function update_folder_elements_recursively(
 	const new_folder_elements = await get_file_data(display.ip, file_path);
 	if (!new_folder_elements) return;
 
-	const existing_file_keys_on_display_in_path: [string, string, number, string][] = (
-		await db.files_on_display.where('display_id').equals(display.id).toArray()
-	).map((e) => JSON.parse(e.file_primary_key) as [string, string, number, string]);
-	const existing_files_on_display_in_path: Inode[] = await db.files
+	const existing_files_on_display_in_path: FileOnDisplay[] = await db.files_on_display
+		.where('display_id')
+		.equals(display.id)
+		.toArray();
+	const existing_file_keys_on_display_in_path: [string, string, number, string][] =
+		existing_files_on_display_in_path.map(
+			(e) => JSON.parse(e.file_primary_key) as [string, string, number, string]
+		);
+	const existing_files: Inode[] = await db.files
 		.where('[path+name+size+type]')
 		.anyOf(existing_file_keys_on_display_in_path)
 		.filter((e) => e.path === file_path)
 		.toArray();
 
+	const existing_files_with_loading_state: { folder_element: Inode; is_loading: boolean }[] =
+		existing_files.map((folder_element) => ({
+			folder_element,
+			is_loading: !!existing_files_on_display_in_path.find(
+				(e) => e.file_primary_key === get_file_primary_key(folder_element)
+			)?.loading_data
+		}));
+
 	const diff = get_folder_elements_difference(
-		existing_files_on_display_in_path,
+		existing_files_with_loading_state,
 		new_folder_elements
 	);
 
@@ -262,13 +275,15 @@ export async function update_folder_elements_recursively(
 }
 
 function get_folder_elements_difference(
-	old_elements: Inode[],
+	old_elements: { folder_element: Inode; is_loading: boolean }[],
 	new_elements: { folder_element: Inode; date_created: Date }[]
 ): { deleted: Inode[]; new: { folder_element: Inode; date_created: Date }[] } {
-	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e)));
+	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e.folder_element)));
 	const new_keys = new Set(new_elements.map((e) => get_file_primary_key(e.folder_element)));
 
-	const only_in_old = old_elements.filter((e) => !new_keys.has(get_file_primary_key(e)));
+	const only_in_old = old_elements
+		.filter((e) => !new_keys.has(get_file_primary_key(e.folder_element)) && !e.is_loading)
+		.map((e) => e.folder_element);
 	const only_in_new = new_elements.filter(
 		(e) => !old_keys.has(get_file_primary_key(e.folder_element))
 	);

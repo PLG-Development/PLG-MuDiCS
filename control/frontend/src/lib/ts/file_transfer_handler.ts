@@ -199,19 +199,10 @@ function generate_valid_file_name(original_file_name: string, used_file_names: s
 
 async function upload(task: FileTransferTask): Promise<void> {
 	const task_data = task.data;
-	if (task_data.type !== 'upload' || !task_data.file) return console.warn('Task cancelled: wrong task type:', task);
+	if (task_data.type !== 'upload' || !task_data.file)
+		return console.warn('Task cancelled: wrong task type:', task);
 
 	await upload_file_via_xhr(task, task.display, task_data.file);
-
-	// Generate Thumbnail if not done already
-	setTimeout(async () => {
-		const inode_element: Inode | undefined = await db.files.get(
-			JSON.parse(task.file_primary_key) as [string, string, number, string]
-		);
-		if (!!inode_element && inode_element.thumbnail === null) {
-			await generate_thumbnail(task.display.ip, task.path, inode_element);
-		}
-	}, 10);
 }
 
 export async function sync(task: FileTransferTask) {
@@ -254,7 +245,7 @@ export async function sync(task: FileTransferTask) {
 		await writable.close();
 
 		// 02 - send downloaded file to every destination_display
-		const temp_file = await file_handle.getFile(); 
+		const temp_file = await file_handle.getFile();
 
 		for (const current_short_display of task.data.destination_displays) {
 			await upload_file_via_xhr(task, current_short_display, temp_file);
@@ -271,7 +262,8 @@ export async function download_file(selected_file_id: string, selected_display_i
 		selected_file_id,
 		selected_display_ids
 	);
-	if (!file_data || file_data.file.type === 'inode/directory') return console.warn('Download cancelled: is folder');
+	if (!file_data || file_data.file.type === 'inode/directory')
+		return console.warn('Download cancelled: is folder');
 
 	try {
 		const url = `http://${file_data.short_display_with_file.ip}:1323/api${get_sanitized_file_url(file_data.file.path + file_data.file.name)}`;
@@ -305,8 +297,7 @@ async function start_task_loop() {
 		const current_task = tasks[0];
 		if (current_task.data.type === 'upload') {
 			await upload(current_task);
-		}
-		else if (current_task.data.type === 'sync') {
+		} else if (current_task.data.type === 'sync') {
 			await sync(current_task);
 		}
 		tasks.shift(); // Remove current_task from tasks
@@ -314,8 +305,13 @@ async function start_task_loop() {
 	is_processing = false;
 }
 
-async function upload_file_via_xhr(task: FileTransferTask, current_short_display: ShortDisplay, current_file: File) {
+async function upload_file_via_xhr(
+	task: FileTransferTask,
+	current_short_display: ShortDisplay,
+	current_file: File
+) {
 	const start_time = new Date();
+	const loading_type = task.data.type === 'upload' ? 'upload' : 'sync_upload';
 
 	return new Promise<void>((resolve) => {
 		const xhr = new XMLHttpRequest();
@@ -328,7 +324,13 @@ async function upload_file_via_xhr(task: FileTransferTask, current_short_display
 
 		xhr.upload.onprogress = (e) => {
 			const apply = async () => {
-				await update_current_loading_data(task.data.type === 'upload' ? 'upload' : 'sync_upload', task, e.loaded, start_time, current_short_display.id);
+				await update_current_loading_data(
+					loading_type,
+					task,
+					e.loaded,
+					start_time,
+					current_short_display.id
+				);
 			};
 			apply();
 		};
@@ -341,9 +343,20 @@ async function upload_file_via_xhr(task: FileTransferTask, current_short_display
 		xhr.onreadystatechange = async () => {
 			if (xhr.readyState === 4) {
 				if (xhr.status == 200) {
-					await db.files_on_display.update([current_short_display.ip, task.file_primary_key], {
+					// set loading_data to 100%
+					await db.files_on_display.update([current_short_display.id, task.file_primary_key], {
+						date_created: new Date(),
 						loading_data: null
-					}); // TODO: Stattdessen update machen und gucken, ob die Datei wirklich da ist
+					});
+					// Generate Thumbnail if not done already
+					setTimeout(async () => {
+						const inode_element: Inode | undefined = await db.files.get(
+							JSON.parse(task.file_primary_key) as [string, string, number, string]
+						);
+						if (!!inode_element && inode_element.thumbnail === null) {
+							await generate_thumbnail(task.display.ip, task.path, inode_element);
+						}
+					}, 10);
 				} else {
 					await show_error(task, `HTTP ${xhr.status}`);
 				}
@@ -352,21 +365,33 @@ async function upload_file_via_xhr(task: FileTransferTask, current_short_display
 		};
 
 		xhr.send(current_file);
-	})
+	});
 }
 
-async function update_current_loading_data(type: FileLoadingData['type'], task: FileTransferTask, current_bytes: number, start_time: Date, other_display_id: string | null = null) {
-	const current_percentage = task.bytes_total > 0 ? Math.round((current_bytes / task.bytes_total) * 100) : 1;
+async function update_current_loading_data(
+	type: FileLoadingData['type'],
+	task: FileTransferTask,
+	current_bytes: number,
+	start_time: Date,
+	other_display_id: string | null = null
+) {
+	const current_percentage = Math.min(
+		task.bytes_total > 0 ? Math.round((current_bytes / task.bytes_total) * 100) : 1,
+		99
+	); // calculate percantage, but maximum value is 99%
 	const prognosed_data = get_prognosed_data(start_time, current_bytes, task.bytes_total);
 
-	await db.files_on_display.update([other_display_id ? other_display_id : task.display.id, task.file_primary_key], {
-		loading_data: {
-			type,
-			percentage: current_percentage,
-			bytes_per_second: prognosed_data.bytes_per_second,
-			seconds_until_finish: prognosed_data.seconds_until_finish
+	await db.files_on_display.update(
+		[other_display_id ? other_display_id : task.display.id, task.file_primary_key],
+		{
+			loading_data: {
+				type,
+				percentage: current_percentage,
+				bytes_per_second: prognosed_data.bytes_per_second,
+				seconds_until_finish: prognosed_data.seconds_until_finish
+			}
 		}
-	});
+	);
 }
 
 function get_prognosed_data(
