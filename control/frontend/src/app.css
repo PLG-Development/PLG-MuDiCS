@@ -26,7 +26,7 @@
 	}
 }
 
-main {
+html {
 	scrollbar-width: thin;
 	scrollbar-color: var(--color-stone-300) transparent;
 }
