@@ -193,12 +193,7 @@ export async function update_local_displays() {
 export async function update_db_displays() {
 	local_displays.update((groups) => groups.filter((g) => g.displays.length !== 0));
 	const filtered_local_display_groups = get(local_displays)
-	// .filter(
-	// 	(group) => group.displays.length !== 0
-	// );
-	// local_displays.set(filtered_local_display_groups);
 	const db_display_group_ids = (await db.display_groups.toArray()).map((group) => group.id);
-	console.log('JOJ', filtered_local_display_groups, db_display_group_ids);
 	const local_display_group_ids = filtered_local_display_groups.map((group) => group.id);
 
 	const display_group_ids_to_delete = db_display_group_ids.filter(
