@@ -125,19 +125,23 @@ export async function get_displays_where_path_exists(
 	const path_without_last_part = path.slice(0, path.length - (last_path_part.length + 1));
 
 	const folders_of_current_path = await db.files
-		.where('[path+name+type]')
-		.equals([path_without_last_part, last_path_part, 'inode/directory'])
+		.where('name')
+		.equals(last_path_part)
+		.filter((inode) => inode.path === path_without_last_part && inode.type === 'inode/directory')
 		.first();
 	if (!folders_of_current_path)
 		return await db.displays.where('id').anyOf(selected_display_ids).toArray();
 	const folder_primary_key = get_file_primary_key(folders_of_current_path);
 
-	const display_ids = selected_display_ids.filter(async (display_id) => {
-		const folder_exists = await db.files_on_display.get([display_id, folder_primary_key]);
+	const display_ids_with_folder = (
+		await db.files_on_display.where('file_primary_key').equals(folder_primary_key).toArray()
+	).map((fod) => fod.display_id);
+
+	const display_ids = selected_display_ids.filter((display_id) => {
 		if (invert) {
-			return !folder_exists;
+			return !display_ids_with_folder.includes(display_id);
 		} else {
-			return folder_exists;
+			return display_ids_with_folder.includes(display_id);
 		}
 	});
 
