@@ -20,6 +20,13 @@
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 	import { db } from '$lib/ts/database';
+	import { liveQuery, type Observable } from 'dexie';
+
+	let all_display_states: Observable<'on' | 'off' | 'mixed'> | undefined = $state();
+	$effect(() => {
+		const ids = $selected_display_ids;
+		all_display_states = liveQuery(() => all_state(ids));
+	});
 
 	let popup_content: PopupContent = $state({
 		open: false,
@@ -115,7 +122,7 @@
 	<p>Bist du sicher, dass du alle ausgewählten Displays herunterfahren möchtest?</p>
 
 	<div class="flex flex-row justify-end gap-2">
-		<Button className="button space" click_function={() => (popup_content.open = false)}>
+		<Button className="button space font-bold" click_function={() => (popup_content.open = false)}>
 			Abbrechen
 		</Button>
 		<Button click_function={shutdown_action} className="button error space">Herunterfahren</Button>
@@ -192,23 +199,21 @@
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
 				<div class="flex flex-col gap-2">
-					{#await all_state($selected_display_ids) then all}
-						<Button
-							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-							disabled={all === 'on' || $selected_display_ids.length === 0}
-							click_function={startup_action}
-						>
-							<Power /> PC hochfahren
-						</Button>
+					<Button
+						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+						disabled={$all_display_states === 'on' || $selected_display_ids.length === 0}
+						click_function={startup_action}
+					>
+						<Power /> PC hochfahren
+					</Button>
 
-						<Button
-							className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-							disabled={all === 'off' || $selected_display_ids.length === 0}
-							click_function={ask_shutdonw}
-						>
-							<PowerOff /> PC herunterfahren</Button
-						>
-					{/await}
+					<Button
+						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
+						disabled={$all_display_states === 'off' || $selected_display_ids.length === 0}
+						click_function={ask_shutdonw}
+					>
+						<PowerOff /> PC herunterfahren</Button
+					>
 				</div>
 				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal" disabled>
 					<SquareTerminal />
