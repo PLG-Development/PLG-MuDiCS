@@ -278,9 +278,7 @@
 						>
 							{#each $local_displays as display_id_group (display_id_group.id)}
 								<!-- Each Group -->
-								<section
-									class="outline-none"
-								>
+								<section class="outline-none">
 									<!-- out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
 										animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }} -->
 									<DisplayGroupObject

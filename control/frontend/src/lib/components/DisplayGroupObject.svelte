@@ -14,7 +14,7 @@
 		set_select_for_group,
 		update_db_displays,
 		local_displays,
-		set_new_display_order,
+		set_new_display_order
 	} from '$lib/ts/stores/displays';
 	import DNDGrip from '$lib/components/DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
@@ -65,7 +65,6 @@
 
 	async function handle_finalize(e: CustomEvent) {
 		set_new_display_order(display_id_group.id, e.detail.items);
-		// $local_displays = $local_displays.filter((g) => g.displays.length !== 0);
 		await update_db_displays();
 		$is_display_drag = false;
 	}

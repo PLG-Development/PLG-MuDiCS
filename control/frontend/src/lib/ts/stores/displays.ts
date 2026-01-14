@@ -191,7 +191,7 @@ export async function update_local_displays() {
 }
 
 export async function update_db_displays() {
-	// local_displays.update((groups) => groups.filter((g) => g.displays.length !== 0));
+	local_displays.update((groups) => groups.filter((g) => g.displays.length !== 0));
 	const filtered_local_display_groups = get(local_displays)
 	// .filter(
 	// 	(group) => group.displays.length !== 0
