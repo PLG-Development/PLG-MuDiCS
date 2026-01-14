@@ -61,7 +61,7 @@
 	}
 
 	function handle_keydown(event: KeyboardEvent) {
-		if (event.key !== 'Enter') return;
+		if (event.key !== 'Enter' || !current_valid) return;
 
 		if (enter_mode === 'focus_next') {
 			event.preventDefault();
