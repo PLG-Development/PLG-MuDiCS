@@ -1,11 +1,19 @@
-import { get } from 'svelte/store';
-import type { Display, DisplayGroup, DisplayStatus } from '../types';
+import { get, writable, type Writable } from 'svelte/store';
+import type {
+	Display,
+	DisplayGroup,
+	DisplayIdGroup,
+	DisplayIdObject,
+	DisplayStatus
+} from '../types';
 import { is_selected, select, selected_display_ids } from './select';
 import { get_uuid, image_content_hash } from '../utils';
 import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../database';
 import { dev } from '$app/environment';
+
+export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
 export async function is_display_name_taken(name: string): Promise<boolean> {
 	const exists = await db.displays.where('name').equals(name).first();
@@ -169,26 +177,62 @@ export async function get_display_groups(): Promise<DisplayGroup[]> {
 	return await db.display_groups.orderBy('position').toArray();
 }
 
-export async function get_display_ids_in_group(display_group_id: string): Promise<Display[]> {
-	const displays: Display[] = await db.displays
-		.where('group_id')
-		.equals(display_group_id)
-		.sortBy('position');
-	return displays;
+export async function update_local_displays() {
+	const display_groups = await db.display_groups.orderBy('position').toArray();
+	const displays = await db.displays.orderBy('position').toArray();
+	const out: DisplayIdGroup[] = [];
+	for (const group of display_groups) {
+		out.push({
+			id: group.id,
+			displays: (await displays).filter((d) => d.group_id === group.id).map((d) => ({ id: d.id }))
+		});
+	}
+	return out;
 }
 
-export async function set_new_display_order(new_ordered_items: Display[]) {
-	for (let i = 0; i < new_ordered_items.length; i++) {
-		new_ordered_items[i].position = i;
-		await db.displays.put(new_ordered_items[i]);
+export async function update_db_displays() {
+	// local_displays.update((groups) => groups.filter((g) => g.displays.length !== 0));
+	const filtered_local_display_groups = get(local_displays)
+	// .filter(
+	// 	(group) => group.displays.length !== 0
+	// );
+	// local_displays.set(filtered_local_display_groups);
+	const db_display_group_ids = (await db.display_groups.toArray()).map((group) => group.id);
+	console.log('JOJ', filtered_local_display_groups, db_display_group_ids);
+	const local_display_group_ids = filtered_local_display_groups.map((group) => group.id);
+
+	const display_group_ids_to_delete = db_display_group_ids.filter(
+		(group) => !local_display_group_ids.includes(group)
+	);
+	await db.display_groups.where('id').anyOf(display_group_ids_to_delete).delete();
+
+	for (let i = 0; i < filtered_local_display_groups.length; i++) {
+		const group = filtered_local_display_groups[i];
+		if (db_display_group_ids.includes(group.id)) {
+			await db.display_groups.update(group.id, { position: i });
+		} else {
+			await db.display_groups.put({
+				id: group.id,
+				position: i
+			});
+		}
+
+		for (let j = 0; j < group.displays.length; j++) {
+			const display_id = group.displays[j].id;
+			await db.displays.update(display_id, { position: j, group_id: group.id });
+		}
 	}
 }
 
-export async function set_new_display_group_order(new_ordered_items: DisplayGroup[]) {
-	for (let i = 0; i < new_ordered_items.length; i++) {
-		new_ordered_items[i].position = i;
-		await db.display_groups.put(new_ordered_items[i]);
-	}
+export function set_new_display_order(display_id_group_id: string, new_data: DisplayIdObject[]) {
+	local_displays.update((local_displays: DisplayIdGroup[]) => {
+		for (const display_id_group of local_displays) {
+			if (display_id_group.id === display_id_group_id) {
+				display_id_group.displays = new_data;
+			}
+		}
+		return local_displays;
+	});
 }
 
 if (dev) {

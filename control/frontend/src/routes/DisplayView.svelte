@@ -3,9 +3,11 @@
 	import {
 		all_displays_of_group_selected,
 		get_display_by_id,
-		get_display_groups,
 		set_select_for_group,
-		set_new_display_group_order
+		local_displays,
+		update_local_displays,
+		update_db_displays,
+		get_display_groups
 	} from '$lib/ts/stores/displays';
 	import {
 		change_height,
@@ -19,15 +21,16 @@
 	import { type Display, type DisplayGroup, type MenuOption } from '$lib/ts/types';
 	import Button from '$lib/components/Button.svelte';
 	import OnlineState from '../lib/components/OnlineState.svelte';
-	import { cubicOut } from 'svelte/easing';
 	import { Menu, Pencil, PinOff, Trash2, VideoOff, ZoomIn, ZoomOut } from 'lucide-svelte';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { dragHandleZone } from 'svelte-dnd-action';
-	import { flip } from 'svelte/animate';
 	import DisplayGroupObject from '../lib/components/DisplayGroupObject.svelte';
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
+	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
 
 	let {
 		handle_display_deletion,
@@ -43,7 +46,16 @@
 		const pdi = $pinned_display_id;
 		pinned_display = liveQuery(() => get_display_by_id(pdi || ''));
 	});
+
 	let display_groups = liveQuery(() => get_display_groups());
+	let display_id_groups = liveQuery(() => update_local_displays());
+	$effect(() => {
+		const current_displays = $display_id_groups;
+		if (!$is_group_drag && !$is_display_drag && current_displays) {
+			$local_displays = current_displays;
+		}
+	});
+
 	let all_groups_selected: Observable<boolean> | undefined = $state();
 	$effect(() => {
 		const d = $display_groups;
@@ -234,51 +246,52 @@
 						</div>
 					</div>
 				</div>
-				<div class="min-h-0 overflow-y-auto" bind:this={displays_scroll_box}>
-					<div
-						class="min-h-full p-2 flex flex-col gap-4"
-						use:dragHandleZone={{
-							items: $display_groups || [],
-							type: 'group',
-							flipDurationMs: dnd_flip_duration_ms,
-							dropFromOthersDisabled: true,
-							dropTargetStyle: { outline: 'none' }
-						}}
-						onconsider={async (e: CustomEvent) => {
-							$is_group_drag = true;
-							await set_new_display_group_order(e.detail.items);
-						}}
-						onfinalize={async (e: CustomEvent) => {
-							await set_new_display_group_order(e.detail.items);
-							$is_group_drag = false;
-						}}
-					>
-						{#if ($display_groups || []).length === 0}
-							<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
-								Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
-								<HighlightedText fg="text-stone-450" className="p-1!">
-									<Menu class="inline pb-1" />
-								</HighlightedText>
-								und
-								<HighlightedText fg="text-stone-450">Neuen Bildschirm hinzufügen</HighlightedText>.
-							</div>
-						{:else}
-							{#each $display_groups || [] as display_group (display_group.id)}
+				<div class="min-h-0 overflow-y-auto overflow-x-hidden" bind:this={displays_scroll_box}>
+					{#if $local_displays.length === 0}
+						<div class="text-stone-500 px-10 py-6 leading-relaxed text-center">
+							Es wurden noch keine Bildschirme hinzugefügt. Klicke oben rechts auf
+							<HighlightedText fg="text-stone-450" className="p-1!">
+								<Menu class="inline pb-1" />
+							</HighlightedText>
+							und
+							<HighlightedText fg="text-stone-450">Neuen Bildschirm hinzufügen</HighlightedText>.
+						</div>
+					{:else}
+						<div
+							class="min-h-full p-2 flex flex-col gap-4"
+							use:dragHandleZone={{
+								items: $local_displays,
+								type: 'group',
+								flipDurationMs: dnd_flip_duration_ms,
+								dropFromOthersDisabled: true,
+								dropTargetStyle: { outline: 'none' }
+							}}
+							onconsider={(e: CustomEvent) => {
+								$is_group_drag = true;
+								$local_displays = e.detail.items;
+							}}
+							onfinalize={async (e: CustomEvent) => {
+								$local_displays = e.detail.items;
+								await update_db_displays();
+								$is_group_drag = false;
+							}}
+						>
+							{#each $local_displays as display_id_group (display_id_group.id)}
 								<!-- Each Group -->
 								<section
-									out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
-									animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
 									class="outline-none"
 								>
+									<!-- out:scale={{ duration: dnd_flip_duration_ms, easing: cubicOut }}
+										animate:flip={{ duration: dnd_flip_duration_ms, easing: cubicOut }} -->
 									<DisplayGroupObject
-										display_group_id={display_group.id}
+										{display_id_group}
 										{get_display_menu_options}
 										{close_pinned_display}
 									/>
 								</section>
 							{/each}
-						{/if}
-					</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</Pane>

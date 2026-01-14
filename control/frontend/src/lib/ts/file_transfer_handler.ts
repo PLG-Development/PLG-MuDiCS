@@ -293,7 +293,6 @@ async function start_task_processing() {
 
 async function start_task_loop() {
 	while (tasks.length > 0) {
-		console.log('NOCH', tasks.length, 'ZU TUN');
 		const current_task = tasks[0];
 		if (current_task.data.type === 'upload') {
 			await upload(current_task);

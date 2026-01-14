@@ -37,20 +37,20 @@ export type FileTransferTask = {
 	bytes_total: number; // if type === 'sync' -> bytes_total = file_size * 2 (1x download + 1x upload)
 };
 
-export type FileTransferTaskData = {
-	type: 'upload',
-	file: File,
-} | {
-	type: "sync",
-	destination_displays: ShortDisplay[],
-}
-
+export type FileTransferTaskData =
+	| {
+			type: 'upload';
+			file: File;
+	  }
+	| {
+			type: 'sync';
+			destination_displays: ShortDisplay[];
+	  };
 
 export type ShortDisplay = {
 	id: string;
 	ip: string;
-}
-
+};
 
 export type FileOnDisplay = {
 	display_id: string;
@@ -64,7 +64,7 @@ export type FileLoadingData = {
 	percentage: number;
 	bytes_per_second: number;
 	seconds_until_finish: number;
-}
+};
 
 export type Inode = {
 	path: string;
@@ -99,6 +99,15 @@ export type Display = {
 export type DisplayGroup = {
 	id: string;
 	position: number;
+};
+
+export type DisplayIdGroup = {
+	id: string;
+	displays: DisplayIdObject[];
+};
+
+export type DisplayIdObject = {
+	id: string;
 };
 
 export type PreviewObject = {

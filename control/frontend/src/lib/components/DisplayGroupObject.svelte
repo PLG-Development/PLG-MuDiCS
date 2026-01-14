@@ -11,22 +11,25 @@
 	import DisplayObject from './DisplayObject.svelte';
 	import {
 		all_displays_of_group_selected,
-		get_display_ids_in_group,
 		set_select_for_group,
-		set_new_display_order
+		update_db_displays,
+		local_displays,
+		set_new_display_order,
 	} from '$lib/ts/stores/displays';
 	import DNDGrip from '$lib/components/DNDGrip.svelte';
 	import { fade } from 'svelte/transition';
-	import type { MenuOption } from '$lib/ts/types';
+	import type { Display, DisplayIdGroup, MenuOption } from '$lib/ts/types';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import { liveQuery, type Observable } from 'dexie';
+	import { onMount } from 'svelte';
+	import { get_uuid } from '$lib/ts/utils';
 
 	let {
-		display_group_id,
+		display_id_group,
 		get_display_menu_options,
 		close_pinned_display
 	}: {
-		display_group_id: string;
+		display_id_group: DisplayIdGroup;
 		get_display_menu_options: (display_id: string) => MenuOption[];
 		close_pinned_display: () => void;
 	} = $props();
@@ -34,14 +37,14 @@
 	let all_selected: Observable<boolean> | undefined = $state();
 	$effect(() => {
 		const sdi = $selected_display_ids;
-		all_selected = liveQuery(() => all_displays_of_group_selected(display_group_id, sdi));
+		all_selected = liveQuery(() => all_displays_of_group_selected(display_id_group.id, sdi));
 	});
-	let display_ids_in_group = liveQuery(() => get_display_ids_in_group(display_group_id));
+
 	let hovering_selectable = $state(false);
 
 	async function select_all_of_this_group() {
 		const new_value = !($all_selected || false);
-		await set_select_for_group(display_group_id, new_value);
+		await set_select_for_group(display_id_group.id, new_value);
 	}
 
 	async function handle_consider(e: CustomEvent) {
@@ -49,14 +52,22 @@
 
 		if (items.length !== 1 && info.trigger === TRIGGERS.DRAG_STARTED) {
 			$is_display_drag = true;
-			// add_empty_display_group();
+			// add empty display group if its not just one group
+			if (!($local_displays.length === 1 && $local_displays[0].displays.length === 1)) {
+				$local_displays.push({
+					id: get_uuid(),
+					displays: []
+				});
+			}
 		}
-		await set_new_display_order(items);
+		set_new_display_order(display_id_group.id, items);
 	}
 
 	async function handle_finalize(e: CustomEvent) {
+		set_new_display_order(display_id_group.id, e.detail.items);
+		// $local_displays = $local_displays.filter((g) => g.displays.length !== 0);
+		await update_db_displays();
 		$is_display_drag = false;
-		await set_new_display_order(e.detail.items);
 	}
 </script>
 
@@ -77,7 +88,7 @@
 	<div
 		class="flex flex-col min-w-0 pl-2 py-2 gap-2 w-full"
 		use:dragHandleZone={{
-			items: $display_ids_in_group || [],
+			items: display_id_group.displays,
 			type: 'item',
 			flipDurationMs: dnd_flip_duration_ms,
 			dropTargetStyle: { outline: 'none' }
@@ -85,18 +96,15 @@
 		onconsider={handle_consider}
 		onfinalize={handle_finalize}
 	>
-		{#each $display_ids_in_group || [] as display (display.id)}
+		{#each display_id_group.displays as display_id_object (display_id_object.id)}
 			<!-- Each Group -->
-			<section
-				animate:flip={{ duration: $is_group_drag ? 0 : dnd_flip_duration_ms, easing: cubicOut }}
-				class="outline-none"
-				role="figure"
-			>
-				<DisplayObject {display} {get_display_menu_options} {close_pinned_display} />
+			<section class="outline-none" role="figure">
+				<!-- animate:flip={{ duration: $is_group_drag ? 0 : dnd_flip_duration_ms, easing: cubicOut }} -->
+				<DisplayObject {display_id_object} {get_display_menu_options} {close_pinned_display} />
 			</section>
 		{/each}
 
-		{#if ($display_ids_in_group || []).length === 0}
+		{#if display_id_group.displays.length === 0}
 			<div class="min-h-10 h-full w-full pl-2 py-2 flex justify-center items-center">
 				Hier in leere neue Gruppe ablegen
 			</div>
