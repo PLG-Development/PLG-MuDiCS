@@ -7,20 +7,16 @@ import (
 	"os/exec"
 )
 
-func OpenBrowserWindow(url string, fullscreen bool, temp bool) error {
+func OpenBrowserWindow(url string, fullscreen bool) error {
 	bins := []string{"chromium", "chromium-browser"}
 
-	args := []string{fmt.Sprintf("--app=%s", url), "--autoplay-policy=no-user-gesture-required"}
+	tempDirPath, err := os.MkdirTemp("", "plg-mudics-browser-")
+	if err != nil {
+		return err
+	}
+	args := []string{fmt.Sprintf("--app=%s", url), "--autoplay-policy=no-user-gesture-required", fmt.Sprintf("--user-data-dir=%s", tempDirPath)}
 	if fullscreen {
 		args = append(args, "--start-fullscreen")
-	}
-	if temp {
-		tempDirPath, err := os.MkdirTemp("", "plg-mudics-browser-")
-		if err != nil {
-			return err
-		}
-		arg := fmt.Sprintf("--user-data-dir=%s", tempDirPath)
-		args = append(args, arg)
 	}
 
 	errs := []string{}
