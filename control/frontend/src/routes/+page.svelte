@@ -231,10 +231,6 @@
 					icon: Plus,
 					name: 'Neuen Bildschirm hinzufügen',
 					on_select: show_new_display_popup
-				},
-				{
-					icon: Settings,
-					name: 'Weitere Einstellungen'
 				}
 			]}
 		>
