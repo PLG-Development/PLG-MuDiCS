@@ -75,6 +75,7 @@
 			title: 'Neuen Bildschirm hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
+			window_class: 'w-3xl',
 			closable: true
 		};
 	};
