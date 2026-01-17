@@ -152,6 +152,17 @@
     };
   };
 
+  systemd.services.enable-wol = {
+    wantedBy = ["multi-user.target"];
+    after = ["network.target"];
+    path = with pkgs; [ ethtool nushell ];
+    script = "nu ${./wol.nu}";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "root";
+    };
+  };
+
   systemd.tmpfiles.rules = [
     "d /home/mudics/mudics 0755 mudics - -"
   ];
