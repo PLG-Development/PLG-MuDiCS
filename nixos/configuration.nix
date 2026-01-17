@@ -116,7 +116,7 @@
     after = ["network-online.target"];
     wants = ["network-online.target"];
     path = config.environment.systemPackages;
-    script = "nu ${./update.sh}";
+    script = "nu ${./update.nu}";
     serviceConfig = {
       WorkingDirectory = "/home/mudics/mudics";
       User = "mudics";
@@ -155,7 +155,7 @@
   systemd.services.enable-wol = {
     wantedBy = ["multi-user.target"];
     after = ["network.target"];
-    path = with pkgs; [ ethtool nushell ];
+    path = with pkgs; [ethtool nushell];
     script = "nu ${./wol.nu}";
     serviceConfig = {
       Type = "oneshot";
