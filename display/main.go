@@ -26,7 +26,7 @@ func main() {
 	// the order is important, the open browser command exitsts as soon as the winodw is closed
 	// and since its the last action in the main go func all other goroutines (e.g. the webserver) are killed
 	go web.StartWebServer(shared.Version, port)
-	err = shared.OpenBrowserWindow("http://localhost:"+port, true)
+	err = shared.OpenBrowserWindow("http://localhost:"+port, true, "display")
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
 		os.Exit(1)

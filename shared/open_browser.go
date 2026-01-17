@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 )
 
-func OpenBrowserWindow(url string, fullscreen bool) error {
+func OpenBrowserWindow(url string, fullscreen bool, profile string) error {
 	bins := []string{"chromium", "chromium-browser"}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("unable to determine user home directory: %w", err)
 	}
-	browserProfileDirPath := filepath.Join(home, ".local", "share", "plg-mudics", "browser")
+	browserProfileDirPath := filepath.Join(home, ".local", "share", "plg-mudics", fmt.Sprintf("browser-%s", profile))
 	if err := os.MkdirAll(browserProfileDirPath, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create local config directory: %w", err)
 	}
