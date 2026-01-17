@@ -377,6 +377,14 @@ export async function create_folder_on_all_selected_displays(
 	path: string,
 	selected_display_ids: string[]
 ): Promise<void> {
+	const path_with_folder_name = (path += folder_name + '/');
+	await create_path_on_all_selected_displays(path_with_folder_name, selected_display_ids);
+}
+
+export async function create_path_on_all_selected_displays(
+	path: string,
+	selected_display_ids: string[]
+) {
 	const path_parts = path
 		.slice(1, path.length - 1)
 		.split('/')
@@ -397,9 +405,8 @@ export async function create_folder_on_all_selected_displays(
 		const displays = await getDisplaysForPath(currentPath);
 		if (!displays.length) continue;
 
-		const folders_to_create = [...path_parts.slice(depth), folder_name];
 		for (const display of displays) {
-			await create_folders(display.ip, currentPath, folders_to_create);
+			await create_folders(display.ip, currentPath, path_parts.slice(depth));
 			remaining_display_ids = remaining_display_ids.filter((id) => id !== display.id);
 		}
 	}
