@@ -5,16 +5,22 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 func OpenBrowserWindow(url string, fullscreen bool) error {
 	bins := []string{"chromium", "chromium-browser"}
 
-	tempDirPath, err := os.MkdirTemp("", "plg-mudics-browser-")
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to determine user home directory: %w", err)
 	}
-	args := []string{fmt.Sprintf("--app=%s", url), "--autoplay-policy=no-user-gesture-required", fmt.Sprintf("--user-data-dir=%s", tempDirPath)}
+	browserProfileDirPath := filepath.Join(home, ".local", "share", "plg-mudics", "browser")
+	if err := os.MkdirAll(browserProfileDirPath, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create local config directory: %w", err)
+	}
+
+	args := []string{fmt.Sprintf("--app=%s", url), "--autoplay-policy=no-user-gesture-required", fmt.Sprintf("--user-data-dir=%s", browserProfileDirPath)}
 	if fullscreen {
 		args = append(args, "--start-fullscreen")
 	}
