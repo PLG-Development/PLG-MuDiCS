@@ -16,7 +16,12 @@
 
   hardware.steam-hardware.enable = true;
 
-  networking.networkmanager.enable = true;
+  networking.networkmanager.enable = false;
+  networking.useNetworkd = true;
+  systemd.network.links."10-wol" = {
+    matchConfig.Name = "en*";
+    linkConfig."WakeOnLan" = "magic";
+  };
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
@@ -161,6 +166,8 @@
     allowedTCPPorts = [
       1323 # display
       8080 # control
+      9 # wol
+      7
     ];
   };
 }
