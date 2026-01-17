@@ -5,7 +5,7 @@ import {
 	create_path_on_all_selected_displays,
 	get_file_by_id,
 	remove_all_files_without_display,
-	remove_file_from_display
+	remove_file_from_display_recusively
 } from './stores/files';
 import { notifications } from './stores/notification';
 import { generate_thumbnail } from './stores/thumbnails';
@@ -417,11 +417,11 @@ async function show_error(task: FileTransferTask, error: ProgressEvent | string)
 		`Datei: "${task.file_name}", Display-IP: ${task.display.ip}\nFehler: ${error}`
 	);
 	if (task_data.type === 'upload') {
-		await remove_file_from_display(task.display.id, task.file_primary_key);
+		await remove_file_from_display_recusively(task.display.id, task.file_primary_key);
 		await remove_all_files_without_display();
 	} else if (task_data.type === 'sync') {
 		for (const display_id of task_data.destination_displays.map((e) => e.id)) {
-			await remove_file_from_display(display_id, task.file_primary_key);
+			await remove_file_from_display_recusively(display_id, task.file_primary_key);
 		}
 		await remove_all_files_without_display();
 	}
