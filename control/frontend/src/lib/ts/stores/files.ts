@@ -42,16 +42,35 @@ export async function delete_and_deselect_unique_files_from_display(display_id: 
 		.equals(display_id)
 		.toArray();
 	for (const file of files_on_display) {
-		await remove_file_from_display(display_id, file.file_primary_key);
+		await remove_file_from_display_recusively(display_id, file.file_primary_key);
 	}
 	await remove_all_files_without_display();
 }
 
-export async function remove_file_from_display(display_id: string, file_primary_key: string) {
+export async function remove_file_from_display_recusively(display_id: string, file_primary_key: string) {
 	const found = await db.files_on_display.get([display_id, file_primary_key]);
 	if (!found) return;
 	select(selected_file_ids, file_primary_key, 'deselect');
 	await db.files_on_display.delete([display_id, file_primary_key]);
+
+	const inode_element = await get_file_by_id(found.file_primary_key);
+	if (!inode_element) return;
+	if (inode_element.type === 'inode/directory') {
+		const path_inside_folder = inode_element.path + inode_element.name + `/`;
+		const primary_file_keys_in_folder = (
+			await db.files.where('path').equals(path_inside_folder).toArray()
+		).map((e) => get_file_primary_key(e));
+		const primary_file_keys_in_folder_on_display = (
+			await db.files_on_display
+				.where('file_primary_key')
+				.anyOf(primary_file_keys_in_folder)
+				.filter((file) => file.display_id === display_id)
+				.toArray()
+		).map((e) => e.file_primary_key);
+		for (const file_key of primary_file_keys_in_folder_on_display) {
+			await remove_file_from_display_recusively(display_id, file_key);
+		}
+	}
 }
 
 export async function remove_all_files_without_display() {
@@ -272,7 +291,7 @@ export async function update_folder_elements_recursively(
 	if (diff.deleted.length > 0) {
 		// Remove old Folder-Elements
 		for (const old_element of diff.deleted) {
-			remove_file_from_display(display.id, get_file_primary_key(old_element));
+			remove_file_from_display_recusively(display.id, get_file_primary_key(old_element));
 		}
 		await remove_all_files_without_display();
 	}
