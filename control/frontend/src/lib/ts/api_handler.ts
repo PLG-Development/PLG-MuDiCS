@@ -72,6 +72,7 @@ export async function get_file_data(
 	const json_response = raw_response.json as ShellCommandResponse;
 	if (json_response.exitCode === 0 && json_response.stdout.trim() === '') return [];
 	if (handle_shell_error(ip, json_response, command, true)) return null;
+	if (json_response.stdout.trim() === '') return null;
 
 	const response: FileInfo[] = json_response.stdout
 		.trim()
@@ -281,7 +282,6 @@ function handle_shell_error(
 		);
 		return true;
 	}
-	if (shell_response.stdout.trim() === '') return true;
 	return false;
 }
 
