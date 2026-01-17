@@ -66,12 +66,6 @@
 				is_selected: () => editor_state.editor?.isActive('strike') ?? false,
 				title: 'Durchgestrichen',
 				icon: Strikethrough
-			},
-			{
-				onclick: () => {},
-				is_selected: () => false,
-				title: 'QR-Code anfügen',
-				icon: QrCode
 			}
 		],
 		[
