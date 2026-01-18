@@ -24,7 +24,6 @@ func OpenBrowserWindow(url string, fullscreen bool, profile string) error {
 		fmt.Sprintf("--app=%s", url),
 		"--autoplay-policy=no-user-gesture-required",
 		fmt.Sprintf("--user-data-dir=%s", browserProfileDirPath),
-		"--disable-web-security",
 		"--allow-running-insecure-content",
 		"--disable-features=XFrameOptions",
 	}
