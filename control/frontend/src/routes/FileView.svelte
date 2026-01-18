@@ -17,7 +17,7 @@
 	import { selected_display_ids, selected_file_ids } from '$lib/ts/stores/select';
 	import {
 		current_file_path,
-		get_current_folder_elements,
+		get_folder_elements,
 		get_file_by_id,
 		run_for_selected_files_on_selected_displays,
 		update_current_folder_on_selected_displays,
@@ -52,7 +52,7 @@
 	$effect(() => {
 		const path = $current_file_path,
 			display_ids = $selected_display_ids;
-		current_folder_elements = liveQuery(() => get_current_folder_elements(path, display_ids));
+		current_folder_elements = liveQuery(() => get_folder_elements(path, display_ids));
 	});
 	let one_file_selected: Observable<boolean> | undefined = $state();
 	$effect(() => {

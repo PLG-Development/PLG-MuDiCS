@@ -1,8 +1,8 @@
 import { db } from './database';
 import { get_display_by_id } from './stores/displays';
 import {
-	get_current_folder_elements,
 	create_path_on_all_selected_displays,
+	get_folder_elements,
 	get_file_by_id,
 	remove_all_files_without_display,
 	remove_file_from_display_recusively
@@ -32,7 +32,7 @@ export async function add_upload(
 	await create_path_on_all_selected_displays(current_file_path, selected_display_ids);
 
 	const used_file_names: string[] = await (
-		await get_current_folder_elements(current_file_path, selected_display_ids)
+		await get_folder_elements(current_file_path, selected_display_ids)
 	).map((e) => e.name);
 
 	for (const file of file_list) {

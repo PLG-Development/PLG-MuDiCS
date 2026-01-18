@@ -310,8 +310,8 @@ function get_folder_elements_difference(
 	return { deleted: only_in_old, new: only_in_new };
 }
 
-export async function get_current_folder_elements(
-	current_file_path: string,
+export async function get_folder_elements(
+	file_path: string,
 	selected_display_ids: string[]
 ): Promise<Inode[]> {
 	const existing_file_keys_on_selected_displays: [string, string, number, string][] = (
@@ -320,7 +320,7 @@ export async function get_current_folder_elements(
 	const existing_files_on_selected_displays_in_path: Inode[] = await db.files
 		.where('[path+name+size+type]')
 		.anyOf(existing_file_keys_on_selected_displays)
-		.filter((e) => e.path === current_file_path)
+		.filter((e) => e.path === file_path)
 		.toArray();
 
 	return sort_files(existing_files_on_selected_displays_in_path);
