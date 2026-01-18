@@ -136,18 +136,21 @@ export async function add_sync_recursively(
 		}
 	});
 	const display_ids_without_file = file_data.short_displays_without_file.map((d) => d.id);
-	await db.files_on_display
-		.where('file_primary_key')
-		.equals(selected_file_id)
-		.filter((e) => display_ids_without_file.includes(e.display_id))
-		.modify({
-			loading_data: {
-				type: 'sync_upload',
-				percentage: 0,
-				bytes_per_second: 0,
-				seconds_until_finish: -1
-			}
-		});
+	const new_file_loading_data: FileLoadingData = {
+		type: 'sync_upload',
+		percentage: 0,
+		bytes_per_second: 0,
+		seconds_until_finish: -1
+	};
+	const new_fods: FileOnDisplay[] = display_ids_without_file.map((display_id) => ({
+		display_id,
+		file_primary_key: selected_file_id,
+		date_created: new Date(),
+		loading_data: new_file_loading_data
+	}));
+	console.log("TEST", new_fods)
+	await db.files_on_display.bulkPut(new_fods);
+
 	await start_task_processing();
 }
 
@@ -265,6 +268,10 @@ export async function sync(task: FileTransferTask) {
 			await writable.write(value);
 		}
 		await writable.close();
+
+		await db.files_on_display.update([task.display.id, task.file_primary_key], {
+			loading_data: null
+		});
 
 		// 02 - send downloaded file to every destination_display
 		const temp_file = await file_handle.getFile();
