@@ -98,10 +98,10 @@
 		}
 	}
 
-	async function ask_shutdonw() {
+	async function ask_shutdown() {
 		popup_content = {
 			open: true,
-			snippet: ask_shutdonw_popup,
+			snippet: ask_shutdown_popup,
 			title: 'Bildschirm Herunterfahren',
 			title_icon: PowerOff,
 			closable: true
@@ -185,7 +185,7 @@
 	</div>
 {/snippet}
 
-{#snippet ask_shutdonw_popup()}
+{#snippet ask_shutdown_popup()}
 	<p>Bist du sicher, dass du alle ausgewählten Displays herunterfahren möchtest?</p>
 
 	<div class="flex flex-row justify-end gap-2">
@@ -286,7 +286,7 @@
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 						disabled={$all_display_states === 'off' ||
 							no_active_display_selected($selected_display_ids, $online_displays)}
-						click_function={ask_shutdonw}
+						click_function={ask_shutdown}
 					>
 						<PowerOff /> Bildschirm Herunterfahren</Button
 					>
