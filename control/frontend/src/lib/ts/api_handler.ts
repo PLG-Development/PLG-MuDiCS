@@ -36,7 +36,7 @@ export async function send_keyboard_input(
 	await request_display(ip, '/keyboardInput', options);
 }
 
-export async function show_html(ip: string, html: string) {
+export async function show_html(ip: string, html: string): Promise<void> {
 	const options = {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
@@ -110,11 +110,8 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
 	return tree_element?.contents || null;
 }
 
-export async function create_path(
-	ip: string,
-	path: string,
-): Promise<void> {
-	const command = `mkdir -p ".${path}"`
+export async function create_path(ip: string, path: string): Promise<void> {
+	const command = `mkdir -p ".${path}"`;
 
 	const raw_response = await run_shell_command(ip, command);
 	if (!raw_response.ok || !raw_response.json) return;
@@ -238,7 +235,11 @@ async function request(
 				error_description += '\nCould not parse error description';
 			}
 		}
-		notifications.push('error', `Fehler bei API-Anfrage`, `\nHTTP: ${response.status}\n${error_description}`);
+		notifications.push(
+			'error',
+			`Fehler bei API-Anfrage`,
+			`\nHTTP: ${response.status}\n${error_description}`
+		);
 	} catch (error: unknown) {
 		if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
 			if (dev) {
