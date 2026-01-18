@@ -71,8 +71,15 @@ export async function edit_display_data(
 ): Promise<Display | null> {
 	let display = await db.displays.get(display_id);
 	if (!display) return null;
-	display = { ...display, ip: ip, mac: mac, name: name };
+	display = {
+		...display,
+		ip: ip,
+		mac: mac,
+		name,
+		preview: { currently_updating: false, url: null }
+	};
 	await db.displays.put(display); // save
+	screenshot_loop(display.id);
 	return display;
 }
 
@@ -127,49 +134,60 @@ export async function get_display_by_id(display_id: string): Promise<Display | n
 	return (await db.displays.get(display_id)) ?? null;
 }
 
-export async function screenshot_loop(display_id: string) {
-	const settings = get(preview_settings);
-	if (settings.mode === 'never') return;
+export function screenshot_loop(display_id: string) {
+	setTimeout(async () => {
+		let settings = get(preview_settings);
+		if (settings.mode === 'never') return;
 
-	const initial_retry_count = settings.retry_count.now;
-	const retry_seconds = get(preview_settings).retry_seconds.now;
+		const initial_retry_count = settings.retry_count.now;
+		const retry_seconds = get(preview_settings).retry_seconds.now;
 
-	const display = await db.displays.get(display_id);
-	if (!display || display.preview.currently_updating) return;
+		const display = await db.displays.get(display_id);
+		if (!display || display.preview.currently_updating) return;
 
-	display.preview.currently_updating = true;
-	await db.displays.update(display.id, { preview: display.preview });
+		display.preview.currently_updating = true;
+		await db.displays.update(display.id, { preview: display.preview });
 
-	let last_hash: number | null = null;
+		let last_hash: number | null = null;
 
-	let retry_count = initial_retry_count;
-	while (retry_count > 0) {
-		if (settings.mode !== 'always') retry_count -= 1;
+		let retry_count = initial_retry_count;
+		while (retry_count > 0) {
+			settings = get(preview_settings);
+			if (settings.mode === 'never') break;
+			if (settings.mode !== 'always') retry_count -= 1;
 
-		const new_blob = await get_screenshot(display.ip);
-		if (!new_blob) {
-			display.preview = { currently_updating: false, url: null };
-			await db.displays.update(display.id, { preview: display.preview });
-			return;
-		}
-		const new_hash = await image_content_hash(new_blob);
-		if (last_hash !== new_hash) {
-			if (display.preview.url) {
-				URL.revokeObjectURL(display.preview.url);
+			const new_blob = await get_screenshot(display.ip);
+			settings = get(preview_settings);
+			if (settings.mode === 'never') break;
+
+			if (!new_blob) {
+				display.preview = { currently_updating: false, url: null };
+				await db.displays.update(display.id, { preview: display.preview });
+				return;
+			}
+			const new_hash = await image_content_hash(new_blob);
+			if (last_hash !== new_hash) {
+				if (display.preview.url) {
+					URL.revokeObjectURL(display.preview.url);
+				}
+
+				last_hash = new_hash;
+				display.preview.url = URL.createObjectURL(new_blob);
+				await db.displays.update(display.id, { preview: display.preview });
+
+				retry_count = initial_retry_count;
 			}
 
-			last_hash = new_hash;
-			display.preview.url = URL.createObjectURL(new_blob);
-			await db.displays.update(display.id, { preview: display.preview });
-
-			retry_count = initial_retry_count;
+			await new Promise((resolve) => setTimeout(resolve, retry_seconds * 1000)); // sleep
 		}
 
-		await new Promise((resolve) => setTimeout(resolve, retry_seconds * 1000)); // sleep
-	}
-
-	display.preview.currently_updating = false;
-	await db.displays.update(display.id, { preview: display.preview });
+		if (settings.mode === 'never') {
+			await db.displays.update(display.id, { preview: { currently_updating: false, url: null } });
+		} else {
+			display.preview.currently_updating = false;
+			await db.displays.update(display.id, { preview: display.preview });
+		}
+	}, 0);
 }
 
 export async function run_on_all_selected_displays(
@@ -188,7 +206,7 @@ export async function run_on_all_selected_displays(
 			if (!display || (ignore_offline && display.status === 'host_offline')) return;
 			await run_function(display);
 			if (update_screenshot_afterwards) {
-				await screenshot_loop(display.id);
+				screenshot_loop(display.id);
 			}
 		})
 	);

@@ -25,7 +25,8 @@
 		edit_display_data,
 		get_display_by_id,
 		is_display_name_taken,
-		remove_display
+		remove_display,
+		screenshot_loop
 	} from '$lib/ts/stores/displays';
 	import { notifications } from '$lib/ts/stores/notification';
 	import { ping_ip } from '$lib/ts/api_handler';
@@ -35,6 +36,7 @@
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { preview_settings } from '$lib/ts/stores/ui_behavior';
 	import NumberSettingInput from '$lib/components/NumberSettingInput.svelte';
+	import { db } from '$lib/ts/database';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -90,6 +92,20 @@
 				return 'Normal';
 			case 'always':
 				return 'Dauerhaft';
+		}
+	}
+
+	async function change_preview_mode(mode: 'never' | 'normal' | 'always') {
+		$preview_settings.mode = mode;
+		if (mode === 'never') {
+			await db.displays
+				.toCollection()
+				.modify({ preview: { currently_updating: false, url: null } });
+		} else {
+			const display_ids = (await db.displays.toArray()).map((d) => d.id);
+			for (const display_id of display_ids) {
+				screenshot_loop(display_id);
+			}
 		}
 	}
 
@@ -332,9 +348,7 @@
 					menu_options={(['never', 'normal', 'always'] as const).map((mode) => ({
 						icon: mode === $preview_settings.mode ? SquareCheckBig : Square,
 						name: get_display_preview_mode(mode),
-						on_select: () => {
-							$preview_settings.mode = mode;
-						}
+						on_select: async () => await change_preview_mode(mode)
 					}))}>{get_display_preview_mode($preview_settings.mode)} <ChevronDown /></Button
 				>
 			</div>

@@ -12,7 +12,9 @@ const loading_display_ids: string[] = [];
 export async function on_app_start() {
 	await db.files.clear();
 	await db.files_on_display.clear();
-	await db.displays.toCollection().modify({ status: null });
+	await db.displays
+		.toCollection()
+		.modify({ status: null, preview: { currently_updating: false, url: null } });
 	await update_all_display_status(false);
 	await setInterval(
 		() => update_all_display_status(false),
@@ -65,5 +67,5 @@ export function remove_display_from_loading_displays(display_id: string) {
 
 async function on_display_start(display: Display) {
 	await update_folder_elements_recursively(display, '/');
-	await screenshot_loop(display.id);
+	screenshot_loop(display.id);
 }

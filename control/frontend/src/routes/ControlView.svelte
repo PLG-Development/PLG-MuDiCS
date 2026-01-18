@@ -112,7 +112,7 @@
 		popup_content.open = false;
 		await run_on_all_selected_displays((d) => {
 			shutdown(d.ip); // no await here because we want to be fast
-			db.displays.update(d.id, { status: 'app_offline' });
+			db.displays.update(d.id, { status: 'app_offline', preview: { currently_updating: false, url: null} });
 		}, false);
 	}
 
