@@ -1,5 +1,6 @@
 import { writable, type Writable } from 'svelte/store';
 import type { NumberSetting } from '../types';
+import { dev } from '$app/environment';
 
 export const dnd_flip_duration_ms = 300;
 
@@ -33,7 +34,7 @@ export const preview_settings: Writable<{
 	retry_seconds: NumberSetting;
 	retry_count: NumberSetting;
 }>({
-	mode: 'normal',
+	mode: dev ? 'never' : 'normal',
 	retry_seconds: {
 		max: 10,
 		min: 0.5,
