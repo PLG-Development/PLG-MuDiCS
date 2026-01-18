@@ -12,6 +12,7 @@ const loading_display_ids: string[] = [];
 export async function on_app_start() {
 	await db.files.clear();
 	await db.files_on_display.clear();
+	await db.displays.toCollection().modify({ status: null });
 	await update_all_display_status(false);
 	await setInterval(
 		() => update_all_display_status(false),
