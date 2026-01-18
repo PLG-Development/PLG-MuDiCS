@@ -51,7 +51,7 @@
 		popup_content = {
 			open: true,
 			snippet: send_keys_popup,
-			title: 'Tastatur-Eingaben Durchgeben',
+			title: 'Tastatur-Eingaben Senden',
 			title_icon: Keyboard,
 			closable: true
 		};
@@ -262,7 +262,7 @@
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
-					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Durchgeben</Button
+					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Senden</Button
 				>
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
