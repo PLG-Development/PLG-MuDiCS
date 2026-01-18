@@ -140,7 +140,7 @@
 
 	function validate_website_url(url: string): [boolean, string] {
 		if (url === '') return [true, ''];
-		const regex = /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+		const regex = /^https?:\/\/[\w\-]+(\.[\w\-]+)+([\w\-\._~:/?#\[\]@!$&'\(\)\*\+,;=.])*/;
 		if (regex.test(url)) {
 			return [true, ''];
 		}
@@ -159,7 +159,7 @@
 {#snippet website_popup()}
 	<div class="flex flex-col gap-2">
 		<TextInput
-			title="URL"
+			title="URL (mit http:// oder https://)"
 			placeholder="https://example.com"
 			bind:current_value={website_url}
 			bind:current_valid={website_url_valid}
