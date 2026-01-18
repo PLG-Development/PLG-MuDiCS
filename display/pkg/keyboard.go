@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/micmonay/keybd_event"
@@ -15,7 +16,7 @@ const (
 )
 
 type Input struct {
-	Key    int
+	Key    string
 	Action KeyAction
 }
 
@@ -28,7 +29,23 @@ func KeyboardInput(inputs []Input) error {
 	}
 
 	for _, input := range inputs {
-		kb.SetKeys(input.Key)
+		switch input.Key {
+		case "Shift":
+			kb.HasSHIFT(true)
+		case "Ctrl":
+			kb.HasCTRL(true)
+		case "Alt":
+			kb.HasALT(true)
+		case "Super":
+			kb.HasSuper(true)
+		default:
+			keyCode, ok := KeyboardEvents[input.Key]
+			if !ok {
+				slog.Warn("Could not parse keyboard input", "key", input.Key)
+				continue
+			}
+			kb.SetKeys(keyCode)
+		}
 
 		switch input.Action {
 		case KeyPress:
@@ -41,7 +58,7 @@ func KeyboardInput(inputs []Input) error {
 			return fmt.Errorf("failed to run key event: %w", err)
 		}
 
-		time.Sleep(time.Microsecond * 100)
+		time.Sleep(time.Microsecond * 10)
 	}
 
 	return nil
