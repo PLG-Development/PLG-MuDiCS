@@ -210,7 +210,7 @@
 			{/each}
 		</div>
 
-		<Button click_function={show_text} className="w-full font-bold">Text anzeigen</Button>
+		<Button click_function={show_text} className="w-full font-bold">Text Anzeigen</Button>
 	</div>
 </div>
 

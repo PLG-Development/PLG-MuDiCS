@@ -51,7 +51,7 @@
 		popup_content = {
 			open: true,
 			snippet: send_keys_popup,
-			title: 'Tastatur-Eingaben durchgeben',
+			title: 'Tastatur-Eingaben Durchgeben',
 			title_icon: Keyboard,
 			closable: true
 		};
@@ -61,7 +61,7 @@
 		popup_content = {
 			open: true,
 			snippet: text_popup,
-			title: 'Text anzeigen',
+			title: 'Text Anzeigen',
 			title_icon: TextAlignStart,
 			closable: true,
 			window_class: 'size-full'
@@ -72,7 +72,7 @@
 		popup_content = {
 			open: true,
 			snippet: website_popup,
-			title: 'Webseite anzeigen',
+			title: 'Webseite Anzeigen',
 			window_class: 'w-xl',
 			title_icon: Globe,
 			closable: true
@@ -208,7 +208,7 @@
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
 	<div class="text-xl font-bold pl-3 content-center bg-stone-700 rounded-t-2xl truncate min-w-0">
-		Bildschirme steuern
+		Bildschirme Steuern
 	</div>
 	<div class="relative flex flex-col gap-2 p-2 overflow-auto">
 		<div class="flex flex-row justify-between gap-2">
@@ -235,13 +235,13 @@
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
-					click_function={show_text_popup}><TextAlignStart /> Text anzeigen</Button
+					click_function={show_text_popup}><TextAlignStart /> Text Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
-					click_function={show_website_popup}><Globe /> Webseite anzeigen</Button
+					click_function={show_website_popup}><Globe /> Webseite Anzeigen</Button
 				>
 
 				<Button
@@ -254,7 +254,7 @@
 
 				<div class="flex flex-row justify-normal">
 					<Button className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal" disabled>
-						<TrafficCone /> Fallback-Bild anzeigen
+						<TrafficCone /> Fallback-Bild Anzeigen
 					</Button>
 					<Button className="rounded-l-none flex grow-0 w-10" disabled><ChevronDown /></Button>
 				</div>
@@ -262,7 +262,7 @@
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
-					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben durchgeben</Button
+					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Durchgeben</Button
 				>
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
@@ -272,7 +272,7 @@
 						disabled={$all_display_states === 'on' || $selected_display_ids.length === 0}
 						click_function={startup_action}
 					>
-						<Power /> Display hochfahren
+						<Power /> Display Hochfahren
 					</Button>
 
 					<Button
@@ -280,12 +280,12 @@
 						disabled={$all_display_states === 'off' || $selected_display_ids.length === 0}
 						click_function={ask_shutdonw}
 					>
-						<PowerOff /> Display herunterfahren</Button
+						<PowerOff /> Display Herunterfahren</Button
 					>
 				</div>
 				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal" disabled>
 					<SquareTerminal />
-					Shell-Befehl ausführen
+					Shell-Befehl Ausführen
 				</Button>
 			</div>
 		</div>

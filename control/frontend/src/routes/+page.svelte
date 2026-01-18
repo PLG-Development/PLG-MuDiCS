@@ -102,7 +102,7 @@
 		popup_content = {
 			open: true,
 			snippet: display_popup,
-			title: 'Neuen Bildschirm hinzufügen',
+			title: 'Neuen Bildschirm Hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
 			window_class: 'w-3xl',
@@ -374,7 +374,7 @@
 			menu_options={[
 				{
 					icon: Plus,
-					name: 'Neuen Bildschirm hinzufügen',
+					name: 'Neuen Bildschirm Hinzufügen',
 					on_select: show_new_display_popup
 				},
 				{
