@@ -23,7 +23,12 @@
 		startup,
 		show_html
 	} from '$lib/ts/api_handler';
-	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import {
+		get_display_by_id,
+		no_active_display_selected,
+		online_displays,
+		run_on_all_selected_displays
+	} from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 	import { db } from '$lib/ts/database';
@@ -217,7 +222,7 @@
 					<Button
 						title="Vorherige Folie (Pfeil nach Links)"
 						className="px-9"
-						disabled={$selected_display_ids.length === 0}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 						click_function={async () => {
 							await send_single_key_press('VK_LEFT');
 						}}><ArrowBigLeft /></Button
@@ -225,7 +230,7 @@
 					<Button
 						title="Nächste Folie (Pfeil nach Rechts)"
 						className="px-9"
-						disabled={$selected_display_ids.length === 0}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 						click_function={async () => {
 							await send_single_key_press('VK_RIGHT');
 						}}><ArrowBigRight /></Button
@@ -234,19 +239,20 @@
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
-					click_function={show_text_popup}><TextAlignStart /> Text Anzeigen</Button
+					click_function={show_text_popup}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					><TextAlignStart /> Text Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					click_function={show_website_popup}><Globe /> Webseite Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					click_function={async () => {
 						await run_on_all_selected_displays((d) => show_blackscreen(d.ip));
 					}}><Presentation />Blackout</Button
@@ -261,7 +267,7 @@
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Senden</Button
 				>
 			</div>
@@ -269,7 +275,8 @@
 				<div class="flex flex-col gap-2">
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$all_display_states === 'on' || $selected_display_ids.length === 0}
+						disabled={$all_display_states === 'on' ||
+							no_active_display_selected($selected_display_ids, $online_displays)}
 						click_function={startup_action}
 					>
 						<Power /> Bildschirm Hochfahren
@@ -277,7 +284,8 @@
 
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$all_display_states === 'off' || $selected_display_ids.length === 0}
+						disabled={$all_display_states === 'off' ||
+							no_active_display_selected($selected_display_ids, $online_displays)}
 						click_function={ask_shutdonw}
 					>
 						<PowerOff /> Bildschirm Herunterfahren</Button

@@ -9,6 +9,9 @@ import {
 } from './types';
 import { dev } from '$app/environment';
 import { get_sanitized_file_url } from './utils';
+import { online_displays } from './stores/displays';
+import { get } from 'svelte/store';
+import { update_display_status } from './main';
 
 export async function get_screenshot(ip: string): Promise<Blob | null> {
 	const options = { method: 'PATCH' };
@@ -188,7 +191,23 @@ async function request_display(
 	supress_error_handling_http_codes: number[] = []
 ): Promise<RequestResponse> {
 	const url = `http://${ip}:1323/api${api_route}`;
-	return await request(url, options, supress_error_handling_http_codes);
+
+	const current_online_displays = get(online_displays);
+	if (!current_online_displays.map((d) => d.ip).includes(ip)) return { ok: false };
+
+	const response = await request(url, options, supress_error_handling_http_codes);
+	if (!response.ok && response.http_code === 408) {
+		// Network error -> device possibly not longer online -> test status and throw no error if its offline
+		const possible_displays = current_online_displays.filter((d) => d.ip === ip);
+		for (const display of possible_displays) {
+			const current_status = await update_display_status(display);
+			if (current_status === 'app_online') {
+				console.error(`No response from ${url}`)
+				notifications.push('error', "Netzwerk-Fehler bei API-Anfrage", `${url}`);
+			}
+		}
+	}
+	return response;
 }
 
 async function request_control(
@@ -245,6 +264,7 @@ async function request(
 			if (dev) {
 				console.warn('Request failed - Is the targeted device online?');
 			}
+			return { ok: false, http_code: 408 };
 		} else {
 			console.error(url, error);
 			notifications.push('error', `Fataler Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);

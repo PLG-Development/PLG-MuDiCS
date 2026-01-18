@@ -38,6 +38,7 @@
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
 	import { download_file, add_upload, add_sync_recursively } from '$lib/ts/file_transfer_handler';
+	import { no_active_display_selected, online_displays } from '$lib/ts/stores/displays';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -321,7 +322,7 @@
 						title="Neuen Ordner erstellen (Neuen Ordner mit ausgewählten Objekten erstellen)"
 						className="px-3 flex"
 						click_function={show_new_folder_popup}
-						disabled={$selected_display_ids.length === 0}><FolderPlus /></Button
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><FolderPlus /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
@@ -330,7 +331,7 @@
 						click_function={() => {
 							if (file_input) file_input.click();
 						}}
-						disabled={$selected_display_ids.length === 0}><Upload /></Button
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><Upload /></Button
 					>
 					<Button
 						title="Ausgewählte Datei herunterladen"
@@ -349,7 +350,7 @@
 								$selected_display_ids,
 								$current_folder_elements ?? []
 							)}
-						disabled={$selected_display_ids.length === 0}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 						><RefreshCcw />
 						<span class="hidden 2xl:flex">Synchronisieren</span>
 					</Button>
@@ -363,7 +364,7 @@
 					<Button
 						title="Ausgewählte Datei(en) einfügen"
 						className="px-3 flex"
-						disabled={$selected_display_ids.length === 0}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					>
 						<ClipboardPaste />
 					</Button>
@@ -387,7 +388,7 @@
 		</div>
 		<div class="min-h-0 h-full overflow-y-auto overflow-x-hidden bg-stone-750 rounded-xl">
 			<div class="flex flex-col gap-2 p-2 min-h-0 max-w-full">
-				{#if $selected_display_ids.length === 0}
+				{#if no_active_display_selected($selected_display_ids, $online_displays)}
 					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
 						Es sind keine Bildschirme ausgewählt.
 					</span>

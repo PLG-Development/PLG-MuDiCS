@@ -1,6 +1,6 @@
 import { screenshot_loop } from './stores/displays';
 import { ping_ip } from './api_handler';
-import type { Display } from './types';
+import type { Display, DisplayStatus } from './types';
 import { update_folder_elements_recursively } from './stores/files';
 import { db } from './database';
 
@@ -37,9 +37,9 @@ async function update_all_display_status(only_loading_displays: boolean) {
 	}
 }
 
-export async function update_display_status(display: Display) {
+export async function update_display_status(display: Display): Promise<DisplayStatus> {
 	const new_status = await ping_ip(display.ip);
-	if (new_status === null && display.status !== null) return;
+	if (new_status === null && display.status !== null) return null;
 	if (new_status !== display.status) {
 		// status change
 		if (new_status === 'app_offline') {
@@ -53,6 +53,7 @@ export async function update_display_status(display: Display) {
 		display.status = new_status;
 		await db.displays.put(display); // save
 	}
+	return new_status;
 }
 
 export function remove_display_from_loading_displays(display_id: string) {

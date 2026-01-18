@@ -14,6 +14,15 @@ import { db } from '../database';
 import { dev } from '$app/environment';
 import { remove_display_from_loading_displays } from '../main';
 import { preview_settings } from './ui_behavior';
+import { liveQuery } from 'dexie';
+
+export const online_displays: Writable<Display[]> = writable<Display[]>([]);
+
+export const online_displays_sub = liveQuery(() =>
+	db.displays.where('status').equals('app_online').toArray()
+).subscribe((value) => {
+	online_displays.set(value);
+});
 
 export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
@@ -204,7 +213,7 @@ export async function update_local_displays() {
 
 export async function update_db_displays() {
 	local_displays.update((groups) => groups.filter((g) => g.displays.length !== 0));
-	const filtered_local_display_groups = get(local_displays)
+	const filtered_local_display_groups = get(local_displays);
 	const db_display_group_ids = (await db.display_groups.toArray()).map((group) => group.id);
 	const local_display_group_ids = filtered_local_display_groups.map((group) => group.id);
 
@@ -240,6 +249,16 @@ export function set_new_display_order(display_id_group_id: string, new_data: Dis
 		}
 		return local_displays;
 	});
+}
+
+export function no_active_display_selected(
+	selected_display_ids: string[],
+	online_displays: Display[]
+) {
+	const online_and_selected_displays = online_displays.filter((d) =>
+		selected_display_ids.includes(d.id)
+	);
+	return online_and_selected_displays.length === 0;
 }
 
 if (dev) {
