@@ -29,7 +29,7 @@
 	import RefreshPlay from '../svgs/RefreshPlay.svelte';
 	import { get_file_size_display_string, get_file_type } from '$lib/ts/utils';
 	import { open_file } from '$lib/ts/api_handler';
-	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery, type Observable } from 'dexie';
 	import { db } from '$lib/ts/database';
@@ -215,7 +215,17 @@
 				if (!is_loading) is_loading = true;
 				percentage_sum += fod.loading_data.percentage;
 				total_seconds_until_finish += fod.loading_data.seconds_until_finish;
-				display_data.push(fod.loading_data);
+				const display = await get_display_by_id(fod.display_id);
+				if (!display) continue;
+				const display_data_element = {
+					loading_data: fod.loading_data,
+					display_name: display.name
+				};
+				if (fod.loading_data.type === 'sync_download') {
+					display_data.unshift(display_data_element); // insert sync_download element at beginning
+				} else {
+					display_data.push(display_data_element);
+				}
 			} else {
 				percentage_sum += 100;
 			}

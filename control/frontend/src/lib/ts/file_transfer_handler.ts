@@ -89,12 +89,31 @@ export async function add_upload(
 	await start_task_processing();
 }
 
-export async function add_sync(selected_file_id: string, selected_display_ids: string[]) {
+export async function add_sync_recursively(
+	selected_file_id: string,
+	selected_display_ids: string[]
+) {
 	const file_data = await find_file_data_on_active_selected_display(
 		selected_file_id,
 		selected_display_ids
 	);
 	if (!file_data) return console.warn('Sync canceled: no file_data');
+
+	if (file_data.file.type === 'inode/directory') {
+		const new_path = file_data.file.path + file_data.file.name + '/';
+		const elements_in_folder = await get_folder_elements(new_path, selected_display_ids);
+		if (elements_in_folder.length === 0) {
+			await create_path_on_all_selected_displays(new_path, selected_display_ids);
+		} else {
+			for (const el of elements_in_folder) {
+				await add_sync_recursively(get_file_primary_key(el), selected_display_ids);
+			}
+		}
+		return; // cannot sync folder
+	}
+
+	if (file_data.short_displays_without_file.length === 0) return; // file is present on all selected displays
+	await create_path_on_all_selected_displays(file_data.file.path, selected_display_ids);
 
 	tasks.push({
 		data: {
