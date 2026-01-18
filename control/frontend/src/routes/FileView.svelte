@@ -66,7 +66,6 @@
 		open: false,
 		snippet: null,
 		title: '',
-		closable: true
 	});
 
 	let file_input: HTMLInputElement;
@@ -120,7 +119,6 @@
 			title: `${is_folder ? 'Ordner' : 'Datei'} umbenennen`,
 			title_icon: FolderPlus,
 			snippet_arg: extension,
-			closable: true
 		};
 	};
 
@@ -135,7 +133,6 @@
 			snippet: new_folder_popup,
 			title: 'Neuen Ordner erstellen',
 			title_icon: FolderPlus,
-			closable: true
 		};
 	};
 
@@ -145,7 +142,6 @@
 			snippet: delete_request_popup,
 			title: `${$selected_file_ids.length} ${$selected_file_ids.length === 1 ? 'Objekt' : 'Objekte'} wirklich löschen?`,
 			title_icon: Trash2,
-			closable: true
 		};
 	};
 
