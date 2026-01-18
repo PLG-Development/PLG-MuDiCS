@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { get_selectable_color_classes } from '$lib/ts/stores/ui_behavior';
-	import key_map_json from './../../../../shared/keys.json';
 	import { fade } from 'svelte/transition';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { send_keyboard_input } from '$lib/ts/api_handler';
-
-	const key_map: Record<string, string> = key_map_json as Record<string, string>;
 
 	let active = $state(false);
 	const current_keys: string[] = $state([]);
@@ -24,7 +21,7 @@
 
 	async function on_key(e: KeyboardEvent, key_down: boolean) {
 		if (!active) return;
-		const id = key_map[e.code];
+		const id = e.code;
 		if (!id) return;
 
 		if (key_down) {
