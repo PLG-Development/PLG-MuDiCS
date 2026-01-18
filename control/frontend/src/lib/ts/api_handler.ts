@@ -238,7 +238,7 @@ async function request(
 				error_description += '\nCould not parse error description';
 			}
 		}
-		notifications.push('error', `Fehler ${response.status} bei API-Anfrage`, error_description);
+		notifications.push('error', `Fehler bei API-Anfrage`, `\nHTTP: ${response.status}\n${error_description}`);
 	} catch (error: unknown) {
 		if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
 			if (dev) {
@@ -272,8 +272,8 @@ function handle_shell_error(
 		console.error(shell_response);
 		notifications.push(
 			'error',
-			`Fehler ${shell_response.exitCode} in API-Shell`,
-			`${ip}\n${shell_command}\nFehler: ${shell_response.stderr}`
+			`Fehler in API-Shell`,
+			`${ip}\n${shell_command}\nFehler (${shell_response.exitCode}): ${shell_response.stderr}`
 		);
 		return true;
 	}
