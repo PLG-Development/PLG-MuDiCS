@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Monitor, Plus, Radio, Settings, Trash2, Menu } from 'lucide-svelte';
+	import { Monitor, Plus, Radio, Trash2, Menu, Info } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import FileView from './FileView.svelte';
 	import ControlView from './ControlView.svelte';
@@ -117,7 +117,62 @@
 	};
 
 	onMount(on_app_start);
+
+	const show_about_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: about_popup,
+			title: 'Über PLG MuDiCS',
+			title_icon: Info,
+			title_class: '!text-xl',
+			closable: true
+		};
+	};
 </script>
+
+{#snippet about_popup(_: string)}
+	<div class="px-2">
+		<h3 class="text-lg font-bold mt-4">Entwickler</h3>
+		<p>
+			<a target="_blank" class="link" href="https://github.com/programmer-44">E44</a>
+			<a target="_blank" class="link" href="https://codeberg.org/2mal3">2mal3</a>,
+		</p>
+
+		<h3 class="text-lg font-bold mt-4">Lizenz</h3>
+		<a
+			target="_blank"
+			class="link"
+			href="https://github.com/PLG-Development/PLG-MuDiCS/blob/main/LICENSE.txt"
+		>
+			GNU Affero General Public License v3 (AGPL-3.0)
+		</a>
+
+		<h3 class="text-lg font-bold mt-4">Verwendete Bibliotheken</h3>
+		<ul class="list-disc list-inside">
+			<li><a target="_blank" href="https://svelte.dev/" class="link">Svelte & SvelteKit</a></li>
+			<li><a target="_blank" href="https://tailwindcss.com/" class="link">TailwindCSS</a></li>
+			<li><a target="_blank" href="https://lucide.dev/" class="link">Lucide Icons</a></li>
+			<li><a target="_blank" href="https://tiptap.dev/" class="link">Tiptap</a></li>
+			<li><a target="_blank" href="https://dexie.org/" class="link">Dexie.js</a></li>
+			<li>
+				<a target="_blank" href="https://github.com/orefalo/svelte-splitpanes" class="link"
+					>svelte-splitpanes</a
+				>
+			</li>
+			<li>
+				<a target="_blank" href="https://github.com/thisux/sveltednd" class="link"
+					>@thisux/sveltednd</a
+				>
+			</li>
+			<li><a target="_blank" href="https://echo.labstack.com/" class="link">Echo</a></li>
+			<li><a target="_blank" href="https://github.com/mdlayher/wol" class="link">wol</a></li>
+		</ul>
+
+		<div class="flex justify-end pt-2">
+			<Button click_function={popup_close_function} className="px-4">Schließen</Button>
+		</div>
+	</div>
+{/snippet}
 
 {#snippet remove_display_popup(display_id: string)}
 	<div class="max-w-prose px-2">
@@ -236,6 +291,11 @@
 					icon: Plus,
 					name: 'Neuen Bildschirm hinzufügen',
 					on_select: show_new_display_popup
+				},
+				{
+					icon: Info,
+					name: 'Über',
+					on_select: show_about_popup
 				}
 			]}
 		>
