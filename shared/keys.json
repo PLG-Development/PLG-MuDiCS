@@ -110,5 +110,10 @@
   "BrowserBack": "VK_BACK",
   "Pause": "VK_PAUSE",
   "Lang1": "VK_HANGUEL",
-  "Lang2": "VK_HANJA"
+  "Lang2": "VK_HANJA",
+
+  "Super": "Super",
+  "Ctrl": "Ctrl",
+  "Alt": "Alt",
+  "Shift": "Shift"
 }
