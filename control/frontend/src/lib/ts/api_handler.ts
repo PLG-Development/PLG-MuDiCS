@@ -110,16 +110,11 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
 	return tree_element?.contents || null;
 }
 
-export async function create_folders(
+export async function create_path(
 	ip: string,
 	path: string,
-	folder_names: string[]
 ): Promise<void> {
-	let command = `cd ".${path}"`;
-
-	for (const part of folder_names) {
-		command += ` && mkdir "${part}" && cd "${part}/"`;
-	}
+	const command = `mkdir -p ".${path}"`
 
 	const raw_response = await run_shell_command(ip, command);
 	if (!raw_response.ok || !raw_response.json) return;

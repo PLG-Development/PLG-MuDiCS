@@ -8,7 +8,7 @@ import {
 } from '../types';
 import { get_display_by_id } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
-import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
+import { create_path, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
 import { db } from '../database';
 
@@ -47,7 +47,10 @@ export async function delete_and_deselect_unique_files_from_display(display_id: 
 	await remove_all_files_without_display();
 }
 
-export async function remove_file_from_display_recusively(display_id: string, file_primary_key: string) {
+export async function remove_file_from_display_recusively(
+	display_id: string,
+	file_primary_key: string
+) {
 	const found = await db.files_on_display.get([display_id, file_primary_key]);
 	if (!found) return;
 	select(selected_file_ids, file_primary_key, 'deselect');
@@ -130,12 +133,11 @@ async function get_display_ids_where_file_is_missing(
 	);
 }
 
-export async function get_displays_where_path_exists(
+export async function get_displays_where_path_not_exists(
 	path: string,
-	selected_display_ids: string[],
-	invert: boolean
+	selected_display_ids: string[]
 ): Promise<Display[]> {
-	if (path === '/') return [];
+	if (path === '/') return await db.displays.where('id').anyOf(selected_display_ids).toArray();
 	const last_path_part =
 		path
 			.slice(0, path.length - 1)
@@ -148,8 +150,7 @@ export async function get_displays_where_path_exists(
 		.equals(last_path_part)
 		.filter((inode) => inode.path === path_without_last_part && inode.type === 'inode/directory')
 		.first();
-	if (!folders_of_current_path)
-		return await db.displays.where('id').anyOf(selected_display_ids).toArray();
+	if (!folders_of_current_path) return [];
 	const folder_primary_key = get_file_primary_key(folders_of_current_path);
 
 	const display_ids_with_folder = (
@@ -157,11 +158,7 @@ export async function get_displays_where_path_exists(
 	).map((fod) => fod.display_id);
 
 	const display_ids = selected_display_ids.filter((display_id) => {
-		if (invert) {
-			return !display_ids_with_folder.includes(display_id);
-		} else {
-			return display_ids_with_folder.includes(display_id);
-		}
+		return !display_ids_with_folder.includes(display_id);
 	});
 
 	return (await db.displays.bulkGet(display_ids)).filter((e) => e !== undefined);
@@ -404,31 +401,24 @@ export async function create_path_on_all_selected_displays(
 	path: string,
 	selected_display_ids: string[]
 ) {
-	const path_parts = path
-		.slice(1, path.length - 1)
-		.split('/')
-		.filter((e) => e.length !== 0);
-	let remaining_display_ids = [...selected_display_ids];
-
-	const getDisplaysForPath = async (currentPath: string): Promise<Display[]> => {
-		if (currentPath === '/') {
-			const displays = await db.displays.bulkGet(remaining_display_ids);
-			return displays.filter((d): d is Display => !!d);
-		}
-		return get_displays_where_path_exists(currentPath, remaining_display_ids, false);
-	};
-
-	for (let depth = path_parts.length; depth >= 0 && remaining_display_ids.length; depth--) {
-		const currentPath = depth === 0 ? '/' : `/${path_parts.slice(0, depth).join('/')}/`;
-
-		const displays = await getDisplaysForPath(currentPath);
-		if (!displays.length) continue;
-
-		for (const display of displays) {
-			await create_folders(display.ip, currentPath, path_parts.slice(depth));
-			remaining_display_ids = remaining_display_ids.filter((id) => id !== display.id);
-		}
+	const displays_without_path = await get_displays_where_path_not_exists(
+		path,
+		selected_display_ids
+	);
+	if (displays_without_path.length === 0) return;
+	for (const display of displays_without_path) {
+		await create_path(display.ip, path);
 	}
+	setTimeout(async () => {
+		for (const display of displays_without_path) {
+			const changed_paths = await get_changed_directory_paths(display, '/');
+			if (!changed_paths) continue;
+			console.debug('Update file system from', display.name, ':', changed_paths);
+			for (const path of changed_paths) {
+				await update_folder_elements_recursively(display, path);
+			}
+		}
+	}, 0);
 }
 
 export async function get_date_mapping(file_primary_key: string): Promise<Record<string, Date>> {
