@@ -11,7 +11,7 @@
 		type Inode,
 		get_file_primary_key,
 		type FileOnDisplay,
-		type FileLoadingData
+		type CompleteFileLoadingData
 	} from '$lib/ts/types';
 
 	import {
@@ -45,12 +45,7 @@
 	});
 
 	let loading_data:
-		| Observable<{
-				is_loading: boolean;
-				total_percentage: number;
-				total_seconds_until_finish: number;
-				display_data: FileLoadingData[];
-		  }>
+		| Observable<CompleteFileLoadingData>
 		| undefined = $state();
 	$effect(() => {
 		const d = $selected_display_ids;
@@ -197,12 +192,7 @@
 	async function get_loading_data(
 		file_primary_key: string,
 		selected_display_ids: string[]
-	): Promise<{
-		is_loading: boolean;
-		total_percentage: number;
-		total_seconds_until_finish: number;
-		display_data: FileLoadingData[];
-	}> {
+	): Promise<CompleteFileLoadingData> {
 		const file_on_display_data: FileOnDisplay[] = await db.files_on_display
 			.where('file_primary_key')
 			.equals(file_primary_key)

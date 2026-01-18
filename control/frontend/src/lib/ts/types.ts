@@ -66,6 +66,13 @@ export type FileLoadingData = {
 	seconds_until_finish: number;
 };
 
+export type CompleteFileLoadingData = {
+	is_loading: boolean;
+	total_percentage: number;
+	total_seconds_until_finish: number;
+	display_data: { loading_data: FileLoadingData; display_name: string }[];
+};
+
 export type Inode = {
 	path: string;
 	name: string;
