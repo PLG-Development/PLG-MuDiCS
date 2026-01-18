@@ -9,18 +9,26 @@
 		Presentation,
 		SquareTerminal,
 		TextAlignStart,
-		TrafficCone
+		TrafficCone,
+		Globe
 	} from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
 	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen, shutdown, startup } from '$lib/ts/api_handler';
+	import {
+		send_keyboard_input,
+		show_blackscreen,
+		shutdown,
+		startup,
+		show_html
+	} from '$lib/ts/api_handler';
 	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 	import { db } from '$lib/ts/database';
 	import { liveQuery, type Observable } from 'dexie';
+	import TextInput from '$lib/components/TextInput.svelte';
 
 	let all_display_states: Observable<'on' | 'off' | 'mixed'> | undefined = $state();
 	$effect(() => {
@@ -57,6 +65,17 @@
 			title_icon: TextAlignStart,
 			closable: true,
 			window_class: 'size-full'
+		};
+	};
+
+	const show_website_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: website_popup,
+			title: 'Webseite anzeigen',
+			window_class: 'w-xl',
+			title_icon: Globe,
+			closable: true
 		};
 	};
 
@@ -116,7 +135,50 @@
 			10
 		);
 	}
+	let website_url = $state('');
+	let website_url_valid = $state(false);
+
+	function validate_website_url(url: string): [boolean, string] {
+		if (url === '') return [true, ''];
+		const regex = /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+		if (regex.test(url)) {
+			return [true, ''];
+		}
+		return [false, 'Ungültige URL'];
+	}
+
+	async function send_website() {
+		popup_content.open = false;
+		await run_on_all_selected_displays((d) =>
+			show_html(d.ip, `<iframe src="${website_url}"></iframe>`)
+		);
+		website_url = '';
+	}
 </script>
+
+{#snippet website_popup()}
+	<div class="flex flex-col gap-2">
+		<TextInput
+			title="URL"
+			placeholder="https://example.com"
+			bind:current_value={website_url}
+			bind:current_valid={website_url_valid}
+			is_valid_function={validate_website_url}
+			enter_mode="submit"
+			enter_function={send_website}
+		/>
+		<div class="flex flex-row justify-end gap-2">
+			<Button className="button space font-bold" click_function={popup_close_function}>
+				Abbrechen
+			</Button>
+			<Button
+				click_function={send_website}
+				disabled={!website_url_valid || website_url === ''}
+				className="button success space">Anzeigen</Button
+			>
+		</div>
+	</div>
+{/snippet}
 
 {#snippet ask_shutdonw_popup()}
 	<p>Bist du sicher, dass du alle ausgewählten Displays herunterfahren möchtest?</p>
@@ -174,6 +236,12 @@
 					className="px-3 flex gap-3 w-75 justify-normal"
 					disabled={$selected_display_ids.length === 0}
 					click_function={show_text_popup}><TextAlignStart /> Text anzeigen</Button
+				>
+
+				<Button
+					className="px-3 flex gap-3 w-75 justify-normal"
+					disabled={$selected_display_ids.length === 0}
+					click_function={show_website_popup}><Globe /> Webseite anzeigen</Button
 				>
 
 				<Button
