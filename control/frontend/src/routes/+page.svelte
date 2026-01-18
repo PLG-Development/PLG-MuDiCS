@@ -5,7 +5,7 @@
 	import ControlView from './ControlView.svelte';
 	import DisplayView from './DisplayView.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
-	import { type PopupContent } from '$lib/ts/types';
+	import { type Display, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import {
 		add_display,
@@ -17,7 +17,7 @@
 	import { notifications } from '$lib/ts/stores/notification';
 	import { ping_ip } from '$lib/ts/api_handler';
 	import { onMount } from 'svelte';
-	import { on_start } from '$lib/ts/main';
+	import { on_app_start, update_display_status } from '$lib/ts/main';
 	import { display_status_to_info } from '$lib/ts/utils';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 
@@ -55,11 +55,15 @@
 		const ip = text_inputs_valid.ip.value;
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
+		let display: Display | null = null;
 		if (!!existing_display_id) {
-			await edit_display_data(existing_display_id, ip, mac, name);
+			display = await edit_display_data(existing_display_id, ip, mac, name);
 		} else {
 			const status = await ping_ip(text_inputs_valid.ip.value);
-			await add_display(ip, mac, name, status);
+			display = await add_display(ip, mac, name, status);
+		}
+		if (!!display) {
+			await update_display_status(display);
 		}
 	}
 
@@ -112,7 +116,7 @@
 		};
 	};
 
-	onMount(on_start);
+	onMount(on_app_start);
 </script>
 
 {#snippet remove_display_popup(display_id: string)}

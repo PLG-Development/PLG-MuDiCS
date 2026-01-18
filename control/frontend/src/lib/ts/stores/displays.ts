@@ -12,6 +12,7 @@ import { get_screenshot } from '../api_handler';
 import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../database';
 import { dev } from '$app/environment';
+import { remove_display_from_loading_displays } from '../main';
 
 export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
@@ -25,8 +26,8 @@ export async function add_display(
 	mac: string | null,
 	name: string,
 	status: DisplayStatus
-) {
-	if (await is_display_name_taken(name)) return;
+): Promise<Display | null> {
+	if (await is_display_name_taken(name)) return null;
 	const new_id = get_uuid();
 	const group = await db.display_groups.toCollection().first();
 	let group_id: string;
@@ -38,7 +39,7 @@ export async function add_display(
 	}
 	const element_count_in_group = (await db.displays.where('group_id').equals(group_id).toArray())
 		.length;
-	await db.displays.put({
+	const display = {
 		id: new_id,
 		ip,
 		mac,
@@ -47,7 +48,9 @@ export async function add_display(
 		group_id: group_id,
 		name,
 		status
-	});
+	};
+	await db.displays.put(display);
+	return display;
 }
 
 export async function edit_display_data(
@@ -55,11 +58,12 @@ export async function edit_display_data(
 	ip: string,
 	mac: string | null,
 	name: string
-) {
+): Promise<Display | null> {
 	let display = await db.displays.get(display_id);
-	if (!display) return;
+	if (!display) return null;
 	display = { ...display, ip: ip, mac: mac, name: name };
 	await db.displays.put(display); // save
+	return display;
 }
 
 export async function remove_display(display_id: string) {
@@ -71,6 +75,7 @@ export async function remove_display(display_id: string) {
 	if (group_id && (await db.displays.where('group_id').equals(group_id).toArray()).length === 0) {
 		await db.display_groups.delete(group_id); // delete empty group
 	}
+	await remove_display_from_loading_displays(display_id);
 }
 
 export async function all_displays_of_group_selected(
