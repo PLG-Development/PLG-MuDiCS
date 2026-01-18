@@ -303,12 +303,10 @@
 		class="{get_main_classes()} relative transition-colors duration-200 gap-4 flex flex-row justify-between group w-full min-w-0"
 	>
 		{#if $loading_data?.is_loading}
-			<!-- <div class="pointer-events-none absolute inset-0"> -->
 			<div
 				class="absolute pointer-events-none inset-y-0 left-0 transition-[width] duration-200 bg-stone-600 rounded-r-lg"
-				style={`width: ${$loading_data.total_percentage}%;`}
+				style={`width: ${Math.min($loading_data.total_percentage, 100)}%;`}
 			></div>
-			<!-- </div> -->
 		{/if}
 		<div class="flex flex-row gap-2 min-w-0 w-full z-10">
 			<div class="aspect-square rounded-md flex justify-center items-center">
