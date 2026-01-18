@@ -1,5 +1,18 @@
 <script lang="ts">
-	import { Monitor, Plus, Radio, Trash2, Menu, Info } from 'lucide-svelte';
+	import {
+		Monitor,
+		Plus,
+		Radio,
+		Settings,
+		Trash2,
+		Menu,
+		ChevronDown,
+		icons,
+		SquareCheckBig,
+		Square,
+		X,
+		Info
+	} from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import FileView from './FileView.svelte';
 	import ControlView from './ControlView.svelte';
@@ -20,6 +33,8 @@
 	import { on_app_start, update_display_status } from '$lib/ts/main';
 	import { display_status_to_info } from '$lib/ts/utils';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
+	import { preview_settings } from '$lib/ts/stores/ui_behavior';
+	import NumberSettingInput from '$lib/components/NumberSettingInput.svelte';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -67,6 +82,17 @@
 		}
 	}
 
+	function get_display_preview_mode(mode: 'never' | 'normal' | 'always') {
+		switch (mode) {
+			case 'never':
+				return 'Nie';
+			case 'normal':
+				return 'Normal';
+			case 'always':
+				return 'Dauerhaft';
+		}
+	}
+
 	function popup_close_function() {
 		popup_content.open = false;
 	}
@@ -78,6 +104,18 @@
 			snippet: display_popup,
 			title: 'Neuen Bildschirm hinzufügen',
 			title_icon: Monitor,
+			title_class: '!text-xl',
+			window_class: 'w-3xl',
+			closable: true
+		};
+	};
+
+	const show_settings_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: settings_popup,
+			title: 'Einstellungen',
+			title_icon: Settings,
 			title_class: '!text-xl',
 			window_class: 'w-3xl',
 			closable: true
@@ -167,10 +205,9 @@
 			<li><a target="_blank" href="https://echo.labstack.com/" class="link">Echo</a></li>
 			<li><a target="_blank" href="https://github.com/mdlayher/wol" class="link">wol</a></li>
 		</ul>
-
-		<div class="flex justify-end pt-2">
-			<Button click_function={popup_close_function} className="px-4">Schließen</Button>
-		</div>
+	</div>
+	<div class="flex justify-end pt-2">
+		<Button click_function={popup_close_function} className="px-4">Schließen</Button>
 	</div>
 {/snippet}
 
@@ -280,6 +317,54 @@
 	</div>
 {/snippet}
 
+{#snippet settings_popup()}
+	<div class="flex flex-col gap-2 pl-1">
+		<span class="font-bold text-lg">Vorschau-Verhalten</span>
+		<div class="flex flex-col gap-2 ml-2">
+			<span class="text-stone-400 text-sm max-w-prose"
+				>Die Vorschau eines Bildschirms ist das Bild, welches links neben dem Display-Namen zu sehen
+				ist. Es zeigt relativ aktuell das an, was auf dem jeweiligen Bildschirm zu sehen ist.</span
+			>
+			<div class="flex flex-row justify-between items-center">
+				<span>Aktualisierungs-Verhalten</span>
+				<Button
+					className="gap-3 pl-4 pr-3 w-35"
+					menu_options={(['never', 'normal', 'always'] as const).map((mode) => ({
+						icon: mode === $preview_settings.mode ? SquareCheckBig : Square,
+						name: get_display_preview_mode(mode),
+						on_select: () => {
+							$preview_settings.mode = mode;
+						}
+					}))}>{get_display_preview_mode($preview_settings.mode)} <ChevronDown /></Button
+				>
+			</div>
+			<div class="flex flex-row justify-between items-center">
+				<span>Intervall zwischen den Aktualisierungs-Anfragen</span>
+				<NumberSettingInput
+					disabled={$preview_settings.mode === 'never'}
+					number_setting={$preview_settings.retry_seconds}
+					on_change={(new_value: number) => {
+						$preview_settings.retry_seconds.now = new_value;
+					}}
+				/>
+			</div>
+			<div class="flex flex-row justify-between items-center max-w-full gap-8">
+				<span class="">Anzahl der änderungslosen Aktualisierungen bis pausiert wird</span>
+				<NumberSettingInput
+					disabled={$preview_settings.mode !== 'normal'}
+					number_setting={$preview_settings.retry_count}
+					on_change={(new_value: number) => {
+						$preview_settings.retry_count.now = new_value;
+					}}
+				/>
+			</div>
+		</div>
+	</div>
+	<div class="flex justify-end pt-4">
+		<Button click_function={popup_close_function} className="px-4">Schließen</Button>
+	</div>
+{/snippet}
+
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
@@ -291,6 +376,11 @@
 					icon: Plus,
 					name: 'Neuen Bildschirm hinzufügen',
 					on_select: show_new_display_popup
+				},
+				{
+					icon: Settings,
+					name: 'Einstellungen',
+					on_select: show_settings_popup
 				},
 				{
 					icon: Info,

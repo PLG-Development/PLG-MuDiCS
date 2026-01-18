@@ -13,6 +13,7 @@ import { delete_and_deselect_unique_files_from_display } from './files';
 import { db } from '../database';
 import { dev } from '$app/environment';
 import { remove_display_from_loading_displays } from '../main';
+import { preview_settings } from './ui_behavior';
 
 export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
@@ -117,7 +118,13 @@ export async function get_display_by_id(display_id: string): Promise<Display | n
 	return (await db.displays.get(display_id)) ?? null;
 }
 
-export async function screenshot_loop(display_id: string, initial_retry_count: number = 5) {
+export async function screenshot_loop(display_id: string) {
+	const settings = get(preview_settings);
+	if (settings.mode === 'never') return;
+
+	const initial_retry_count = settings.retry_count.now;
+	const retry_seconds = get(preview_settings).retry_seconds.now;
+
 	const display = await db.displays.get(display_id);
 	if (!display || display.preview.currently_updating) return;
 
@@ -128,7 +135,7 @@ export async function screenshot_loop(display_id: string, initial_retry_count: n
 
 	let retry_count = initial_retry_count;
 	while (retry_count > 0) {
-		retry_count -= 1;
+		if (settings.mode !== 'always') retry_count -= 1;
 
 		const new_blob = await get_screenshot(display.ip);
 		if (!new_blob) {
@@ -149,7 +156,7 @@ export async function screenshot_loop(display_id: string, initial_retry_count: n
 			retry_count = initial_retry_count;
 		}
 
-		await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep 2s
+		await new Promise((resolve) => setTimeout(resolve, retry_seconds * 1000)); // sleep
 	}
 
 	display.preview.currently_updating = false;

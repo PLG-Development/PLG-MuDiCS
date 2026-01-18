@@ -141,6 +141,13 @@ export type PopupContent = {
 	closable?: boolean;
 };
 
+export type NumberSetting = {
+	max: number,
+	min: number,
+	now: number,
+	step: number
+}
+
 export type DisplayStatus = 'host_offline' | 'app_offline' | 'app_online' | null;
 
 export function to_display_status(value: string): DisplayStatus {
