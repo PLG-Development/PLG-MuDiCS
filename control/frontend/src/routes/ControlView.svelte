@@ -97,7 +97,7 @@
 		popup_content = {
 			open: true,
 			snippet: ask_shutdonw_popup,
-			title: 'Display Herunterfahren',
+			title: 'Bildschirm Herunterfahren',
 			title_icon: PowerOff,
 			closable: true
 		};
@@ -272,7 +272,7 @@
 						disabled={$all_display_states === 'on' || $selected_display_ids.length === 0}
 						click_function={startup_action}
 					>
-						<Power /> Display Hochfahren
+						<Power /> Bildschirm Hochfahren
 					</Button>
 
 					<Button
@@ -280,7 +280,7 @@
 						disabled={$all_display_states === 'off' || $selected_display_ids.length === 0}
 						click_function={ask_shutdonw}
 					>
-						<PowerOff /> Display Herunterfahren</Button
+						<PowerOff /> Bildschirm Herunterfahren</Button
 					>
 				</div>
 				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal" disabled>
