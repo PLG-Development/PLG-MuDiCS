@@ -195,7 +195,7 @@ async function request_control(
 	api_route: string,
 	options: { method: string; headers?: Record<string, string>; body?: string }
 ): Promise<RequestResponse> {
-	const url = `http://127.0.0.1:8080/api${api_route}`;
+	const url = `http://${dev ? '127.0.0.1:8080' : window.location.origin}/api${api_route}`;
 	return await request(url, options);
 }
 
