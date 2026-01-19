@@ -104,17 +104,8 @@
 		);
 	}
 
-	async function send_single_key_press(key: string) {
-		await run_on_all_selected_displays((d) =>
-			send_keyboard_input(d.ip, [{ key, action: 'press' }])
-		);
-		setTimeout(
-			async () =>
-				await run_on_all_selected_displays((d) =>
-					send_keyboard_input(d.ip, [{ key, action: 'release' }])
-				),
-			10
-		);
+	async function send_single_key_press(key: string, action: 'press' | 'release') {
+		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]));
 	}
 </script>
 
@@ -152,22 +143,37 @@
 		<div class="flex flex-row justify-between gap-2">
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-row gap-2 w-75 justify-normal">
-					<Button
+					<button
 						title="Vorherige Folie (Pfeil nach Links)"
-						className="px-9"
+						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+							? 'text-stone-500 cursor-not-allowed'
+							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
 						disabled={$selected_display_ids.length === 0}
-						click_function={async () => {
-							await send_single_key_press('VK_LEFT');
-						}}><ArrowBigLeft /></Button
+						onmousedown={async () => {
+							await send_single_key_press('ArrowLeft', 'press');
+						}}
+						onmouseup={async () => {
+							await send_single_key_press('ArrowLeft', 'release');
+						}}
 					>
-					<Button
-						title="Nächste Folie (Pfeil nach Rechts)"
-						className="px-9"
+						<ArrowBigLeft />
+					</button>
+
+					<button
+						title="Vorherige Folie (Pfeil nach Links)"
+						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+							? 'text-stone-500 cursor-not-allowed'
+							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
 						disabled={$selected_display_ids.length === 0}
-						click_function={async () => {
-							await send_single_key_press('VK_RIGHT');
-						}}><ArrowBigRight /></Button
+						onmousedown={async () => {
+							await send_single_key_press('ArrowRight', 'press');
+						}}
+						onmouseup={async () => {
+							await send_single_key_press('ArrowRight', 'release');
+						}}
 					>
+						<ArrowBigRight />
+					</button>
 				</div>
 
 				<Button
