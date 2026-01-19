@@ -395,15 +395,6 @@ export async function run_for_selected_files_on_selected_displays(
 	}
 }
 
-export async function create_folder_on_all_selected_displays(
-	folder_name: string,
-	path: string,
-	selected_display_ids: string[]
-): Promise<void> {
-	const path_with_folder_name = (path += folder_name + '/');
-	await create_path_on_all_selected_displays(path_with_folder_name, selected_display_ids);
-}
-
 export async function create_path_on_all_selected_displays(
 	path: string,
 	selected_display_ids: string[]

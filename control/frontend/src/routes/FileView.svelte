@@ -22,7 +22,8 @@
 		run_for_selected_files_on_selected_displays,
 		update_current_folder_on_selected_displays,
 		get_displays_where_path_not_exists,
-		create_folder_on_all_selected_displays
+		create_path_on_all_selected_displays
+
 	} from '$lib/ts/stores/files';
 	import { slide } from 'svelte/transition';
 	import InodeElement from '../lib/components/InodeElement.svelte';
@@ -89,11 +90,8 @@
 
 	async function create_new_folder() {
 		popup_close_function();
-		await create_folder_on_all_selected_displays(
-			current_name.trim(),
-			$current_file_path,
-			$selected_display_ids
-		);
+		const path_with_folder_name = ($current_file_path += current_name.trim() + '/');
+		await create_path_on_all_selected_displays(path_with_folder_name, $selected_display_ids);
 		await update_current_folder_on_selected_displays();
 	}
 
