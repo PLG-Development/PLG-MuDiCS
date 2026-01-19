@@ -33,7 +33,7 @@ export type FileTransferTask = {
 	display: ShortDisplay;
 	path: string;
 	file_name: string;
-	file_primary_key: string;
+	loading_data: FileLoadingData;
 	bytes_total: number; // if type === 'sync' -> bytes_total = file_size * 2 (1x download + 1x upload)
 };
 
@@ -44,8 +44,17 @@ export type FileTransferTaskData =
 	  }
 	| {
 			type: 'sync';
-			destination_displays: ShortDisplay[];
+			destination_display_data: {
+				display: ShortDisplay;
+				loading_data: FileLoadingData
+			}[];
 	  };
+
+export type FileLoadingData = {
+	percentage: number;
+	bytes_per_second: number;
+	seconds_until_finish: number;
+};
 
 export type ShortDisplay = {
 	id: string;
@@ -56,21 +65,6 @@ export type FileOnDisplay = {
 	display_id: string;
 	file_primary_key: string; // JSON.stringify([string, string, number, string])
 	date_created: Date;
-	loading_data: FileLoadingData | null; // null if not loading
-};
-
-export type FileLoadingData = {
-	type: 'upload' | 'download' | 'sync_download' | 'sync_upload';
-	percentage: number;
-	bytes_per_second: number;
-	seconds_until_finish: number;
-};
-
-export type CompleteFileLoadingData = {
-	is_loading: boolean;
-	total_percentage: number;
-	total_seconds_until_finish: number;
-	display_data: { loading_data: FileLoadingData; display_name: string }[];
 };
 
 export type Inode = {

@@ -11,6 +11,7 @@ import { is_selected, select, selected_display_ids, selected_file_ids } from './
 import { create_path, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
 import { db } from '../database';
+import { file_transfer_tasks } from '../file_transfer_handler';
 
 export const current_file_path: Writable<string> = writable<string>('/');
 
@@ -231,9 +232,20 @@ export async function update_folder_elements_recursively(
 	const new_folder_elements = await get_file_data(display.ip, file_path);
 	if (!new_folder_elements) return;
 
+	const loading_file_ids = Object.keys(get(file_transfer_tasks));
+	const loading_file_keys_without_size = (
+		await db.files.bulkGet(
+			loading_file_ids.map((string_id) => JSON.parse(string_id) as [string, string, number, string])
+		)
+	)
+		.filter((f) => !!f)
+		.map((f) => JSON.stringify([f.path, f.name, f.type]));
+
+	// Filter new files, which aren't currently uploading
 	const existing_files_on_display_in_path: FileOnDisplay[] = await db.files_on_display
 		.where('display_id')
 		.equals(display.id)
+		.filter((f) => !loading_file_ids.includes(f.file_primary_key))
 		.toArray();
 	const existing_file_keys_on_display_in_path: [string, string, number, string][] =
 		existing_files_on_display_in_path.map(
@@ -245,17 +257,14 @@ export async function update_folder_elements_recursively(
 		.filter((e) => e.path === file_path)
 		.toArray();
 
-	const existing_files_with_loading_state: { folder_element: Inode; is_loading: boolean }[] =
-		existing_files.map((folder_element) => ({
-			folder_element,
-			is_loading: !!existing_files_on_display_in_path.find(
-				(e) => e.file_primary_key === get_file_primary_key(folder_element)
-			)?.loading_data
-		}));
+	const diff = get_folder_elements_difference(existing_files, new_folder_elements);
 
-	const diff = get_folder_elements_difference(
-		existing_files_with_loading_state,
-		new_folder_elements
+	// Filter new files, which aren't currently uploading -> don't compare size
+	diff.new = diff.new.filter(
+		(e) =>
+			!loading_file_keys_without_size.includes(
+				JSON.stringify([e.folder_element.path, e.folder_element.name, e.folder_element.type])
+			)
 	);
 
 	if (diff.new.length > 0) {
@@ -265,7 +274,6 @@ export async function update_folder_elements_recursively(
 			const file_on_display: FileOnDisplay = {
 				display_id: display.id,
 				file_primary_key: get_file_primary_key(new_element.folder_element),
-				loading_data: null,
 				date_created: new_element.date_created
 			};
 			await db.files_on_display.put(file_on_display);
@@ -295,15 +303,13 @@ export async function update_folder_elements_recursively(
 }
 
 function get_folder_elements_difference(
-	old_elements: { folder_element: Inode; is_loading: boolean }[],
+	old_elements: Inode[],
 	new_elements: { folder_element: Inode; date_created: Date }[]
 ): { deleted: Inode[]; new: { folder_element: Inode; date_created: Date }[] } {
-	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e.folder_element)));
+	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e)));
 	const new_keys = new Set(new_elements.map((e) => get_file_primary_key(e.folder_element)));
 
-	const only_in_old = old_elements
-		.filter((e) => !new_keys.has(get_file_primary_key(e.folder_element)) && !e.is_loading)
-		.map((e) => e.folder_element);
+	const only_in_old = old_elements.filter((e) => !new_keys.has(get_file_primary_key(e)));
 	const only_in_new = new_elements.filter(
 		(e) => !old_keys.has(get_file_primary_key(e.folder_element))
 	);

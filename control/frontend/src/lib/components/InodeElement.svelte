@@ -11,7 +11,7 @@
 		type Inode,
 		get_file_primary_key,
 		type FileOnDisplay,
-		type CompleteFileLoadingData
+		type FileTransferTask
 	} from '$lib/ts/types';
 
 	import {
@@ -33,8 +33,11 @@
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery, type Observable } from 'dexie';
 	import { db } from '$lib/ts/database';
+	import { file_transfer_tasks } from '$lib/ts/file_transfer_handler';
 
 	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
+
+	let file_primary_key = $derived(get_file_primary_key(file));
 
 	let missing_colliding_displays_ids:
 		| Observable<{ missing: string[]; colliding: string[] }>
@@ -44,31 +47,26 @@
 		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(file, s));
 	});
 
-	let loading_data:
-		| Observable<CompleteFileLoadingData>
-		| undefined = $state();
-	$effect(() => {
-		const d = $selected_display_ids;
-		loading_data = liveQuery(() => get_loading_data(get_file_primary_key(file), d));
-	});
+	let file_transfer_task: FileTransferTask | null = $derived(
+		$file_transfer_tasks.hasOwnProperty(file_primary_key)
+			? $file_transfer_tasks[file_primary_key]
+			: null
+	);
 
 	let loading_finished = $state(false);
+	let previous_loading_state = $state(false);
 	$effect(() => {
-		if (!loading_data) return;
-		let prev: boolean | undefined;
-		const sub = loading_data.subscribe((v) => {
-			if (prev === true && v.is_loading === false) {
-				loading_finished = true;
-				setTimeout(() => (loading_finished = false), 200);
-			}
-			prev = v.is_loading;
-		});
-		return () => sub.unsubscribe();
+		const ftt = file_transfer_task;
+		if (previous_loading_state && !ftt) {
+			loading_finished = true;
+			setTimeout(() => (loading_finished = false), 200);
+		}
+		previous_loading_state = !!ftt;
 	});
 
-	let thumbnail_url = liveQuery(() => get_thumbnail_url(get_file_primary_key(file)));
+	let thumbnail_url = liveQuery(() => get_thumbnail_url(file_primary_key));
 	let date_mapping: Observable<Record<string, Date>> = liveQuery(() =>
-		get_date_mapping(get_file_primary_key(file))
+		get_date_mapping(file_primary_key)
 	);
 
 	const is_folder = file.type === 'inode/directory';
@@ -130,7 +128,7 @@
 
 	function get_grayed_out_text_color_strings(is_selected: boolean): string {
 		if (not_interactable) return 'text-stone-400';
-		if ($loading_data?.is_loading) return 'text-white/20';
+		if (!!file_transfer_task) return 'text-white/20';
 		const color = is_selected ? 'text-stone-600' : 'text-stone-400';
 		const factor = is_selected ? -1 : 1;
 		return `${color} group-hover:${get_shifted_color(color, factor * 100)} group-active:${get_shifted_color(color, factor * 150)}`;
@@ -138,15 +136,15 @@
 
 	function get_grayed_out_border_color_strings(is_selected: boolean): string {
 		if (not_interactable) return 'border-stone-550';
-		if ($loading_data?.is_loading) return 'border-white/10';
+		if (!!file_transfer_task) return 'border-white/10';
 		const color = is_selected ? 'border-stone-450' : 'border-stone-550';
 		const factor = is_selected ? 1 : 1;
 		return `${color} group-hover:${get_shifted_color(color, factor * 100)} group-active:${get_shifted_color(color, factor * 150)}`;
 	}
 
 	function onclick(e: Event) {
-		if (not_interactable || $loading_data?.is_loading) return;
-		select(selected_file_ids, get_file_primary_key(file), 'toggle');
+		if (not_interactable || !!file_transfer_task) return;
+		select(selected_file_ids, file_primary_key, 'toggle');
 		e.stopPropagation();
 	}
 
@@ -164,11 +162,11 @@
 
 		if (loading_finished) {
 			out += 'bg-stone-500 text-white/30';
-		} else if ($loading_data?.is_loading) {
+		} else if (!!file_transfer_task) {
 			out += 'bg-stone-700 text-white/30';
 		} else {
 			out += get_selectable_color_classes(
-				!not_interactable && is_selected(get_file_primary_key(file), $selected_file_ids),
+				!not_interactable && is_selected(file_primary_key, $selected_file_ids),
 				{
 					bg: true,
 					hover: !not_interactable,
@@ -180,7 +178,7 @@
 
 		if (not_interactable) {
 			out += ' rounded-lg';
-		} else if ($loading_data?.is_loading) {
+		} else if (!!file_transfer_task) {
 			out += ' rounded-r-lg';
 		} else {
 			out += ' rounded-r-lg cursor-pointer';
@@ -189,54 +187,20 @@
 		return out;
 	}
 
-	async function get_loading_data(
-		file_primary_key: string,
-		selected_display_ids: string[]
-	): Promise<CompleteFileLoadingData> {
-		const file_on_display_data: FileOnDisplay[] = await db.files_on_display
-			.where('file_primary_key')
-			.equals(file_primary_key)
-			.filter((e) => selected_display_ids.includes(e.display_id))
-			.toArray();
-		if (file_on_display_data.length === 0) {
-			return {
-				is_loading: true,
-				total_percentage: 0,
-				total_seconds_until_finish: -1,
-				display_data: []
-			};
+	function get_total_percentage(ftt: FileTransferTask): number {
+		let total_percentage: number;
+		if (ftt.data.type === 'upload') {
+			total_percentage = ftt.loading_data.percentage;
+		} else {
+			const percentage_array = ftt.data.destination_display_data.map(
+				(dd) => dd.loading_data.percentage
+			);
+			total_percentage =
+				(ftt.loading_data.percentage + percentage_array.reduce((total, n) => total + n, 0)) /
+				(1 + percentage_array.length);
 		}
-		const display_data = [];
-		let is_loading = false;
-		let percentage_sum = 0;
-		let total_seconds_until_finish = 0;
-		for (const fod of file_on_display_data) {
-			if (!!fod.loading_data) {
-				if (!is_loading) is_loading = true;
-				percentage_sum += fod.loading_data.percentage;
-				total_seconds_until_finish += fod.loading_data.seconds_until_finish;
-				const display = await get_display_by_id(fod.display_id);
-				if (!display) continue;
-				const display_data_element = {
-					loading_data: fod.loading_data,
-					display_name: display.name
-				};
-				if (fod.loading_data.type === 'sync_download') {
-					display_data.unshift(display_data_element); // insert sync_download element at beginning
-				} else {
-					display_data.push(display_data_element);
-				}
-			} else {
-				percentage_sum += 100;
-			}
-		}
-		let total_percentage = percentage_sum / display_data.length;
-		return {
-			is_loading,
-			total_percentage,
-			total_seconds_until_finish,
-			display_data
-		};
+
+		return Math.min(total_percentage, 100);
 	}
 </script>
 
@@ -302,10 +266,10 @@
 		{onclick}
 		class="{get_main_classes()} relative transition-colors duration-200 gap-4 flex flex-row justify-between group w-full min-w-0"
 	>
-		{#if $loading_data?.is_loading}
+		{#if !!file_transfer_task}
 			<div
-				class="absolute pointer-events-none inset-y-0 left-0 transition-[width] duration-200 bg-stone-600 rounded-r-lg"
-				style={`width: ${Math.min($loading_data.total_percentage, 100)}%;`}
+				class="absolute pointer-events-none inset-y-0 left-0 transition-[width] duration-400 bg-stone-600 rounded-r-lg"
+				style={`width: ${get_total_percentage(file_transfer_task)}%;`}
 			></div>
 		{/if}
 		<div class="flex flex-row gap-2 min-w-0 w-full z-10">
@@ -334,7 +298,7 @@
 		</div>
 		<div
 			class=" p-1 flex flex-row items-center gap-1 pr-1 z-10 {get_grayed_out_text_color_strings(
-				is_selected(get_file_primary_key(file), $selected_file_ids)
+				is_selected(file_primary_key, $selected_file_ids)
 			)} duration-200 transition-colors"
 		>
 			<!-- {#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
@@ -372,7 +336,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(get_file_primary_key(file), $selected_file_ids)
+					is_selected(file_primary_key, $selected_file_ids)
 				)} duration-200 transition-colors my-1"
 			></div>
 			<div
@@ -383,7 +347,7 @@
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(
-					is_selected(get_file_primary_key(file), $selected_file_ids)
+					is_selected(file_primary_key, $selected_file_ids)
 				)} duration-200 transition-colors"
 			></div>
 			<div
