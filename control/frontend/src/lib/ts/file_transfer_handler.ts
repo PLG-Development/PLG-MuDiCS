@@ -1,6 +1,6 @@
 import { get, writable, type Writable } from 'svelte/store';
 import { db } from './database';
-import { get_display_by_id } from './stores/displays';
+import { get_display_by_id, run_on_all_selected_displays } from './stores/displays';
 import {
 	create_path_on_all_selected_displays,
 	get_folder_elements,
@@ -20,6 +20,7 @@ import {
 	type ShortDisplay
 } from './types';
 import { get_sanitized_file_url, get_uuid, make_valid_name } from './utils';
+import { open_file } from './api_handler';
 
 const START_LOADING_DATA = {
 	percentage: 0,
@@ -102,7 +103,8 @@ export async function add_upload(
 
 export async function add_sync_recursively(
 	selected_file_id: string,
-	selected_display_ids: string[]
+	selected_display_ids: string[],
+	open_file_afterwards: boolean = false
 ) {
 	const file_data = await find_file_data_on_active_selected_display(
 		selected_file_id,
@@ -134,7 +136,8 @@ export async function add_sync_recursively(
 			destination_display_data: file_data.short_displays_without_file.map((display) => ({
 				display,
 				loading_data: START_LOADING_DATA
-			}))
+			})),
+			open_file_afterwards_on_display_ids: open_file_afterwards ? selected_display_ids : []
 		},
 		display: file_data.short_display_with_file,
 		path: file_data.file.path,
@@ -285,6 +288,12 @@ export async function sync(file_primary_key: string, task: FileTransferTask) {
 		}
 
 		await dir.removeEntry(temp_name);
+
+		// open file, if required
+		if (task.data.open_file_afterwards_on_display_ids.length !== 0) {
+			const path_to_file = task.path + task.file_name;
+			await run_on_all_selected_displays((d) => open_file(d.ip, path_to_file), true, task.data.open_file_afterwards_on_display_ids);
+		}
 	} catch (e) {
 		show_general_error(file_primary_key, task, String(e));
 	}
@@ -295,8 +304,7 @@ export async function download_file(selected_file_id: string, selected_display_i
 		selected_file_id,
 		selected_display_ids
 	);
-	if (!file_data || is_folder(file_data.file))
-		return console.warn('Download cancelled: is folder');
+	if (!file_data || is_folder(file_data.file)) return console.warn('Download cancelled: is folder');
 
 	try {
 		const url = `http://${file_data.short_display_with_file.ip}:1323/api${get_sanitized_file_url(file_data.file.path + file_data.file.name)}`;
@@ -455,7 +463,11 @@ function update_current_loading_data(
 	});
 }
 
-function get_updated_task(current_loading_data: FileLoadingData, destination_display_id: string | null, task: FileTransferTask): FileTransferTask {
+function get_updated_task(
+	current_loading_data: FileLoadingData,
+	destination_display_id: string | null,
+	task: FileTransferTask
+): FileTransferTask {
 	if (destination_display_id && task.data.type === 'sync') {
 		const updatedDestinations = task.data.destination_display_data.map((dd) =>
 			dd.display.id === destination_display_id ? { ...dd, loading_data: current_loading_data } : dd

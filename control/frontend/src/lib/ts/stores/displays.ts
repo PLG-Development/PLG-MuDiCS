@@ -22,7 +22,11 @@ export const online_displays_sub = liveQuery(() =>
 	db.displays.where('status').equals('app_online').toArray()
 ).subscribe((value) => {
 	online_displays.set(value);
+	const current_online_display_ids = value.map((d) => d.id);
+	selected_online_display_ids.set(get(selected_display_ids).filter((id) => current_online_display_ids.includes(id)));
 });
+
+export const selected_online_display_ids: Writable<string[]> = writable<string[]>([]);
 
 export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
@@ -193,17 +197,18 @@ export function screenshot_loop(display_id: string) {
 export async function run_on_all_selected_displays(
 	run_function: (display: Display) => void | Promise<void>,
 	update_screenshot_afterwards: boolean = true,
-	ignore_offline: boolean = true
+	display_ids: string[] | null = null
 ) {
+	if (!display_ids) display_ids = get(selected_online_display_ids);
 	const maybe_displays: (Display | null)[] = await Promise.all(
 		// fails when only a single promis fails
-		get(selected_display_ids).map(async (id) => await get_display_by_id(id))
+		display_ids.map(async (id) => await get_display_by_id(id))
 	);
 	const displays: Display[] = maybe_displays.filter((d): d is Display => d !== null);
 
-	Promise.all(
+	await Promise.all(
 		displays.map(async (display) => {
-			if (!display || (ignore_offline && display.status === 'host_offline')) return;
+			if (!display) return;
 			await run_function(display);
 			if (update_screenshot_afterwards) {
 				screenshot_loop(display.id);
@@ -269,15 +274,6 @@ export function set_new_display_order(display_id_group_id: string, new_data: Dis
 	});
 }
 
-export function no_active_display_selected(
-	selected_display_ids: string[],
-	online_displays: Display[]
-) {
-	const online_and_selected_displays = online_displays.filter((d) =>
-		selected_display_ids.includes(d.id)
-	);
-	return online_and_selected_displays.length === 0;
-}
 
 if (dev) {
 	setTimeout(add_testing_displays, 0);

@@ -7,7 +7,7 @@ import {
 	type Inode,
 	type TreeElement
 } from '../types';
-import { get_display_by_id } from './displays';
+import { get_display_by_id, selected_online_display_ids } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
 import { create_path, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
@@ -29,12 +29,16 @@ export async function change_file_path(new_path: string) {
 	const displays = await db.displays.toArray();
 
 	for (const display of displays) {
-		const changed_paths = await get_changed_directory_paths(display, new_path);
-		if (!changed_paths) continue;
-		console.debug('Update file system from', display.name, ':', changed_paths);
-		for (const path of changed_paths) {
-			await update_folder_elements_recursively(display, path);
-		}
+		await update_changed_directories(display, new_path);
+	}
+}
+
+async function update_changed_directories(display: Display, path: string = '/') {
+	const changed_paths = await get_changed_directory_paths(display, path);
+	if (!changed_paths) return;
+	console.debug('Update file system from', display.name, ':', changed_paths);
+	for (const path of changed_paths) {
+		await update_folder_elements_recursively(display, path);
 	}
 }
 
@@ -94,7 +98,10 @@ export async function update_current_folder_on_selected_displays() {
 	});
 	const current_path = get(current_file_path);
 
-	for (const display of await db.displays.where('id').anyOf(get(selected_display_ids)).toArray()) {
+	for (const display of await db.displays
+		.where('id')
+		.anyOf(get(selected_online_display_ids))
+		.toArray()) {
 		await update_folder_elements_recursively(display, current_path);
 	}
 }
@@ -107,13 +114,19 @@ export async function get_missing_colliding_display_ids(
 
 	const colliding: string[] = [];
 	const colliding_files = await db.files
-		.where('[path+name]')
-		.equals([file.path, file.name])
-		.filter((e) => e.size !== file.size || e.type !== file.type)
+		.where('name')
+		.equals(file.name)
+		.filter((e) => e.path === file.path && e.size !== file.size)
 		.toArray();
 	for (const colliding_file of colliding_files) {
 		colliding.push(
-			...(await get_display_ids_where_file_is_missing(colliding_file, selected_display_ids))
+			...(
+				await db.files_on_display
+					.where('file_primary_key')
+					.equals(get_file_primary_key(colliding_file))
+					.filter((fod) => selected_display_ids.includes(fod.display_id))
+					.toArray()
+			).map((fod) => fod.display_id)
 		);
 	}
 
@@ -371,7 +384,7 @@ export async function get_file_by_id(
 export async function run_for_selected_files_on_selected_displays(
 	action: (ip: string, file_names: string[]) => Promise<void>
 ): Promise<void> {
-	for (const display_id of get(selected_display_ids)) {
+	for (const display_id of get(selected_online_display_ids)) {
 		const file_key_strings_on_display: string[] = (
 			await db.files_on_display.where('display_id').equals(display_id).toArray()
 		).map((e) => e.file_primary_key);
@@ -409,12 +422,7 @@ export async function create_path_on_all_selected_displays(
 	}
 	setTimeout(async () => {
 		for (const display of displays_without_path) {
-			const changed_paths = await get_changed_directory_paths(display, '/');
-			if (!changed_paths) continue;
-			console.debug('Update file system from', display.name, ':', changed_paths);
-			for (const path of changed_paths) {
-				await update_folder_elements_recursively(display, path);
-			}
+			await update_changed_directories(display);
 		}
 	}, 0);
 }
