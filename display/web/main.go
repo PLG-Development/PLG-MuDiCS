@@ -295,14 +295,7 @@ func downloadFileRoute(ctx echo.Context) error {
 
 	slog.Info("Serving file for download", "path", fullPath)
 
-	file, err := os.Open(fullPath)
-	if err != nil {
-		slog.Error("Failed to open file", "file", fullPath, "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open file"})
-	}
-	defer file.Close()
-
-	return ctx.Stream(http.StatusOK, "application/octet-stream", file)
+	return ctx.File(fullPath)
 }
 
 func openFileRoute(ctx echo.Context) error {
