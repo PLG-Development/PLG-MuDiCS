@@ -14,7 +14,7 @@
 	import { change_height, current_height, next_height_step_size } from '$lib/ts/stores/ui_behavior';
 	import Button from '$lib/components/Button.svelte';
 	import PathBar from './PathBar.svelte';
-	import { selected_display_ids, selected_file_ids } from '$lib/ts/stores/select';
+	import { select, selected_display_ids, selected_file_ids } from '$lib/ts/stores/select';
 	import {
 		current_file_path,
 		get_folder_elements,
@@ -149,16 +149,17 @@
 	};
 
 	async function sync_selected_files(
-		selected_file_ids: string[],
+		current_selected_file_ids: string[],
 		selected_display_ids: string[],
 		current_folder_elements: Inode[]
 	) {
-		if (selected_file_ids.length === 0 && current_folder_elements.length > 0) {
-			selected_file_ids = current_folder_elements.map((inode) => get_file_primary_key(inode));
+		if (current_selected_file_ids.length === 0 && current_folder_elements.length > 0) {
+			current_selected_file_ids = current_folder_elements.map((inode) => get_file_primary_key(inode));
 		}
-		if (selected_file_ids.length === 0) return;
+		if (current_selected_file_ids.length === 0) return;
 		// Mit For-Schleife über ausgewählte Elemente gehen
-		for (const file_id of selected_file_ids) {
+		for (const file_id of current_selected_file_ids) {
+			await select(selected_file_ids, file_id, 'deselect');
 			await add_sync_recursively(file_id, selected_display_ids);
 		}
 	}
