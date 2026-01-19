@@ -30,7 +30,7 @@
 		enter_function?: (() => void) | null;
 	} = $props();
 
-	let focus_bg = get_shifted_color(bg, 100);
+	let focus_bg = $derived(get_shifted_color(bg, 100));
 	let focused: boolean = $state(false);
 	let current_info = $state('');
 	let input_element: HTMLInputElement;
