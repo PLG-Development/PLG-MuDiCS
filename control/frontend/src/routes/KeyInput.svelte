@@ -7,6 +7,7 @@
 	import { ArrowDownToLine, ArrowUpFromLine, Grid2x2, Grid2X2, Option } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { onDestroy } from 'svelte';
+	import { queue_input } from '$lib/ts/queue';
 
 	let {
 		popup_close_function
@@ -58,17 +59,21 @@
 		const action: 'press' | 'release' = key_down ? 'press' : 'release';
 
 		add_to_last_keys(action.toUpperCase() + ' ' + key);
-		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]), true);
+		queue_input(async () => {
+			await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]), true);
+		});
 	}
 
-	async function release_all_pressed_keys() {
+	function release_all_pressed_keys() {
 		const inputs: { key: string; action: 'press' | 'release' }[] = [];
 		for (let i = current_keys.length - 1; i >= 0; i--) {
 			inputs.push({ key: current_keys[i], action: 'release' });
 			current_keys.splice(i, 1);
 		}
 
-		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, inputs), true);
+		queue_input(async () => {
+			await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, inputs), true);
+		});
 	}
 
 	onDestroy(() => {
@@ -91,7 +96,7 @@
 		}}
 		onblur={async () => {
 			active = false;
-			await release_all_pressed_keys();
+			release_all_pressed_keys();
 		}}
 		onkeydown={(e) => on_keyboard_input(e, true)}
 		onkeyup={(e) => on_keyboard_input(e, false)}

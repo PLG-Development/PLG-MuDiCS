@@ -34,6 +34,7 @@
 	import { db } from '$lib/ts/database';
 	import { liveQuery, type Observable } from 'dexie';
 	import TextInput from '$lib/components/TextInput.svelte';
+	import { queue_input } from '$lib/ts/queue';
 
 	let all_display_states: Observable<'on' | 'off' | 'mixed'> | undefined = $state();
 	$effect(() => {
@@ -206,11 +207,11 @@
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
 						disabled={$selected_display_ids.length === 0}
-						onmousedown={async () => {
-							await send_single_key_press('ArrowLeft', 'press');
+						onmousedown={() => {
+							queue_input(async () => await send_single_key_press('ArrowLeft', 'press'));
 						}}
-						onmouseup={async () => {
-							await send_single_key_press('ArrowLeft', 'release');
+						onmouseup={() => {
+							queue_input(async () => await send_single_key_press('ArrowLeft', 'release'));
 						}}
 					>
 						<ArrowBigLeft />
@@ -222,11 +223,11 @@
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
 						disabled={$selected_display_ids.length === 0}
-						onmousedown={async () => {
-							await send_single_key_press('ArrowRight', 'press');
+						onmousedown={() => {
+							queue_input(async () => await send_single_key_press('ArrowRight', 'press'));
 						}}
-						onmouseup={async () => {
-							await send_single_key_press('ArrowRight', 'release');
+						onmouseup={() => {
+							queue_input(async () => await send_single_key_press('ArrowRight', 'release'));
 						}}
 					>
 						<ArrowBigRight />

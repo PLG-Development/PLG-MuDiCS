@@ -201,7 +201,7 @@ export async function run_on_all_selected_displays(
 	);
 	const displays: Display[] = maybe_displays.filter((d): d is Display => d !== null);
 
-	Promise.all(
+	await Promise.all(
 		displays.map(async (display) => {
 			if (!display || (ignore_offline && display.status === 'host_offline')) return;
 			await run_function(display);
