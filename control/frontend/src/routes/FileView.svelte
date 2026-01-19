@@ -62,7 +62,7 @@
 		one_file_selected = liveQuery(async () => {
 			const inode = await get_file_by_id(s[0]);
 			if (!inode) return false;
-			return s.length === 1 && is_folder(inode);
+			return s.length === 1 && !is_folder(inode);
 		});
 	});
 
