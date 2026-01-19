@@ -2,8 +2,10 @@ package pkg
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"plg-mudics/shared"
 	"syscall"
 
@@ -36,7 +38,17 @@ func (fh *fileHandler) OpenFile(path string) error {
 
 	switch mType.String() {
 	case "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
-		fh.runningProgram = exec.Command("soffice", "--show", path, "--nologo", "--view", "--norestore", fmt.Sprintf("-env:UserInstallation=file://%s", tempDirPath))
+		// yes, we need this weird workaround to delete lock files since libreoffice
+		// doesn't expose an option to ignore them or prevent their creation
+		// the --view argument for some reason doesn't work with --show
+		parent := filepath.Dir(path)
+		cmd := exec.Command("find", parent, "-name", ".~lock*", "-type", "f", "-delete")
+		result := shared.RunShellCommand(cmd)
+		if result.ExitCode != 0 {
+			slog.Warn("could not remove lock files", "path", parent, "stderr", result.Stderr, "exitCode", result.ExitCode)
+		}
+
+		fh.runningProgram = exec.Command("soffice", "--show", path, "--nologo", "--norestore", fmt.Sprintf("-env:UserInstallation=file://%s", tempDirPath))
 	case "application/pdf":
 		fh.runningProgram = exec.Command("xreader", path, "--presentation")
 	default:
