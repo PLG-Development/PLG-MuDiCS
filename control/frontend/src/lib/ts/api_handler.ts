@@ -1,5 +1,6 @@
 import { notifications } from './stores/notification';
 import {
+	is_folder,
 	to_display_status,
 	type DisplayStatus,
 	type Inode,
@@ -95,6 +96,7 @@ export async function get_file_data(
 			size: Number(response_element.size),
 			thumbnail: null
 		};
+		if (is_folder(folder_element)) folder_element.size = 0;
 		folder_element_list.push({ folder_element, date_created: new Date(response_element.created) });
 	}
 	return folder_element_list;
@@ -202,8 +204,8 @@ async function request_display(
 		for (const display of possible_displays) {
 			const current_status = await update_display_status(display);
 			if (current_status === 'app_online') {
-				console.error(`No response from ${url}`)
-				notifications.push('error', "Netzwerk-Fehler bei API-Anfrage", `${url}`);
+				console.error(`No response from ${url}`);
+				notifications.push('error', 'Netzwerk-Fehler bei API-Anfrage', `${url}`);
 			}
 		}
 	}
