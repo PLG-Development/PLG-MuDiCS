@@ -24,7 +24,6 @@ export const online_displays_sub = liveQuery(() =>
 	online_displays.set(value);
 	const current_online_display_ids = value.map((d) => d.id);
 	selected_online_display_ids.set(get(selected_display_ids).filter((id) => current_online_display_ids.includes(id)));
-	console.log(get(selected_online_display_ids))
 });
 
 export const selected_online_display_ids: Writable<string[]> = writable<string[]>([]);

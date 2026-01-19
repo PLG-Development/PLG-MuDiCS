@@ -24,7 +24,6 @@ export function select(
 	if (selected_ids === selected_display_ids) {
 		const current_online_display_ids = get(online_displays).map((d) => d.id);
 		selected_online_display_ids.set(get(selected_display_ids).filter((id) => current_online_display_ids.includes(id)));
-		console.log(get(selected_online_display_ids))
 	}
 }
 
