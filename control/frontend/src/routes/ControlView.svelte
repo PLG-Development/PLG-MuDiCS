@@ -45,7 +45,6 @@
 		open: false,
 		snippet: null,
 		title: '',
-		closable: true
 	});
 
 	function popup_close_function() {
@@ -58,7 +57,6 @@
 			snippet: send_keys_popup,
 			title: 'Tastatur-Eingaben Senden',
 			title_icon: Keyboard,
-			closable: true
 		};
 	};
 
@@ -68,7 +66,6 @@
 			snippet: text_popup,
 			title: 'Text Anzeigen',
 			title_icon: TextAlignStart,
-			closable: true,
 			window_class: 'size-full'
 		};
 	};
@@ -80,7 +77,6 @@
 			title: 'Webseite Anzeigen',
 			window_class: 'w-xl',
 			title_icon: Globe,
-			closable: true
 		};
 	};
 
@@ -104,7 +100,6 @@
 			snippet: ask_shutdown_popup,
 			title: 'Bildschirm Herunterfahren',
 			title_icon: PowerOff,
-			closable: true
 		};
 	}
 

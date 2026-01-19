@@ -126,13 +126,12 @@ export type MenuOption = {
 
 export type PopupContent = {
 	open: boolean;
-	snippet: Snippet<[string]> | null;
-	snippet_arg?: string;
+	snippet: Snippet<[any]> | Snippet<[]> | Snippet | null | any;
+	snippet_arg?: any;
 	title?: string;
 	title_class?: string;
 	title_icon?: typeof X | null;
 	window_class?: string;
-	closable?: boolean;
 };
 
 export type NumberSetting = {

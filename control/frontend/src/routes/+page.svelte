@@ -47,7 +47,6 @@
 		snippet: null,
 		title: '',
 		title_class: '!text-xl',
-		closable: true
 	});
 	let remove_display_name = $state('');
 
@@ -122,7 +121,6 @@
 			title_icon: Monitor,
 			title_class: '!text-xl',
 			window_class: 'w-3xl',
-			closable: true
 		};
 	};
 
@@ -134,7 +132,6 @@
 			title_icon: Settings,
 			title_class: '!text-xl',
 			window_class: 'w-3xl',
-			closable: true
 		};
 	};
 
@@ -147,7 +144,6 @@
 			title: 'Bildschirm wirklich löschen?',
 			title_class: 'text-red-400 !text-xl',
 			title_icon: Trash2,
-			closable: true
 		};
 	};
 
@@ -166,7 +162,6 @@
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
 			title_class: '!text-xl',
-			closable: true
 		};
 	};
 
@@ -179,7 +174,6 @@
 			title: 'Über PLG MuDiCS',
 			title_icon: Info,
 			title_class: '!text-xl',
-			closable: true
 		};
 	};
 </script>
