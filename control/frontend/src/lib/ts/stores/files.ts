@@ -7,7 +7,7 @@ import {
 	type Inode,
 	type TreeElement
 } from '../types';
-import { get_display_by_id } from './displays';
+import { get_display_by_id, selected_online_display_ids } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
 import { create_path, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
@@ -94,7 +94,7 @@ export async function update_current_folder_on_selected_displays() {
 	});
 	const current_path = get(current_file_path);
 
-	for (const display of await db.displays.where('id').anyOf(get(selected_display_ids)).toArray()) {
+	for (const display of await db.displays.where('id').anyOf(get(selected_online_display_ids)).toArray()) {
 		await update_folder_elements_recursively(display, current_path);
 	}
 }
@@ -371,7 +371,7 @@ export async function get_file_by_id(
 export async function run_for_selected_files_on_selected_displays(
 	action: (ip: string, file_names: string[]) => Promise<void>
 ): Promise<void> {
-	for (const display_id of get(selected_display_ids)) {
+	for (const display_id of get(selected_online_display_ids)) {
 		const file_key_strings_on_display: string[] = (
 			await db.files_on_display.where('display_id').equals(display_id).toArray()
 		).map((e) => e.file_primary_key);

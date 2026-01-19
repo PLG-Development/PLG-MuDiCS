@@ -1,4 +1,5 @@
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Writable } from 'svelte/store';
+import { online_displays, selected_online_display_ids } from './displays';
 
 export const selected_file_ids: Writable<string[]> = writable<string[]>([]); // JSON.stringify([string, string, number, string])
 export const selected_display_ids: Writable<string[]> = writable<string[]>([]);
@@ -19,6 +20,12 @@ export function select(
 		}
 		return all_ids;
 	});
+	
+	if (selected_ids === selected_display_ids) {
+		const current_online_display_ids = get(online_displays).map((d) => d.id);
+		selected_online_display_ids.set(get(selected_display_ids).filter((id) => current_online_display_ids.includes(id)));
+		console.log(get(selected_online_display_ids))
+	}
 }
 
 export function is_selected(id: string, selected_ids: string[]): boolean {

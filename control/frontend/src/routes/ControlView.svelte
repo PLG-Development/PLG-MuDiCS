@@ -25,9 +25,8 @@
 	} from '$lib/ts/api_handler';
 	import {
 		get_display_by_id,
-		no_active_display_selected,
-		online_displays,
-		run_on_all_selected_displays
+		run_on_all_selected_displays,
+		selected_online_display_ids
 	} from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
@@ -203,10 +202,10 @@
 				<div class="flex flex-row gap-2 w-75 justify-normal">
 					<button
 						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
-						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+						class="px-9 bg-stone-700 {$selected_online_display_ids.length === 0
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
-						disabled={$selected_display_ids.length === 0}
+						disabled={$selected_online_display_ids.length === 0}
 						onmousedown={() => {
 							add_to_keyboard_queue(async () => await send_single_key_press('ArrowLeft', 'press'));
 						}}
@@ -219,10 +218,10 @@
 
 					<button
 						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
-						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+						class="px-9 bg-stone-700 {$selected_online_display_ids.length === 0
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
-						disabled={$selected_display_ids.length === 0}
+						disabled={$selected_online_display_ids.length === 0}
 						onmousedown={() => {
 							add_to_keyboard_queue(async () => await send_single_key_press('ArrowRight', 'press'));
 						}}
@@ -237,19 +236,19 @@
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
 					click_function={show_text_popup}
-					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					disabled={$selected_online_display_ids.length === 0}
 					><TextAlignStart /> Text Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					disabled={$selected_online_display_ids.length === 0}
 					click_function={show_website_popup}><Globe /> Webseite Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					disabled={$selected_online_display_ids.length === 0}
 					click_function={async () => {
 						await run_on_all_selected_displays((d) => show_blackscreen(d.ip));
 					}}><Presentation />Blackout</Button
@@ -264,7 +263,7 @@
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					disabled={$selected_online_display_ids.length === 0}
 					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Senden</Button
 				>
 			</div>
@@ -273,7 +272,7 @@
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 						disabled={$all_display_states === 'on' ||
-							no_active_display_selected($selected_display_ids, $online_displays)}
+							$selected_online_display_ids.length === 0}
 						click_function={startup_action}
 					>
 						<Power /> Bildschirm Hochfahren
@@ -282,7 +281,7 @@
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 						disabled={$all_display_states === 'off' ||
-							no_active_display_selected($selected_display_ids, $online_displays)}
+							$selected_online_display_ids.length === 0}
 						click_function={ask_shutdown}
 					>
 						<PowerOff /> Bildschirm Herunterfahren</Button

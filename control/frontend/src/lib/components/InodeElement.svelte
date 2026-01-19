@@ -31,7 +31,7 @@
 	import RefreshPlay from '../svgs/RefreshPlay.svelte';
 	import { get_file_size_display_string, get_file_type } from '$lib/ts/utils';
 	import { open_file } from '$lib/ts/api_handler';
-	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import { get_display_by_id, run_on_all_selected_displays, selected_online_display_ids } from '$lib/ts/stores/displays';
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery, type Observable } from 'dexie';
 	import { db } from '$lib/ts/database';
@@ -45,8 +45,9 @@
 		| Observable<{ missing: string[]; colliding: string[] }>
 		| undefined = $state();
 	$effect(() => {
-		const s = $selected_file_ids;
-		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(file, s));
+		const f = file;
+		const s = $selected_online_display_ids;
+		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(f, s));
 	});
 
 	let file_size: Observable<number> | undefined = $state();
@@ -215,7 +216,7 @@
 		if (is_folder(file)) {
 			const folder_elements = await get_folder_elements(
 				file.path + file.name + '/',
-				$selected_display_ids
+				$selected_online_display_ids
 			);
 			let out: number = 0;
 			for (const el of folder_elements) {

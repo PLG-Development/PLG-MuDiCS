@@ -39,7 +39,7 @@
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
 	import { download_file, add_upload, add_sync_recursively } from '$lib/ts/file_transfer_handler';
-	import { no_active_display_selected, online_displays } from '$lib/ts/stores/displays';
+	import { selected_online_display_ids } from '$lib/ts/stores/displays';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -53,7 +53,7 @@
 	let current_folder_elements: Observable<Inode[]> | undefined = $state();
 	$effect(() => {
 		const path = $current_file_path,
-			display_ids = $selected_display_ids;
+			display_ids = $selected_online_display_ids;
 		current_folder_elements = liveQuery(() => get_folder_elements(path, display_ids));
 	});
 	let one_file_selected: Observable<boolean> | undefined = $state();
@@ -91,7 +91,7 @@
 	async function create_new_folder() {
 		popup_close_function();
 		const path_with_folder_name = ($current_file_path += current_name.trim() + '/');
-		await create_path_on_all_selected_displays(path_with_folder_name, $selected_display_ids);
+		await create_path_on_all_selected_displays(path_with_folder_name, $selected_online_display_ids);
 		await update_current_folder_on_selected_displays();
 	}
 
@@ -127,7 +127,7 @@
 		current_name = '';
 		current_valid = false;
 		display_names_where_path_does_not_exist = (
-			await get_displays_where_path_not_exists($current_file_path, $selected_display_ids)
+			await get_displays_where_path_not_exists($current_file_path, $selected_online_display_ids)
 		).map((display) => display.name);
 		popup_content = {
 			open: true,
@@ -277,7 +277,7 @@
 	multiple
 	accept={get_accepted_file_type_string()}
 	onchange={(e) =>
-		add_upload((e.target as HTMLInputElement).files!, $selected_display_ids, $current_file_path)}
+		add_upload((e.target as HTMLInputElement).files!, $selected_online_display_ids, $current_file_path)}
 />
 
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
@@ -319,7 +319,7 @@
 						title="Neuen Ordner erstellen (Neuen Ordner mit ausgewählten Objekten erstellen)"
 						className="px-3 flex"
 						click_function={show_new_folder_popup}
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><FolderPlus /></Button
+						disabled={$selected_online_display_ids.length === 0}><FolderPlus /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
@@ -328,13 +328,13 @@
 						click_function={() => {
 							if (file_input) file_input.click();
 						}}
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><Upload /></Button
+						disabled={$selected_online_display_ids.length === 0}><Upload /></Button
 					>
 					<Button
 						title="Ausgewählte Datei herunterladen"
 						className="px-3 flex"
 						click_function={async () =>
-							await download_file($selected_file_ids[0], $selected_display_ids)}
+							await download_file($selected_file_ids[0], $selected_online_display_ids)}
 						disabled={!$one_file_selected}><Download /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
@@ -344,10 +344,10 @@
 						click_function={async () =>
 							await sync_selected_files(
 								$selected_file_ids,
-								$selected_display_ids,
+								$selected_online_display_ids,
 								$current_folder_elements ?? []
 							)}
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+						disabled={$selected_online_display_ids.length === 0}
 						><RefreshCcw />
 						<span class="hidden 2xl:flex">Synchronisieren</span>
 					</Button>
@@ -361,7 +361,7 @@
 					<Button
 						title="Ausgewählte Datei(en) einfügen"
 						className="px-3 flex"
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+						disabled={$selected_online_display_ids.length === 0}
 					>
 						<ClipboardPaste />
 					</Button>
@@ -385,7 +385,7 @@
 		</div>
 		<div class="min-h-0 h-full overflow-y-auto overflow-x-hidden bg-stone-750 rounded-xl">
 			<div class="flex flex-col gap-2 p-2 min-h-0 max-w-full">
-				{#if no_active_display_selected($selected_display_ids, $online_displays)}
+				{#if $selected_online_display_ids.length === 0}
 					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
 						Es sind keine Bildschirme ausgewählt.
 					</span>

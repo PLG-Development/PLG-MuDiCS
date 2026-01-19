@@ -22,7 +22,12 @@ export const online_displays_sub = liveQuery(() =>
 	db.displays.where('status').equals('app_online').toArray()
 ).subscribe((value) => {
 	online_displays.set(value);
+	const current_online_display_ids = value.map((d) => d.id);
+	selected_online_display_ids.set(get(selected_display_ids).filter((id) => current_online_display_ids.includes(id)));
+	console.log(get(selected_online_display_ids))
 });
+
+export const selected_online_display_ids: Writable<string[]> = writable<string[]>([]);
 
 export const local_displays: Writable<DisplayIdGroup[]> = writable<DisplayIdGroup[]>([]);
 
@@ -269,15 +274,6 @@ export function set_new_display_order(display_id_group_id: string, new_data: Dis
 	});
 }
 
-export function no_active_display_selected(
-	selected_display_ids: string[],
-	online_displays: Display[]
-) {
-	const online_and_selected_displays = online_displays.filter((d) =>
-		selected_display_ids.includes(d.id)
-	);
-	return online_and_selected_displays.length === 0;
-}
 
 if (dev) {
 	setTimeout(add_testing_displays, 0);
