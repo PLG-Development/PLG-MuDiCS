@@ -20,6 +20,12 @@
 	import { Color } from '@tiptap/extension-text-style';
 	import Highlight from '@tiptap/extension-highlight';
 
+	let {
+		text = $bindable()
+	}: {
+		text: string;
+	} = $props();
+
 	type TextEditOption = {
 		onclick: () => void;
 		is_selected: () => boolean;
@@ -128,15 +134,17 @@
 					multicolor: true
 				})
 			],
-			content: '',
+			content: text,
 			onTransaction: ({ editor }) => {
 				// Increment the state signal to force a re-render
 				editor_state = { editor };
 			},
 			autofocus: true
 		});
+		editor_state.editor.commands.selectAll();
 	});
 	onDestroy(() => {
+		if (editor_state.editor) text = editor_state.editor.getHTML();
 		editor_state.editor?.destroy();
 	});
 </script>

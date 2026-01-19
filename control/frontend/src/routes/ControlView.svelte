@@ -47,6 +47,8 @@
 		title: '',
 	});
 
+	let current_text = $state('');
+
 	function popup_close_function() {
 		popup_content.open = false;
 	}
@@ -144,7 +146,6 @@
 		await run_on_all_selected_displays((d) =>
 			show_html(d.ip, `<iframe src="${website_url}"></iframe>`)
 		);
-		website_url = '';
 	}
 </script>
 
@@ -188,7 +189,7 @@
 {/snippet}
 
 {#snippet text_popup()}
-	<TipTapInput />
+	<TipTapInput bind:text={current_text}/>
 {/snippet}
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
