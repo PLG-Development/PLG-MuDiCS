@@ -227,9 +227,6 @@ async function request(
 ): Promise<RequestResponse> {
 	try {
 		const cache_buster = `${url.includes('?') ? '&' : '?'}=${Date.now()}`;
-		if (dev) {
-			console.debug('Sending request: ', url + cache_buster, 'with', options.body ?? 'none');
-		}
 		const response = await fetch(url + cache_buster, options);
 		if (response.ok || supress_error_handling_http_codes.includes(response.status)) {
 			const contentType = response.headers.get('content-type') || '';
@@ -240,9 +237,6 @@ async function request(
 			} else {
 				const json: Record<string, unknown> = await response.json();
 				request_response = { ok: response.ok, http_code: response.status, json: json };
-				if (dev) {
-					console.debug(request_response);
-				}
 			}
 			return request_response;
 		}
