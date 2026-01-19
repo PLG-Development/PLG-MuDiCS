@@ -95,6 +95,7 @@
     xreader
     tree
     jq
+    screen
 
     # Libraries
     imagemagick
