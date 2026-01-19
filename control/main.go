@@ -77,13 +77,13 @@ func pingRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, PingResponse{Error: "missing 'ip' query parameter"})
 	}
 
-	cmd := exec.Command("ping", "-c", "1", "-w", "1", ip)
+	cmd := exec.Command("ping", "-c", "1", "-w", "5", ip)
 	result := shared.RunShellCommand(cmd)
 	if result.ExitCode != 0 {
 		return ctx.JSON(http.StatusOK, PingResponse{Status: "host_offline"})
 	}
 
-	conn, err := net.DialTimeout("tcp", ip+":1323", 1*time.Second)
+	conn, err := net.DialTimeout("tcp", ip+":1323", 5*time.Second)
 	if err != nil {
 		return ctx.JSON(http.StatusOK, PingResponse{Status: "app_offline"})
 	}

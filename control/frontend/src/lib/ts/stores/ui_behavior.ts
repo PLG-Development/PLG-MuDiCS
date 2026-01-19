@@ -1,4 +1,6 @@
 import { writable, type Writable } from 'svelte/store';
+import type { NumberSetting } from '../types';
+import { dev } from '$app/environment';
 
 export const dnd_flip_duration_ms = 300;
 
@@ -22,6 +24,30 @@ export const current_height: Writable<Record<string, number>> = writable<Record<
 
 export const is_group_drag: Writable<boolean> = writable<boolean>(false);
 export const is_display_drag: Writable<boolean> = writable<boolean>(false);
+
+export const preview_settings: Writable<{
+	mode: 'never' | 'normal' | 'always';
+	retry_seconds: NumberSetting;
+	retry_count: NumberSetting;
+}> = writable<{
+	mode: 'never' | 'normal' | 'always';
+	retry_seconds: NumberSetting;
+	retry_count: NumberSetting;
+}>({
+	mode: dev ? 'never' : 'normal',
+	retry_seconds: {
+		max: 10,
+		min: 0.5,
+		now: 2,
+		step: 0.5
+	},
+	retry_count: {
+		max: 10,
+		min: 1,
+		now: 5,
+		step: 1
+	}
+});
 
 export const pinned_display_id: Writable<string | null> = writable<string | null>(null);
 

@@ -9,18 +9,31 @@
 		Presentation,
 		SquareTerminal,
 		TextAlignStart,
-		TrafficCone
+		TrafficCone,
+		Globe
 	} from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
 	import type { PopupContent } from '$lib/ts/types';
 	import KeyInput from './KeyInput.svelte';
-	import { send_keyboard_input, show_blackscreen, shutdown, startup } from '$lib/ts/api_handler';
-	import { get_display_by_id, run_on_all_selected_displays } from '$lib/ts/stores/displays';
+	import {
+		send_keyboard_input,
+		show_blackscreen,
+		shutdown,
+		startup,
+		show_html
+	} from '$lib/ts/api_handler';
+	import {
+		get_display_by_id,
+		no_active_display_selected,
+		online_displays,
+		run_on_all_selected_displays
+	} from '$lib/ts/stores/displays';
 	import { selected_display_ids } from '$lib/ts/stores/select';
 	import TipTapInput from './TipTapInput.svelte';
 	import { db } from '$lib/ts/database';
 	import { liveQuery, type Observable } from 'dexie';
+	import TextInput from '$lib/components/TextInput.svelte';
 
 	let all_display_states: Observable<'on' | 'off' | 'mixed'> | undefined = $state();
 	$effect(() => {
@@ -32,7 +45,6 @@
 		open: false,
 		snippet: null,
 		title: '',
-		closable: true
 	});
 
 	function popup_close_function() {
@@ -43,9 +55,8 @@
 		popup_content = {
 			open: true,
 			snippet: send_keys_popup,
-			title: 'Tastatur-Eingaben durchgeben',
+			title: 'Tastatur-Eingaben Senden',
 			title_icon: Keyboard,
-			closable: true,
 			window_class: 'h-full'
 		};
 	};
@@ -54,9 +65,19 @@
 		popup_content = {
 			open: true,
 			snippet: text_popup,
-			title: 'Text anzeigen',
+			title: 'Text Anzeigen',
 			title_icon: TextAlignStart,
-			closable: true,
+			window_class: 'size-full'
+		};
+	};
+
+	const show_website_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: website_popup,
+			title: 'Webseite Anzeigen',
+			window_class: 'w-xl',
+			title_icon: Globe,
 		};
 	};
 
@@ -74,13 +95,12 @@
 		}
 	}
 
-	async function ask_shutdonw() {
+	async function ask_shutdown() {
 		popup_content = {
 			open: true,
-			snippet: ask_shutdonw_popup,
-			title: 'PC Herunterfahren',
+			snippet: ask_shutdown_popup,
+			title: 'Bildschirm Herunterfahren',
 			title_icon: PowerOff,
-			closable: true
 		};
 	}
 
@@ -88,7 +108,7 @@
 		popup_content.open = false;
 		await run_on_all_selected_displays((d) => {
 			shutdown(d.ip); // no await here because we want to be fast
-			db.displays.update(d.id, { status: 'app_offline' });
+			db.displays.update(d.id, { status: 'app_offline', preview: { currently_updating: false, url: null} });
 		}, false);
 	}
 
@@ -107,9 +127,52 @@
 	async function send_single_key_press(key: string, action: 'press' | 'release') {
 		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]));
 	}
+	let website_url = $state('');
+	let website_url_valid = $state(false);
+
+	function validate_website_url(url: string): [boolean, string] {
+		if (url === '') return [true, ''];
+		const regex = /^https?:\/\/[\w\-]+(\.[\w\-]+)+([\w\-\._~:/?#\[\]@!$&'\(\)\*\+,;=.])*/;
+		if (regex.test(url)) {
+			return [true, ''];
+		}
+		return [false, 'Ungültige URL'];
+	}
+
+	async function send_website() {
+		popup_content.open = false;
+		await run_on_all_selected_displays((d) =>
+			show_html(d.ip, `<iframe src="${website_url}"></iframe>`)
+		);
+		website_url = '';
+	}
 </script>
 
-{#snippet ask_shutdonw_popup()}
+{#snippet website_popup()}
+	<div class="flex flex-col gap-2">
+		<TextInput
+			title="URL (mit http:// oder https://)"
+			placeholder="https://example.com"
+			bind:current_value={website_url}
+			bind:current_valid={website_url_valid}
+			is_valid_function={validate_website_url}
+			enter_mode="submit"
+			enter_function={send_website}
+		/>
+		<div class="flex flex-row justify-end gap-2">
+			<Button className="button space font-bold" click_function={popup_close_function}>
+				Abbrechen
+			</Button>
+			<Button
+				click_function={send_website}
+				disabled={!website_url_valid || website_url === ''}
+				className="button success space">Anzeigen</Button
+			>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet ask_shutdown_popup()}
 	<p>Bist du sicher, dass du alle ausgewählten Displays herunterfahren möchtest?</p>
 
 	<div class="flex flex-row justify-end gap-2">
@@ -130,7 +193,7 @@
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">
 	<div class="text-xl font-bold pl-3 content-center bg-stone-700 rounded-t-2xl truncate min-w-0">
-		Bildschirme steuern
+		Bildschirme Steuern
 	</div>
 	<div class="relative flex flex-col gap-2 p-2 overflow-auto">
 		<div class="flex flex-row justify-between gap-2">
@@ -171,13 +234,20 @@
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
-					click_function={show_text_popup}><TextAlignStart /> Text anzeigen</Button
+					click_function={show_text_popup}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					><TextAlignStart /> Text Anzeigen</Button
 				>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					click_function={show_website_popup}><Globe /> Webseite Anzeigen</Button
+				>
+
+				<Button
+					className="px-3 flex gap-3 w-75 justify-normal"
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					click_function={async () => {
 						await run_on_all_selected_displays((d) => show_blackscreen(d.ip));
 					}}><Presentation />Blackout</Button
@@ -185,38 +255,40 @@
 
 				<div class="flex flex-row justify-normal">
 					<Button className="rounded-r-none pl-3 flex gap-3 grow w-65 justify-normal" disabled>
-						<TrafficCone /> Fallback-Bild anzeigen
+						<TrafficCone /> Fallback-Bild Anzeigen
 					</Button>
 					<Button className="rounded-l-none flex grow-0 w-10" disabled><ChevronDown /></Button>
 				</div>
 
 				<Button
 					className="px-3 flex gap-3 w-75 justify-normal"
-					disabled={$selected_display_ids.length === 0}
-					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben durchgeben</Button
+					disabled={no_active_display_selected($selected_display_ids, $online_displays)}
+					click_function={show_send_keys_popup}><Keyboard /> Tastatur-Eingaben Senden</Button
 				>
 			</div>
 			<div class="flex flex-col gap-2 justify-between">
 				<div class="flex flex-col gap-2">
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$all_display_states === 'on' || $selected_display_ids.length === 0}
+						disabled={$all_display_states === 'on' ||
+							no_active_display_selected($selected_display_ids, $online_displays)}
 						click_function={startup_action}
 					>
-						<Power /> PC hochfahren
+						<Power /> Bildschirm Hochfahren
 					</Button>
 
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
-						disabled={$all_display_states === 'off' || $selected_display_ids.length === 0}
-						click_function={ask_shutdonw}
+						disabled={$all_display_states === 'off' ||
+							no_active_display_selected($selected_display_ids, $online_displays)}
+						click_function={ask_shutdown}
 					>
-						<PowerOff /> PC herunterfahren</Button
+						<PowerOff /> Bildschirm Herunterfahren</Button
 					>
 				</div>
 				<Button className="px-3 flex gap-3 w-full xl:w-75 justify-normal" disabled>
 					<SquareTerminal />
-					Shell-Befehl ausführen
+					Shell-Befehl Ausführen
 				</Button>
 			</div>
 		</div>

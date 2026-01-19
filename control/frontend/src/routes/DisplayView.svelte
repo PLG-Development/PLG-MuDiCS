@@ -218,7 +218,7 @@
 							class="min-w-40 px-4 rounded-xl cursor-pointer duration-200 transition-colors bg-stone-600"
 							onclick={async () => await toggle_all_selected_displays($display_groups)}
 						>
-							<span>{$all_groups_selected || false ? 'Alle abwählen' : 'Alle auswählen'}</span>
+							<span>{$all_groups_selected || false ? 'Alle Abwählen' : 'Alle Auswählen'}</span>
 						</button>
 						<div class="flex flex-row">
 							<Button

@@ -41,7 +41,7 @@
 		} else {
 			$pinned_display_id = display_id_object.id;
 		}
-		await screenshot_loop(display_id_object.id);
+		screenshot_loop(display_id_object.id);
 		e.stopPropagation();
 	}
 </script>

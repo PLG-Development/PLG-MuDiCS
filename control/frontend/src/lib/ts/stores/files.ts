@@ -1,6 +1,7 @@
 import { get, writable, type Writable } from 'svelte/store';
 import {
 	get_file_primary_key,
+	is_folder,
 	type Display,
 	type FileOnDisplay,
 	type Inode,
@@ -8,9 +9,10 @@ import {
 } from '../types';
 import { get_display_by_id } from './displays';
 import { is_selected, select, selected_display_ids, selected_file_ids } from './select';
-import { create_folders, get_file_data, get_file_tree_data } from '../api_handler';
+import { create_path, get_file_data, get_file_tree_data } from '../api_handler';
 import { deactivate_old_thumbnail_urls, generate_thumbnail } from './thumbnails';
 import { db } from '../database';
+import { file_transfer_tasks } from '../file_transfer_handler';
 
 export const current_file_path: Writable<string> = writable<string>('/');
 
@@ -47,7 +49,10 @@ export async function delete_and_deselect_unique_files_from_display(display_id: 
 	await remove_all_files_without_display();
 }
 
-export async function remove_file_from_display_recusively(display_id: string, file_primary_key: string) {
+export async function remove_file_from_display_recusively(
+	display_id: string,
+	file_primary_key: string
+) {
 	const found = await db.files_on_display.get([display_id, file_primary_key]);
 	if (!found) return;
 	select(selected_file_ids, file_primary_key, 'deselect');
@@ -55,7 +60,7 @@ export async function remove_file_from_display_recusively(display_id: string, fi
 
 	const inode_element = await get_file_by_id(found.file_primary_key);
 	if (!inode_element) return;
-	if (inode_element.type === 'inode/directory') {
+	if (is_folder(inode_element)) {
 		const path_inside_folder = inode_element.path + inode_element.name + `/`;
 		const primary_file_keys_in_folder = (
 			await db.files.where('path').equals(path_inside_folder).toArray()
@@ -130,12 +135,11 @@ async function get_display_ids_where_file_is_missing(
 	);
 }
 
-export async function get_displays_where_path_exists(
+export async function get_displays_where_path_not_exists(
 	path: string,
-	selected_display_ids: string[],
-	invert: boolean
+	selected_display_ids: string[]
 ): Promise<Display[]> {
-	if (path === '/') return [];
+	if (path === '/') return await db.displays.where('id').anyOf(selected_display_ids).toArray();
 	const last_path_part =
 		path
 			.slice(0, path.length - 1)
@@ -146,10 +150,9 @@ export async function get_displays_where_path_exists(
 	const folders_of_current_path = await db.files
 		.where('name')
 		.equals(last_path_part)
-		.filter((inode) => inode.path === path_without_last_part && inode.type === 'inode/directory')
+		.filter((inode) => inode.path === path_without_last_part && is_folder(inode))
 		.first();
-	if (!folders_of_current_path)
-		return await db.displays.where('id').anyOf(selected_display_ids).toArray();
+	if (!folders_of_current_path) return [];
 	const folder_primary_key = get_file_primary_key(folders_of_current_path);
 
 	const display_ids_with_folder = (
@@ -157,11 +160,7 @@ export async function get_displays_where_path_exists(
 	).map((fod) => fod.display_id);
 
 	const display_ids = selected_display_ids.filter((display_id) => {
-		if (invert) {
-			return !display_ids_with_folder.includes(display_id);
-		} else {
-			return display_ids_with_folder.includes(display_id);
-		}
+		return !display_ids_with_folder.includes(display_id);
 	});
 
 	return (await db.displays.bulkGet(display_ids)).filter((e) => e !== undefined);
@@ -234,9 +233,20 @@ export async function update_folder_elements_recursively(
 	const new_folder_elements = await get_file_data(display.ip, file_path);
 	if (!new_folder_elements) return;
 
+	const loading_file_ids = Object.keys(get(file_transfer_tasks));
+	const loading_file_keys_without_size = (
+		await db.files.bulkGet(
+			loading_file_ids.map((string_id) => JSON.parse(string_id) as [string, string, number, string])
+		)
+	)
+		.filter((f) => !!f)
+		.map((f) => JSON.stringify([f.path, f.name, f.type]));
+
+	// Filter new files, which aren't currently uploading
 	const existing_files_on_display_in_path: FileOnDisplay[] = await db.files_on_display
 		.where('display_id')
 		.equals(display.id)
+		.filter((f) => !loading_file_ids.includes(f.file_primary_key))
 		.toArray();
 	const existing_file_keys_on_display_in_path: [string, string, number, string][] =
 		existing_files_on_display_in_path.map(
@@ -248,17 +258,14 @@ export async function update_folder_elements_recursively(
 		.filter((e) => e.path === file_path)
 		.toArray();
 
-	const existing_files_with_loading_state: { folder_element: Inode; is_loading: boolean }[] =
-		existing_files.map((folder_element) => ({
-			folder_element,
-			is_loading: !!existing_files_on_display_in_path.find(
-				(e) => e.file_primary_key === get_file_primary_key(folder_element)
-			)?.loading_data
-		}));
+	const diff = get_folder_elements_difference(existing_files, new_folder_elements);
 
-	const diff = get_folder_elements_difference(
-		existing_files_with_loading_state,
-		new_folder_elements
+	// Filter new files, which aren't currently uploading -> don't compare size
+	diff.new = diff.new.filter(
+		(e) =>
+			!loading_file_keys_without_size.includes(
+				JSON.stringify([e.folder_element.path, e.folder_element.name, e.folder_element.type])
+			)
 	);
 
 	if (diff.new.length > 0) {
@@ -268,12 +275,11 @@ export async function update_folder_elements_recursively(
 			const file_on_display: FileOnDisplay = {
 				display_id: display.id,
 				file_primary_key: get_file_primary_key(new_element.folder_element),
-				loading_data: null,
 				date_created: new_element.date_created
 			};
 			await db.files_on_display.put(file_on_display);
 
-			if (new_element.folder_element.type === 'inode/directory') {
+			if (is_folder(new_element.folder_element)) {
 				await update_folder_elements_recursively(
 					display,
 					file_path + new_element.folder_element.name + '/'
@@ -298,23 +304,21 @@ export async function update_folder_elements_recursively(
 }
 
 function get_folder_elements_difference(
-	old_elements: { folder_element: Inode; is_loading: boolean }[],
+	old_elements: Inode[],
 	new_elements: { folder_element: Inode; date_created: Date }[]
 ): { deleted: Inode[]; new: { folder_element: Inode; date_created: Date }[] } {
-	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e.folder_element)));
+	const old_keys = new Set(old_elements.map((e) => get_file_primary_key(e)));
 	const new_keys = new Set(new_elements.map((e) => get_file_primary_key(e.folder_element)));
 
-	const only_in_old = old_elements
-		.filter((e) => !new_keys.has(get_file_primary_key(e.folder_element)) && !e.is_loading)
-		.map((e) => e.folder_element);
+	const only_in_old = old_elements.filter((e) => !new_keys.has(get_file_primary_key(e)));
 	const only_in_new = new_elements.filter(
 		(e) => !old_keys.has(get_file_primary_key(e.folder_element))
 	);
 	return { deleted: only_in_old, new: only_in_new };
 }
 
-export async function get_current_folder_elements(
-	current_file_path: string,
+export async function get_folder_elements(
+	file_path: string,
 	selected_display_ids: string[]
 ): Promise<Inode[]> {
 	const existing_file_keys_on_selected_displays: [string, string, number, string][] = (
@@ -323,7 +327,7 @@ export async function get_current_folder_elements(
 	const existing_files_on_selected_displays_in_path: Inode[] = await db.files
 		.where('[path+name+size+type]')
 		.anyOf(existing_file_keys_on_selected_displays)
-		.filter((e) => e.path === current_file_path)
+		.filter((e) => e.path === file_path)
 		.toArray();
 
 	return sort_files(existing_files_on_selected_displays_in_path);
@@ -331,8 +335,8 @@ export async function get_current_folder_elements(
 
 function sort_files(files: Inode[]) {
 	files.sort((a, b) => {
-		const isDirA = a.type === 'inode/directory';
-		const isDirB = b.type === 'inode/directory';
+		const isDirA = is_folder(a);
+		const isDirB = is_folder(b);
 
 		// Ordner zuerst
 		if (isDirA && !isDirB) return -1;
@@ -404,31 +408,24 @@ export async function create_path_on_all_selected_displays(
 	path: string,
 	selected_display_ids: string[]
 ) {
-	const path_parts = path
-		.slice(1, path.length - 1)
-		.split('/')
-		.filter((e) => e.length !== 0);
-	let remaining_display_ids = [...selected_display_ids];
-
-	const getDisplaysForPath = async (currentPath: string): Promise<Display[]> => {
-		if (currentPath === '/') {
-			const displays = await db.displays.bulkGet(remaining_display_ids);
-			return displays.filter((d): d is Display => !!d);
-		}
-		return get_displays_where_path_exists(currentPath, remaining_display_ids, false);
-	};
-
-	for (let depth = path_parts.length; depth >= 0 && remaining_display_ids.length; depth--) {
-		const currentPath = depth === 0 ? '/' : `/${path_parts.slice(0, depth).join('/')}/`;
-
-		const displays = await getDisplaysForPath(currentPath);
-		if (!displays.length) continue;
-
-		for (const display of displays) {
-			await create_folders(display.ip, currentPath, path_parts.slice(depth));
-			remaining_display_ids = remaining_display_ids.filter((id) => id !== display.id);
-		}
+	const displays_without_path = await get_displays_where_path_not_exists(
+		path,
+		selected_display_ids
+	);
+	if (displays_without_path.length === 0) return;
+	for (const display of displays_without_path) {
+		await create_path(display.ip, path);
 	}
+	setTimeout(async () => {
+		for (const display of displays_without_path) {
+			const changed_paths = await get_changed_directory_paths(display, '/');
+			if (!changed_paths) continue;
+			console.debug('Update file system from', display.name, ':', changed_paths);
+			for (const path of changed_paths) {
+				await update_folder_elements_recursively(display, path);
+			}
+		}
+	}, 0);
 }
 
 export async function get_date_mapping(file_primary_key: string): Promise<Record<string, Date>> {

@@ -1,5 +1,6 @@
 import { notifications } from './stores/notification';
 import {
+	is_folder,
 	to_display_status,
 	type DisplayStatus,
 	type Inode,
@@ -9,6 +10,9 @@ import {
 } from './types';
 import { dev } from '$app/environment';
 import { get_sanitized_file_url } from './utils';
+import { online_displays } from './stores/displays';
+import { get } from 'svelte/store';
+import { update_display_status } from './main';
 
 export async function get_screenshot(ip: string): Promise<Blob | null> {
 	const options = { method: 'PATCH' };
@@ -36,7 +40,7 @@ export async function send_keyboard_input(
 	await request_display(ip, '/keyboardInput', options);
 }
 
-export async function show_html(ip: string, html: string) {
+export async function show_html(ip: string, html: string): Promise<void> {
 	const options = {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
@@ -92,6 +96,7 @@ export async function get_file_data(
 			size: Number(response_element.size),
 			thumbnail: null
 		};
+		if (is_folder(folder_element)) folder_element.size = 0;
 		folder_element_list.push({ folder_element, date_created: new Date(response_element.created) });
 	}
 	return folder_element_list;
@@ -110,16 +115,8 @@ export async function get_file_tree_data(ip: string, path: string): Promise<Tree
 	return tree_element?.contents || null;
 }
 
-export async function create_folders(
-	ip: string,
-	path: string,
-	folder_names: string[]
-): Promise<void> {
-	let command = `cd ".${path}"`;
-
-	for (const part of folder_names) {
-		command += ` && mkdir "${part}" && cd "${part}/"`;
-	}
+export async function create_path(ip: string, path: string): Promise<void> {
+	const command = `mkdir -p ".${path}"`;
 
 	const raw_response = await run_shell_command(ip, command);
 	if (!raw_response.ok || !raw_response.json) return;
@@ -196,14 +193,30 @@ async function request_display(
 	supress_error_handling_http_codes: number[] = []
 ): Promise<RequestResponse> {
 	const url = `http://${ip}:1323/api${api_route}`;
-	return await request(url, options, supress_error_handling_http_codes);
+
+	const current_online_displays = get(online_displays);
+	if (!current_online_displays.map((d) => d.ip).includes(ip)) return { ok: false };
+
+	const response = await request(url, options, supress_error_handling_http_codes);
+	if (!response.ok && response.http_code === 408) {
+		// Network error -> device possibly not longer online -> test status and throw no error if its offline
+		const possible_displays = current_online_displays.filter((d) => d.ip === ip);
+		for (const display of possible_displays) {
+			const current_status = await update_display_status(display);
+			if (current_status === 'app_online') {
+				console.error(`No response from ${url}`);
+				notifications.push('error', 'Netzwerk-Fehler bei API-Anfrage', `${url}`);
+			}
+		}
+	}
+	return response;
 }
 
 async function request_control(
 	api_route: string,
 	options: { method: string; headers?: Record<string, string>; body?: string }
 ): Promise<RequestResponse> {
-	const url = `http://127.0.0.1:8080/api${api_route}`;
+	const url = `${dev ? 'http://127.0.0.1:8080' : window.location.origin}/api${api_route}`;
 	return await request(url, options);
 }
 
@@ -243,12 +256,17 @@ async function request(
 				error_description += '\nCould not parse error description';
 			}
 		}
-		notifications.push('error', `Fehler ${response.status} bei API-Anfrage`, error_description);
+		notifications.push(
+			'error',
+			`Fehler bei API-Anfrage`,
+			`\nHTTP: ${response.status}\n${error_description}`
+		);
 	} catch (error: unknown) {
 		if (error instanceof TypeError && /fetch|NetworkError/i.test(error.message)) {
 			if (dev) {
 				console.warn('Request failed - Is the targeted device online?');
 			}
+			return { ok: false, http_code: 408 };
 		} else {
 			console.error(url, error);
 			notifications.push('error', `Fataler Fehler bei API-Anfrage`, `${url}\nFehler: ${error}`);
@@ -277,8 +295,8 @@ function handle_shell_error(
 		console.error(shell_response);
 		notifications.push(
 			'error',
-			`Fehler ${shell_response.exitCode} in API-Shell`,
-			`${ip}\n${shell_command}\nFehler: ${shell_response.stderr}`
+			`Fehler in API-Shell`,
+			`${ip}\n${shell_command}\nFehler (${shell_response.exitCode}): ${shell_response.stderr}`
 		);
 		return true;
 	}

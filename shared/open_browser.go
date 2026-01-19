@@ -20,7 +20,13 @@ func OpenBrowserWindow(url string, fullscreen bool, profile string) error {
 		return fmt.Errorf("failed to create local config directory: %w", err)
 	}
 
-	args := []string{fmt.Sprintf("--app=%s", url), "--autoplay-policy=no-user-gesture-required", fmt.Sprintf("--user-data-dir=%s", browserProfileDirPath)}
+	args := []string{
+		fmt.Sprintf("--app=%s", url),
+		"--autoplay-policy=no-user-gesture-required",
+		fmt.Sprintf("--user-data-dir=%s", browserProfileDirPath),
+		"--allow-running-insecure-content",
+		"--disable-features=XFrameOptions",
+	}
 	if fullscreen {
 		args = append(args, "--start-fullscreen")
 	}

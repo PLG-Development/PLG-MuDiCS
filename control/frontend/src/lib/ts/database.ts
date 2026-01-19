@@ -23,8 +23,7 @@ export class FileDatabase extends Dexie {
         [display_id+file_primary_key],
         display_id,
         file_primary_key,
-        date_created,
-        loading_data
+        date_created
       `,
 			displays: `
         id,

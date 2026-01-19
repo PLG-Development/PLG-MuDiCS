@@ -17,17 +17,17 @@
 	import { selected_display_ids, selected_file_ids } from '$lib/ts/stores/select';
 	import {
 		current_file_path,
-		get_current_folder_elements,
+		get_folder_elements,
 		get_file_by_id,
 		run_for_selected_files_on_selected_displays,
 		update_current_folder_on_selected_displays,
-		get_displays_where_path_exists,
+		get_displays_where_path_not_exists,
 		create_folder_on_all_selected_displays
 	} from '$lib/ts/stores/files';
 	import { slide } from 'svelte/transition';
 	import InodeElement from '../lib/components/InodeElement.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
-	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
+	import { get_file_primary_key, is_folder, type Inode, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import {
 		first_letter_is_valid,
@@ -37,7 +37,8 @@
 	import { delete_files, rename_file } from '$lib/ts/api_handler';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
 	import { liveQuery, type Observable } from 'dexie';
-	import { download_file, add_upload } from '$lib/ts/file_transfer_handler';
+	import { download_file, add_upload, add_sync_recursively } from '$lib/ts/file_transfer_handler';
+	import { no_active_display_selected, online_displays } from '$lib/ts/stores/displays';
 
 	let current_name: string = $state('');
 	let current_valid: boolean = $state(false);
@@ -52,21 +53,22 @@
 	$effect(() => {
 		const path = $current_file_path,
 			display_ids = $selected_display_ids;
-		current_folder_elements = liveQuery(() => get_current_folder_elements(path, display_ids));
+		current_folder_elements = liveQuery(() => get_folder_elements(path, display_ids));
 	});
 	let one_file_selected: Observable<boolean> | undefined = $state();
 	$effect(() => {
 		const s = $selected_file_ids;
 		one_file_selected = liveQuery(async () => {
-			return s.length === 1 && (await get_file_by_id(s[0]))?.type !== 'inode/directory';
-		})
-	})
+			const inode = await get_file_by_id(s[0]);
+			if (!inode) return false;
+			return s.length === 1 && is_folder(inode);
+		});
+	});
 
 	let popup_content: PopupContent = $state({
 		open: false,
 		snippet: null,
 		title: '',
-		closable: true
 	});
 
 	let file_input: HTMLInputElement;
@@ -110,17 +112,16 @@
 	const show_edit_file_popup = async () => {
 		const file = await get_file_by_id($selected_file_ids[0]);
 		if (!file) return;
-		const is_folder = file.type === 'inode/directory';
-		const extension = is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
+		const file_is_folder = is_folder(file);
+		const extension = file_is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
 		current_name = file.name.slice(0, file.name.length - extension.length);
 		current_valid = true;
 		popup_content = {
 			open: true,
 			snippet: edit_file_name_popup,
-			title: `${is_folder ? 'Ordner' : 'Datei'} umbenennen`,
+			title: `${file_is_folder ? 'Ordner' : 'Datei'} umbenennen`,
 			title_icon: FolderPlus,
 			snippet_arg: extension,
-			closable: true
 		};
 	};
 
@@ -128,14 +129,13 @@
 		current_name = '';
 		current_valid = false;
 		display_names_where_path_does_not_exist = (
-			await get_displays_where_path_exists($current_file_path, $selected_display_ids, true)
+			await get_displays_where_path_not_exists($current_file_path, $selected_display_ids)
 		).map((display) => display.name);
 		popup_content = {
 			open: true,
 			snippet: new_folder_popup,
 			title: 'Neuen Ordner erstellen',
 			title_icon: FolderPlus,
-			closable: true
 		};
 	};
 
@@ -145,9 +145,23 @@
 			snippet: delete_request_popup,
 			title: `${$selected_file_ids.length} ${$selected_file_ids.length === 1 ? 'Objekt' : 'Objekte'} wirklich löschen?`,
 			title_icon: Trash2,
-			closable: true
 		};
 	};
+
+	async function sync_selected_files(
+		selected_file_ids: string[],
+		selected_display_ids: string[],
+		current_folder_elements: Inode[]
+	) {
+		if (selected_file_ids.length === 0 && current_folder_elements.length > 0) {
+			selected_file_ids = current_folder_elements.map((inode) => get_file_primary_key(inode));
+		}
+		if (selected_file_ids.length === 0) return;
+		// Mit For-Schleife über ausgewählte Elemente gehen
+		for (const file_id of selected_file_ids) {
+			await add_sync_recursively(file_id, selected_display_ids);
+		}
+	}
 </script>
 
 {#snippet new_folder_popup()}
@@ -232,7 +246,7 @@
 		<span class="text-stone-400 px-1"
 			>{`${$selected_file_ids.length === 1 ? 'Folgendes Objekt' : `Folgende ${$selected_file_ids.length} Objekte`} löschen? (Wiederherstellung nicht möglich)`}</span
 		>
-		<div class="flex flex-col gap-2 overflow-auto h-full min-h-0 grow-0">
+		<div class="flex flex-col gap-2 overflow-y-auto h-full min-h-0 grow-0">
 			{#each $selected_files || [] as file}
 				<InodeElement {file} not_interactable />
 			{/each}
@@ -270,7 +284,7 @@
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
 	<div class="bg-stone-700 flex justify-between w-full p-1 rounded-t-2xl min-w-0 gap-2">
 		<span class="text-xl font-bold pl-2 content-center truncate min-w-0">
-			Dateien anzeigen und verwalten
+			Dateien Anzeigen und Verwalten
 		</span>
 		<div class="flex flex-row">
 			<Button
@@ -306,7 +320,7 @@
 						title="Neuen Ordner erstellen (Neuen Ordner mit ausgewählten Objekten erstellen)"
 						className="px-3 flex"
 						click_function={show_new_folder_popup}
-						disabled={$selected_display_ids.length === 0}><FolderPlus /></Button
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><FolderPlus /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
@@ -315,19 +329,26 @@
 						click_function={() => {
 							if (file_input) file_input.click();
 						}}
-						disabled={$selected_display_ids.length === 0}><Upload /></Button
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}><Upload /></Button
 					>
 					<Button
 						title="Ausgewählte Datei herunterladen"
 						className="px-3 flex"
-						click_function={() => (download_file($selected_file_ids[0], $selected_display_ids))}
+						click_function={async () =>
+							await download_file($selected_file_ids[0], $selected_display_ids)}
 						disabled={!$one_file_selected}><Download /></Button
 					>
 					<div class="border border-stone-700 my-1"></div>
 					<Button
 						title="Aktuellen Ordner / Ausgewählte Datei(en) zwischen Bildschirmen synchronisieren"
 						className="px-3 flex gap-3"
-						disabled={$selected_display_ids.length === 0}
+						click_function={async () =>
+							await sync_selected_files(
+								$selected_file_ids,
+								$selected_display_ids,
+								$current_folder_elements ?? []
+							)}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 						><RefreshCcw />
 						<span class="hidden 2xl:flex">Synchronisieren</span>
 					</Button>
@@ -341,7 +362,7 @@
 					<Button
 						title="Ausgewählte Datei(en) einfügen"
 						className="px-3 flex"
-						disabled={$selected_display_ids.length === 0}
+						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
 					>
 						<ClipboardPaste />
 					</Button>
@@ -365,7 +386,7 @@
 		</div>
 		<div class="min-h-0 h-full overflow-y-auto overflow-x-hidden bg-stone-750 rounded-xl">
 			<div class="flex flex-col gap-2 p-2 min-h-0 max-w-full">
-				{#if $selected_display_ids.length === 0}
+				{#if no_active_display_selected($selected_display_ids, $online_displays)}
 					<span class="text-stone-450 px-10 py-6 leading-relaxed text-center">
 						Es sind keine Bildschirme ausgewählt.
 					</span>

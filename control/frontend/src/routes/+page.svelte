@@ -1,25 +1,42 @@
 <script lang="ts">
-	import { Monitor, Plus, Radio, Settings, Trash2, Menu } from 'lucide-svelte';
+	import {
+		Monitor,
+		Plus,
+		Radio,
+		Settings,
+		Trash2,
+		Menu,
+		ChevronDown,
+		icons,
+		SquareCheckBig,
+		Square,
+		X,
+		Info
+	} from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import FileView from './FileView.svelte';
 	import ControlView from './ControlView.svelte';
 	import DisplayView from './DisplayView.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
-	import { type PopupContent } from '$lib/ts/types';
+	import { type Display, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import {
 		add_display,
 		edit_display_data,
 		get_display_by_id,
 		is_display_name_taken,
-		remove_display
+		remove_display,
+		screenshot_loop
 	} from '$lib/ts/stores/displays';
 	import { notifications } from '$lib/ts/stores/notification';
 	import { ping_ip } from '$lib/ts/api_handler';
 	import { onMount } from 'svelte';
-	import { on_start } from '$lib/ts/main';
+	import { on_app_start, update_display_status } from '$lib/ts/main';
 	import { display_status_to_info } from '$lib/ts/utils';
 	import HighlightedText from '$lib/components/HighlightedText.svelte';
+	import { preview_settings } from '$lib/ts/stores/ui_behavior';
+	import NumberSettingInput from '$lib/components/NumberSettingInput.svelte';
+	import { db } from '$lib/ts/database';
 
 	const ip_regex =
 		/^(?:(?:10|127)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d))$/;
@@ -30,7 +47,6 @@
 		snippet: null,
 		title: '',
 		title_class: '!text-xl',
-		closable: true
 	});
 	let remove_display_name = $state('');
 
@@ -55,11 +71,40 @@
 		const ip = text_inputs_valid.ip.value;
 		const mac = text_inputs_valid.mac.value === '' ? null : text_inputs_valid.mac.value;
 		const name = text_inputs_valid.name.value;
+		let display: Display | null = null;
 		if (!!existing_display_id) {
-			await edit_display_data(existing_display_id, ip, mac, name);
+			display = await edit_display_data(existing_display_id, ip, mac, name);
 		} else {
 			const status = await ping_ip(text_inputs_valid.ip.value);
-			await add_display(ip, mac, name, status);
+			display = await add_display(ip, mac, name, status);
+		}
+		if (!!display) {
+			await update_display_status(display);
+		}
+	}
+
+	function get_display_preview_mode(mode: 'never' | 'normal' | 'always') {
+		switch (mode) {
+			case 'never':
+				return 'Nie';
+			case 'normal':
+				return 'Normal';
+			case 'always':
+				return 'Dauerhaft';
+		}
+	}
+
+	async function change_preview_mode(mode: 'never' | 'normal' | 'always') {
+		$preview_settings.mode = mode;
+		if (mode === 'never') {
+			await db.displays
+				.toCollection()
+				.modify({ preview: { currently_updating: false, url: null } });
+		} else {
+			const display_ids = (await db.displays.toArray()).map((d) => d.id);
+			for (const display_id of display_ids) {
+				screenshot_loop(display_id);
+			}
 		}
 	}
 
@@ -72,11 +117,21 @@
 		popup_content = {
 			open: true,
 			snippet: display_popup,
-			title: 'Neuen Bildschirm hinzufügen',
+			title: 'Neuen Bildschirm Hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
 			window_class: 'w-3xl',
-			closable: true
+		};
+	};
+
+	const show_settings_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: settings_popup,
+			title: 'Einstellungen',
+			title_icon: Settings,
+			title_class: '!text-xl',
+			window_class: 'w-3xl',
 		};
 	};
 
@@ -89,7 +144,6 @@
 			title: 'Bildschirm wirklich löschen?',
 			title_class: 'text-red-400 !text-xl',
 			title_icon: Trash2,
-			closable: true
 		};
 	};
 
@@ -108,12 +162,64 @@
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
 			title_class: '!text-xl',
-			closable: true
 		};
 	};
 
-	onMount(on_start);
+	onMount(on_app_start);
+
+	const show_about_popup = () => {
+		popup_content = {
+			open: true,
+			snippet: about_popup,
+			title: 'Über PLG MuDiCS',
+			title_icon: Info,
+			title_class: '!text-xl',
+		};
+	};
 </script>
+
+{#snippet about_popup(_: string)}
+	<div class="px-2">
+		<h3 class="text-lg font-bold mt-4">Entwickler</h3>
+		<p>
+			<a target="_blank" class="link" href="https://github.com/programmer-44">E44</a>
+			<a target="_blank" class="link" href="https://codeberg.org/2mal3">2mal3</a>,
+		</p>
+
+		<h3 class="text-lg font-bold mt-4">Lizenz</h3>
+		<a
+			target="_blank"
+			class="link"
+			href="https://github.com/PLG-Development/PLG-MuDiCS/blob/main/LICENSE.txt"
+		>
+			GNU Affero General Public License v3 (AGPL-3.0)
+		</a>
+
+		<h3 class="text-lg font-bold mt-4">Verwendete Bibliotheken</h3>
+		<ul class="list-disc list-inside">
+			<li><a target="_blank" href="https://svelte.dev/" class="link">Svelte & SvelteKit</a></li>
+			<li><a target="_blank" href="https://tailwindcss.com/" class="link">TailwindCSS</a></li>
+			<li><a target="_blank" href="https://lucide.dev/" class="link">Lucide Icons</a></li>
+			<li><a target="_blank" href="https://tiptap.dev/" class="link">Tiptap</a></li>
+			<li><a target="_blank" href="https://dexie.org/" class="link">Dexie.js</a></li>
+			<li>
+				<a target="_blank" href="https://github.com/orefalo/svelte-splitpanes" class="link"
+					>svelte-splitpanes</a
+				>
+			</li>
+			<li>
+				<a target="_blank" href="https://github.com/thisux/sveltednd" class="link"
+					>@thisux/sveltednd</a
+				>
+			</li>
+			<li><a target="_blank" href="https://echo.labstack.com/" class="link">Echo</a></li>
+			<li><a target="_blank" href="https://github.com/mdlayher/wol" class="link">wol</a></li>
+		</ul>
+	</div>
+	<div class="flex justify-end pt-2">
+		<Button click_function={popup_close_function} className="px-4">Schließen</Button>
+	</div>
+{/snippet}
 
 {#snippet remove_display_popup(display_id: string)}
 	<div class="max-w-prose px-2">
@@ -221,6 +327,52 @@
 	</div>
 {/snippet}
 
+{#snippet settings_popup()}
+	<div class="flex flex-col gap-2 pl-1">
+		<span class="font-bold text-lg">Vorschau-Verhalten</span>
+		<div class="flex flex-col gap-2 ml-2">
+			<span class="text-stone-400 text-sm max-w-prose"
+				>Die Vorschau eines Bildschirms ist das Bild, welches links neben dem Display-Namen zu sehen
+				ist. Es zeigt relativ aktuell das an, was auf dem jeweiligen Bildschirm zu sehen ist.</span
+			>
+			<div class="flex flex-row justify-between items-center">
+				<span>Aktualisierungs-Verhalten</span>
+				<Button
+					className="gap-3 pl-4 pr-3 w-35"
+					menu_options={(['never', 'normal', 'always'] as const).map((mode) => ({
+						icon: mode === $preview_settings.mode ? SquareCheckBig : Square,
+						name: get_display_preview_mode(mode),
+						on_select: async () => await change_preview_mode(mode)
+					}))}>{get_display_preview_mode($preview_settings.mode)} <ChevronDown /></Button
+				>
+			</div>
+			<div class="flex flex-row justify-between items-center">
+				<span>Intervall zwischen den Aktualisierungs-Anfragen</span>
+				<NumberSettingInput
+					disabled={$preview_settings.mode === 'never'}
+					number_setting={$preview_settings.retry_seconds}
+					on_change={(new_value: number) => {
+						$preview_settings.retry_seconds.now = new_value;
+					}}
+				/>
+			</div>
+			<div class="flex flex-row justify-between items-center max-w-full gap-8">
+				<span class="">Anzahl der änderungslosen Aktualisierungen bis pausiert wird</span>
+				<NumberSettingInput
+					disabled={$preview_settings.mode !== 'normal'}
+					number_setting={$preview_settings.retry_count}
+					on_change={(new_value: number) => {
+						$preview_settings.retry_count.now = new_value;
+					}}
+				/>
+			</div>
+		</div>
+	</div>
+	<div class="flex justify-end pt-4">
+		<Button click_function={popup_close_function} className="px-4">Schließen</Button>
+	</div>
+{/snippet}
+
 <main class="bg-stone-900 h-dvh w-dvw text-stone-200 px-4 py-2 gap-2 grid grid-rows-[3rem_auto]">
 	<div class="w-[calc(100dvw-(8*var(--spacing)))] flex justify-between">
 		<span class="text-4xl font-bold content-center pl-1"> PLG MuDiCS </span>
@@ -230,8 +382,18 @@
 			menu_options={[
 				{
 					icon: Plus,
-					name: 'Neuen Bildschirm hinzufügen',
+					name: 'Neuen Bildschirm Hinzufügen',
 					on_select: show_new_display_popup
+				},
+				{
+					icon: Settings,
+					name: 'Einstellungen',
+					on_select: show_settings_popup
+				},
+				{
+					icon: Info,
+					name: 'Über',
+					on_select: show_about_popup
 				}
 			]}
 		>

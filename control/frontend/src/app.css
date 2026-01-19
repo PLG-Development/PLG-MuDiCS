@@ -12,6 +12,14 @@
 	--color-stone-850: oklch(0.242 0.0065 45.171);
 }
 
+.link {
+	@apply text-blue-300 underline;
+
+	&:hover {
+		@apply text-blue-400;
+	}
+}
+
 .button {
 	&.space {
 		@apply px-4;
