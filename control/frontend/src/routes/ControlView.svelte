@@ -45,7 +45,8 @@
 			snippet: send_keys_popup,
 			title: 'Tastatur-Eingaben durchgeben',
 			title_icon: Keyboard,
-			closable: true
+			closable: true,
+			window_class: 'h-full'
 		};
 	};
 
@@ -56,7 +57,6 @@
 			title: 'Text anzeigen',
 			title_icon: TextAlignStart,
 			closable: true,
-			window_class: 'size-full'
 		};
 	};
 
@@ -121,14 +121,7 @@
 {/snippet}
 
 {#snippet send_keys_popup()}
-	<div class="overflow-hidden flex flex-col gap-2">
-		<div>
-			<KeyInput />
-		</div>
-		<div class="flex flex-row justify-end gap-2">
-			<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
-		</div>
-	</div>
+	<KeyInput {popup_close_function}/>
 {/snippet}
 
 {#snippet text_popup()}
@@ -144,7 +137,7 @@
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-row gap-2 w-75 justify-normal">
 					<button
-						title="Vorherige Folie (Pfeil nach Links)"
+						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
 						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
@@ -160,7 +153,7 @@
 					</button>
 
 					<button
-						title="Vorherige Folie (Pfeil nach Links)"
+						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
 						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
