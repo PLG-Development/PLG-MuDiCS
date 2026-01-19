@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"plg-mudics/shared"
-
-	"github.com/micmonay/keybd_event"
 )
 
 func GetDeviceIp() (string, error) {
@@ -44,46 +42,6 @@ func GetDeviceMac() (string, error) {
 	}
 
 	return "", fmt.Errorf("no suitable MAC address found")
-}
-
-type KeyAction int
-
-const (
-	KeyPress KeyAction = iota
-	KeyRelease
-)
-
-type Input struct {
-	Key    int
-	Action KeyAction
-}
-
-func KeyboardInput(inputs []Input) error {
-	var err error
-
-	kb, err := keybd_event.NewKeyBonding()
-	if err != nil {
-		return fmt.Errorf("failed to create key bonding: %w", err)
-	}
-
-	for _, input := range inputs {
-		kb.SetKeys(input.Key)
-
-		switch input.Action {
-		case KeyPress:
-			err = kb.Press()
-		case KeyRelease:
-			err = kb.Release()
-		}
-
-		if err != nil {
-			return fmt.Errorf("failed to run key event: %w", err)
-		}
-
-		time.Sleep(time.Microsecond * 100)
-	}
-
-	return nil
 }
 
 func TakeScreenshot() (string, error) {

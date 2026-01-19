@@ -57,6 +57,7 @@
 			snippet: send_keys_popup,
 			title: 'Tastatur-Eingaben Senden',
 			title_icon: Keyboard,
+			window_class: 'h-full'
 		};
 	};
 
@@ -123,17 +124,8 @@
 		);
 	}
 
-	async function send_single_key_press(key: string) {
-		await run_on_all_selected_displays((d) =>
-			send_keyboard_input(d.ip, [{ key, action: 'press' }])
-		);
-		setTimeout(
-			async () =>
-				await run_on_all_selected_displays((d) =>
-					send_keyboard_input(d.ip, [{ key, action: 'release' }])
-				),
-			10
-		);
+	async function send_single_key_press(key: string, action: 'press' | 'release') {
+		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]));
 	}
 	let website_url = $state('');
 	let website_url_valid = $state(false);
@@ -192,14 +184,7 @@
 {/snippet}
 
 {#snippet send_keys_popup()}
-	<div class="overflow-hidden flex flex-col gap-2">
-		<div>
-			<KeyInput />
-		</div>
-		<div class="flex flex-row justify-end gap-2">
-			<Button className="px-4 font-bold" click_function={popup_close_function}>Fertig</Button>
-		</div>
-	</div>
+	<KeyInput {popup_close_function}/>
 {/snippet}
 
 {#snippet text_popup()}
@@ -214,22 +199,37 @@
 		<div class="flex flex-row justify-between gap-2">
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-row gap-2 w-75 justify-normal">
-					<Button
-						title="Vorherige Folie (Pfeil nach Links)"
-						className="px-9"
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
-						click_function={async () => {
-							await send_single_key_press('VK_LEFT');
-						}}><ArrowBigLeft /></Button
+					<button
+						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
+						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+							? 'text-stone-500 cursor-not-allowed'
+							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
+						disabled={$selected_display_ids.length === 0}
+						onmousedown={async () => {
+							await send_single_key_press('ArrowLeft', 'press');
+						}}
+						onmouseup={async () => {
+							await send_single_key_press('ArrowLeft', 'release');
+						}}
 					>
-					<Button
-						title="Nächste Folie (Pfeil nach Rechts)"
-						className="px-9"
-						disabled={no_active_display_selected($selected_display_ids, $online_displays)}
-						click_function={async () => {
-							await send_single_key_press('VK_RIGHT');
-						}}><ArrowBigRight /></Button
+						<ArrowBigLeft />
+					</button>
+
+					<button
+						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
+						class="px-9 bg-stone-700 {$selected_display_ids.length === 0
+							? 'text-stone-500 cursor-not-allowed'
+							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
+						disabled={$selected_display_ids.length === 0}
+						onmousedown={async () => {
+							await send_single_key_press('ArrowRight', 'press');
+						}}
+						onmouseup={async () => {
+							await send_single_key_press('ArrowRight', 'release');
+						}}
 					>
+						<ArrowBigRight />
+					</button>
 				</div>
 
 				<Button

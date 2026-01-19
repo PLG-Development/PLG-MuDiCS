@@ -216,12 +216,6 @@ func keyboardInputRoute(ctx echo.Context) error {
 			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Invalid action: %s", input.Action)})
 		}
 
-		code, ok := pkg.KeyboardEvents[input.Key]
-		if !ok {
-			slog.Error("Unsupported key", "key", input.Key)
-			return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: fmt.Sprintf("Unsupported key: %s", input.Key)})
-		}
-
 		var action pkg.KeyAction
 		if input.Action == "press" {
 			action = pkg.KeyPress
@@ -231,7 +225,7 @@ func keyboardInputRoute(ctx echo.Context) error {
 		}
 
 		inputs = append(inputs, pkg.Input{
-			Key:    code,
+			Key:    input.Key,
 			Action: action,
 		})
 	}
