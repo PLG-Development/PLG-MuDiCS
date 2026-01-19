@@ -29,12 +29,16 @@ export async function change_file_path(new_path: string) {
 	const displays = await db.displays.toArray();
 
 	for (const display of displays) {
-		const changed_paths = await get_changed_directory_paths(display, new_path);
-		if (!changed_paths) continue;
-		console.debug('Update file system from', display.name, ':', changed_paths);
-		for (const path of changed_paths) {
-			await update_folder_elements_recursively(display, path);
-		}
+		await update_changed_directories(display, new_path);
+	}
+}
+
+async function update_changed_directories(display: Display, path: string = '/') {
+	const changed_paths = await get_changed_directory_paths(display, path);
+	if (!changed_paths) return;
+	console.debug('Update file system from', display.name, ':', changed_paths);
+	for (const path of changed_paths) {
+		await update_folder_elements_recursively(display, path);
 	}
 }
 
@@ -94,7 +98,10 @@ export async function update_current_folder_on_selected_displays() {
 	});
 	const current_path = get(current_file_path);
 
-	for (const display of await db.displays.where('id').anyOf(get(selected_online_display_ids)).toArray()) {
+	for (const display of await db.displays
+		.where('id')
+		.anyOf(get(selected_online_display_ids))
+		.toArray()) {
 		await update_folder_elements_recursively(display, current_path);
 	}
 }
@@ -415,12 +422,7 @@ export async function create_path_on_all_selected_displays(
 	}
 	setTimeout(async () => {
 		for (const display of displays_without_path) {
-			const changed_paths = await get_changed_directory_paths(display, '/');
-			if (!changed_paths) continue;
-			console.debug('Update file system from', display.name, ':', changed_paths);
-			for (const path of changed_paths) {
-				await update_folder_elements_recursively(display, path);
-			}
+			await update_changed_directories(display);
 		}
 	}, 0);
 }
