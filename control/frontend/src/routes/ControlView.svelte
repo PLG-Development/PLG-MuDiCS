@@ -21,7 +21,7 @@
 		show_blackscreen,
 		shutdown,
 		startup,
-		show_html
+		show_website
 	} from '$lib/ts/api_handler';
 	import {
 		get_display_by_id,
@@ -44,7 +44,7 @@
 	let popup_content: PopupContent = $state({
 		open: false,
 		snippet: null,
-		title: '',
+		title: ''
 	});
 
 	let current_text = $state('');
@@ -79,7 +79,7 @@
 			snippet: website_popup,
 			title: 'Webseite Anzeigen',
 			window_class: 'w-xl',
-			title_icon: Globe,
+			title_icon: Globe
 		};
 	};
 
@@ -102,7 +102,7 @@
 			open: true,
 			snippet: ask_shutdown_popup,
 			title: 'Bildschirm Herunterfahren',
-			title_icon: PowerOff,
+			title_icon: PowerOff
 		};
 	}
 
@@ -110,7 +110,10 @@
 		popup_content.open = false;
 		await run_on_all_selected_displays((d) => {
 			shutdown(d.ip); // no await here because we want to be fast
-			db.displays.update(d.id, { status: 'app_offline', preview: { currently_updating: false, url: null} });
+			db.displays.update(d.id, {
+				status: 'app_offline',
+				preview: { currently_updating: false, url: null }
+			});
 		}, false);
 	}
 
@@ -143,9 +146,7 @@
 
 	async function send_website() {
 		popup_content.open = false;
-		await run_on_all_selected_displays((d) =>
-			show_html(d.ip, `<iframe src="${website_url}"></iframe>`)
-		);
+		await run_on_all_selected_displays((d) => show_website(d.ip, website_url));
 	}
 </script>
 
@@ -185,11 +186,11 @@
 {/snippet}
 
 {#snippet send_keys_popup()}
-	<KeyInput {popup_close_function}/>
+	<KeyInput {popup_close_function} />
 {/snippet}
 
 {#snippet text_popup()}
-	<TipTapInput bind:text={current_text}/>
+	<TipTapInput bind:text={current_text} />
 {/snippet}
 
 <div class="grid grid-rows-[2.5rem_auto] bg-stone-800 rounded-2xl min-w-0">

@@ -51,6 +51,11 @@ export async function show_html(ip: string, html: string): Promise<void> {
 	await request_display(ip, '/showHTML', options);
 }
 
+export async function show_website(ip: string, url: string): Promise<void> {
+	const command = `screen -dmS custom_website chromium-browser --user-data-dir=$(mktemp -d) --start-fullscreen --app="${url}"`;
+	await run_shell_command(ip, command);
+}
+
 export async function get_file_data(
 	ip: string,
 	path: string
