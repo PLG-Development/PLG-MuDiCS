@@ -122,7 +122,7 @@
 				db.displays.update(d.id, { status: 'app_offline' });
 			},
 			false,
-			false
+			$selected_display_ids
 		);
 	}
 

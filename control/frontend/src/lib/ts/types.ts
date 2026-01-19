@@ -48,6 +48,7 @@ export type FileTransferTaskData =
 				display: ShortDisplay;
 				loading_data: FileLoadingData;
 			}[];
+			open_file_afterwards_on_display_ids: string[];
 	  };
 
 export type FileLoadingData = {

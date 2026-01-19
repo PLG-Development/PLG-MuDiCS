@@ -197,17 +197,18 @@ export function screenshot_loop(display_id: string) {
 export async function run_on_all_selected_displays(
 	run_function: (display: Display) => void | Promise<void>,
 	update_screenshot_afterwards: boolean = true,
-	ignore_offline: boolean = true
+	display_ids: string[] | null = null
 ) {
+	if (!display_ids) display_ids = get(selected_online_display_ids);
 	const maybe_displays: (Display | null)[] = await Promise.all(
 		// fails when only a single promis fails
-		get(selected_display_ids).map(async (id) => await get_display_by_id(id))
+		display_ids.map(async (id) => await get_display_by_id(id))
 	);
 	const displays: Display[] = maybe_displays.filter((d): d is Display => d !== null);
 
 	await Promise.all(
 		displays.map(async (display) => {
-			if (!display || (ignore_offline && display.status === 'host_offline')) return;
+			if (!display) return;
 			await run_function(display);
 			if (update_screenshot_afterwards) {
 				screenshot_loop(display.id);

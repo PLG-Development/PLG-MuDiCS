@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Ban, FileIcon, Folder, Play } from 'lucide-svelte';
+	import { ArrowRight, Ban, FileIcon, Folder, Play, Triangle, TriangleAlert } from 'lucide-svelte';
 	import {
 		current_height,
 		get_selectable_color_classes,
@@ -31,11 +31,15 @@
 	import RefreshPlay from '../svgs/RefreshPlay.svelte';
 	import { get_file_size_display_string, get_file_type } from '$lib/ts/utils';
 	import { open_file } from '$lib/ts/api_handler';
-	import { get_display_by_id, run_on_all_selected_displays, selected_online_display_ids } from '$lib/ts/stores/displays';
+	import {
+		get_display_by_id,
+		run_on_all_selected_displays,
+		selected_online_display_ids
+	} from '$lib/ts/stores/displays';
 	import { get_thumbnail_url } from '$lib/ts/stores/thumbnails';
 	import { liveQuery, type Observable } from 'dexie';
 	import { db } from '$lib/ts/database';
-	import { file_transfer_tasks } from '$lib/ts/file_transfer_handler';
+	import { add_sync_recursively, file_transfer_tasks } from '$lib/ts/file_transfer_handler';
 
 	let { file, not_interactable = false }: { file: Inode; not_interactable?: boolean } = $props();
 
@@ -49,6 +53,10 @@
 		const s = $selected_online_display_ids;
 		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(f, s));
 	});
+
+	let colliding_warning: boolean = $derived(
+		!!$missing_colliding_displays_ids && $missing_colliding_displays_ids.colliding.length !== 0
+	);
 
 	let file_size: Observable<number> | undefined = $state();
 	$effect(() => {
@@ -160,6 +168,11 @@
 	async function open() {
 		if (file_is_folder) {
 			await change_file_path($current_file_path + file.name + '/');
+		} else if (
+			!!$missing_colliding_displays_ids &&
+			$missing_colliding_displays_ids.missing.length !== 0
+		) {
+			await add_sync_recursively(get_file_primary_key(file), $selected_online_display_ids, true);
 		} else {
 			const path_to_file = $current_file_path + file.name;
 			await run_on_all_selected_displays((d) => open_file(d.ip, path_to_file));
@@ -238,33 +251,43 @@
 	{#if !not_interactable}
 		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 			<Button
-				disabled={!file_is_folder && get_file_type(file) === null}
-				title={!file_is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
+				disabled={(!file_is_folder && get_file_type(file) === null) || colliding_warning}
+				title={!file_is_folder && get_file_type(file) === null
+					? 'Dateityp nicht unterstützt'
+					: colliding_warning
+						? 'Dateien kollidieren auf verschiedenen Bildschirmen'
+						: ''}
 				className="flex rounded-l-lg rounded-r-none {file_is_folder
 					? 'text-stone-450'
 					: 'text-stone-800'} w-full"
 				div_class="w-full"
-				bg={get_selectable_color_classes(
-					!file_is_folder && get_file_type(file) !== null,
-					{
-						bg: true
-					},
-					-50
-				)}
-				hover_bg={get_selectable_color_classes(
-					!file_is_folder,
-					{
-						bg: true
-					},
-					50
-				)}
-				active_bg={get_selectable_color_classes(
-					!file_is_folder,
-					{
-						bg: true
-					},
-					100
-				)}
+				bg={colliding_warning
+					? 'bg-red-400'
+					: get_selectable_color_classes(
+							!file_is_folder && get_file_type(file) !== null,
+							{
+								bg: true
+							},
+							-50
+						)}
+				hover_bg={colliding_warning
+					? 'bg-red-500'
+					: get_selectable_color_classes(
+							!file_is_folder,
+							{
+								bg: true
+							},
+							50
+						)}
+				active_bg={colliding_warning
+					? 'bg-red-500'
+					: get_selectable_color_classes(
+							!file_is_folder,
+							{
+								bg: true
+							},
+							100
+						)}
 				click_function={(e) => {
 					open();
 					e.stopPropagation();
@@ -272,12 +295,14 @@
 			>
 				{#if file_is_folder}
 					<ArrowRight class="size-full" strokeWidth="3" />
-				{:else if $missing_colliding_displays_ids && $missing_colliding_displays_ids.missing.length !== 0}
-					<RefreshPlay className="size-full" />
-				{:else if get_file_type(file) !== null}
-					<Play class="size-full" strokeWidth="3" />
-				{:else}
+				{:else if get_file_type(file) === null}
 					<Ban class="size-full" strokeWidth="3" />
+				{:else if colliding_warning}
+					<TriangleAlert class="size-full" strokeWidth="3" />
+				{:else if !!$missing_colliding_displays_ids && $missing_colliding_displays_ids.missing.length !== 0}
+					<RefreshPlay className="size-full" />
+				{:else}
+					<Play class="size-full" strokeWidth="3" />
 				{/if}
 			</Button>
 		</div>
@@ -326,33 +351,6 @@
 				is_selected(file_primary_key, $selected_file_ids)
 			)} duration-200 transition-colors"
 		>
-			<!-- {#if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[1].length !== 0}
-				<Button
-					className="h-8 aspect-square transition-colors duration-200 !p-1.5 text-stone-100"
-					bg="bg-red-500"
-					click_function={(e) => {
-						e.stopPropagation();
-					}}
-				>
-					<TriangleAlert class="size-full" />
-				</Button>
-			{:else if get_display_ids_where_file_is_missing($current_file_path, file, $selected_display_ids, $all_files)[0].length !== 0}
-				<Button
-					className="h-8 aspect-square transition-colors duration-200 !p-1.5"
-					bg="bg-transparent"
-					hover_bg={get_selectable_color_classes(false, {
-						bg: true
-					})}
-					active_bg={get_selectable_color_classes(false, {
-						bg: true
-					})}
-					click_function={(e) => {
-						e.stopPropagation();
-					}}
-				>
-					<RefreshCcwDot class="size-full" />
-				</Button>
-			{/if} -->
 			<div
 				class="w-14 content-center text-center select-none text-xs whitespace-nowrap"
 				title={get_created_info($date_mapping, true)}
