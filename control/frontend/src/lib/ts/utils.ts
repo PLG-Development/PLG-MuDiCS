@@ -113,3 +113,12 @@ export function get_sanitized_file_url(file_path: string, is_preview = false) {
 
 	return `/file/${is_preview ? 'preview/' : ''}${[...pathSegments].join('/')}`;
 }
+
+
+let keyboard_queue = Promise.resolve();
+
+export function add_to_keyboard_queue(task: () => Promise<void>) {
+	keyboard_queue = keyboard_queue.then(task).catch((err) => {
+		console.error('Error in input queue:', err);
+	});
+}

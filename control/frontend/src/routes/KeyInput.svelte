@@ -7,7 +7,7 @@
 	import { ArrowDownToLine, ArrowUpFromLine, Grid2x2, Grid2X2, Option } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { onDestroy } from 'svelte';
-	import { queue_input } from '$lib/ts/queue';
+	import { add_to_keyboard_queue } from '$lib/ts/utils';
 
 	let {
 		popup_close_function
@@ -59,7 +59,7 @@
 		const action: 'press' | 'release' = key_down ? 'press' : 'release';
 
 		add_to_last_keys(action.toUpperCase() + ' ' + key);
-		queue_input(async () => {
+		add_to_keyboard_queue(async () => {
 			await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]), true);
 		});
 	}
@@ -71,7 +71,7 @@
 			current_keys.splice(i, 1);
 		}
 
-		queue_input(async () => {
+		add_to_keyboard_queue(async () => {
 			await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, inputs), true);
 		});
 	}
