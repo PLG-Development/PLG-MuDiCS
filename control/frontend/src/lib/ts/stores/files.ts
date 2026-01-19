@@ -107,13 +107,19 @@ export async function get_missing_colliding_display_ids(
 
 	const colliding: string[] = [];
 	const colliding_files = await db.files
-		.where('[path+name]')
-		.equals([file.path, file.name])
-		.filter((e) => e.size !== file.size || e.type !== file.type)
+		.where('name')
+		.equals(file.name)
+		.filter((e) => e.path === file.path && e.size !== file.size)
 		.toArray();
 	for (const colliding_file of colliding_files) {
 		colliding.push(
-			...(await get_display_ids_where_file_is_missing(colliding_file, selected_display_ids))
+			...(
+				await db.files_on_display
+					.where('file_primary_key')
+					.equals(get_file_primary_key(colliding_file))
+					.filter((fod) => selected_display_ids.includes(fod.display_id))
+					.toArray()
+			).map((fod) => fod.display_id)
 		);
 	}
 
