@@ -4,8 +4,9 @@
 	import { fade } from 'svelte/transition';
 	import { run_on_all_selected_displays } from '$lib/ts/stores/displays';
 	import { send_keyboard_input } from '$lib/ts/api_handler';
-	import { ArrowDownToLine, ArrowUpFromLine, Grid2x2, Grid2X2 } from 'lucide-svelte';
+	import { ArrowDownToLine, ArrowUpFromLine, Grid2x2, Grid2X2, Option } from 'lucide-svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { onDestroy } from 'svelte';
 
 	let {
 		popup_close_function
@@ -32,28 +33,32 @@
 		}, 1500);
 	}
 
-	async function on_key(e: KeyboardEvent, key_down: boolean) {
+	async function on_keyboard_input(e: KeyboardEvent, key_down: boolean) {
 		if (!active) return;
 		const id = e.code;
 		if (!id) return;
 
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (e.repeat) return;
+		await on_key(id, key_down);
+	}
+
+	async function on_key(key: string, key_down: boolean) {
 		if (key_down) {
-			if (current_keys.includes(e.code)) return;
-			current_keys.push(e.code);
+			if (current_keys.includes(key)) return;
+			current_keys.push(key);
 		} else {
-			const index = current_keys.indexOf(e.code);
+			const index = current_keys.indexOf(key);
 			if (index === -1) return;
 			current_keys.splice(index, 1);
 		}
 
-		if (e.repeat) return;
-
-		e.preventDefault();
-		e.stopPropagation();
-
 		const action: 'press' | 'release' = key_down ? 'press' : 'release';
 
-		await send_keyboard_input_to_all_selected_displays(id, action);
+		add_to_last_keys(action.toUpperCase() + ' ' + key);
+		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]), true);
 	}
 
 	async function release_all_pressed_keys() {
@@ -66,38 +71,9 @@
 		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, inputs), true);
 	}
 
-	async function press_alt_tab(action: 'press' | 'release') {
-		if (action === 'press') {
-			add_to_last_keys(action.toUpperCase() + ' ' + 'AltLeft');
-			add_to_last_keys(action.toUpperCase() + ' ' + 'Tab');
-			await run_on_all_selected_displays(
-				(d) =>
-					send_keyboard_input(d.ip, [
-						{ key: 'AltLeft', action: 'press' },
-						{ key: 'Tab', action: 'press' }
-					]),
-				true
-			);
-
-			setTimeout(
-				async () => await send_keyboard_input_to_all_selected_displays('Tab', 'release'),
-				100
-			);
-		} else {
-			setTimeout(
-				async () => await send_keyboard_input_to_all_selected_displays('AltLeft', 'release'),
-				150
-			);
-		}
-	}
-
-	async function send_keyboard_input_to_all_selected_displays(
-		key: string,
-		action: 'press' | 'release'
-	) {
-		add_to_last_keys(action.toUpperCase() + ' ' + key);
-		await run_on_all_selected_displays((d) => send_keyboard_input(d.ip, [{ key, action }]), true);
-	}
+	onDestroy(() => {
+		release_all_pressed_keys();
+	});
 </script>
 
 <div class="flex flex-row gap-2 overflow-hidden h-full">
@@ -117,8 +93,8 @@
 			active = false;
 			await release_all_pressed_keys();
 		}}
-		onkeydown={(e) => on_key(e, true)}
-		onkeyup={(e) => on_key(e, false)}
+		onkeydown={(e) => on_keyboard_input(e, true)}
+		onkeyup={(e) => on_keyboard_input(e, false)}
 		class="flex justify-center items-center text-center grow py-2 px-8 w-70 h-full cursor-pointer rounded-xl transition-colors duration-200 select-none {get_selectable_color_classes(
 			active,
 			{
@@ -155,33 +131,35 @@
 			class="absolute bottom-0 right-0 left-0 h-5 bg-linear-to-b from-transparent to-stone-750"
 		></div>
 	</div>
-	<div class="flex flex-col gap-2">
-		<button
-			title="Alt + Tab zum wechseln der aktuellen Fenster [gedrückt halten möglich]"
-			class="px-4 bg-stone-700 py-2 rounded-xl flex justify-center items-center transition-colors duration-200 hover:bg-stone-600 active:bg-stone-500 cursor-pointer"
-			onmousedown={async (e) => {
-				e.preventDefault();
-				await press_alt_tab('press');
-			}}
-			onmouseup={async () => {
-				await press_alt_tab('release');
-			}}
-		>
-			Alt + Tab
-		</button>
-		<button
-			title="Windows-/Meta-Taste [gedrückt halten möglich]"
-			class="px-4 bg-stone-700 py-2 gap-2 rounded-xl flex justify-center items-center transition-colors duration-200 hover:bg-stone-600 active:bg-stone-500 cursor-pointer"
-			onmousedown={async (e) => {
-				e.preventDefault();
-				await send_keyboard_input_to_all_selected_displays('MetaLeft', 'press');
-			}}
-			onmouseup={async () => {
-				await send_keyboard_input_to_all_selected_displays('MetaLeft', 'release');
-			}}
-		>
-			<Grid2x2 /> Meta
-		</button>
+	<div class="flex flex-col gap-2 justify-between">
+		<div class="flex flex-col gap-2">
+			<button
+				title="Windows-/Meta-Taste [gedrückt halten möglich]"
+				class="px-3 bg-stone-700 py-2 gap-2 rounded-xl flex items-center transition-colors duration-200 hover:bg-stone-600 active:bg-stone-500 cursor-pointer"
+				onmousedown={async (e) => {
+					e.preventDefault();
+					await on_key('MetaLeft', true);
+				}}
+				onmouseup={async () => {
+					await on_key('MetaLeft', false);
+				}}
+			>
+				<Grid2x2 /> Meta
+			</button>
+			<button
+				title="Alt-Taste [gedrückt halten möglich]"
+				class="px-3 bg-stone-700 py-2 gap-2 rounded-xl flex items-center transition-colors duration-200 hover:bg-stone-600 active:bg-stone-500 cursor-pointer"
+				onmousedown={async (e) => {
+					e.preventDefault();
+					await on_key('AltLeft', true);
+				}}
+				onmouseup={async () => {
+					await on_key('AltLeft', false);
+				}}
+			>
+				<Option /> Alt
+			</button>
+		</div>
 
 		<Button
 			div_class="mt-2 justify-end"
