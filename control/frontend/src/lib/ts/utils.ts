@@ -55,7 +55,7 @@ export function get_uuid(): string {
 
 export function get_file_size_display_string(size: number, toFixed: number | null = null): string {
 	if (size < 0)
-		return toFixed === null ? 'versch.' : 'Verschiedene Größen auf verschiedenen Bildschirmen';
+		return toFixed === null ? '...' : 'Größe wird aktuell berechnet';
 	if (size === 0) return '0 B';
 
 	const k = 1024;

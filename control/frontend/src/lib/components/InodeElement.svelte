@@ -12,9 +12,7 @@
 		get_file_primary_key,
 		type FileOnDisplay,
 		type FileTransferTask,
-
 		is_folder
-
 	} from '$lib/ts/types';
 
 	import {
@@ -27,6 +25,7 @@
 		change_file_path,
 		current_file_path,
 		get_date_mapping,
+		get_folder_elements,
 		get_missing_colliding_display_ids
 	} from '$lib/ts/stores/files';
 	import RefreshPlay from '../svgs/RefreshPlay.svelte';
@@ -48,6 +47,12 @@
 	$effect(() => {
 		const s = $selected_file_ids;
 		missing_colliding_displays_ids = liveQuery(() => get_missing_colliding_display_ids(file, s));
+	});
+
+	let file_size: Observable<number> | undefined = $state();
+	$effect(() => {
+		const f = file;
+		file_size = liveQuery(() => get_size_recursively(f));
 	});
 
 	let file_transfer_task: FileTransferTask | null = $derived(
@@ -205,6 +210,22 @@
 
 		return Math.min(total_percentage, 100);
 	}
+
+	async function get_size_recursively(file: Inode): Promise<number> {
+		if (is_folder(file)) {
+			const folder_elements = await get_folder_elements(
+				file.path + file.name + '/',
+				$selected_display_ids
+			);
+			let out: number = 0;
+			for (const el of folder_elements) {
+				out += await get_size_recursively(el);
+			}
+			return out;
+		} else {
+			return file.size;
+		}
+	}
 </script>
 
 <div
@@ -355,9 +376,9 @@
 			></div>
 			<div
 				class="w-12 content-center text-center select-none text-xs whitespace-nowrap"
-				title={get_file_size_display_string(file.size, 3)}
+				title={get_file_size_display_string($file_size ?? -1, 3)}
 			>
-				{get_file_size_display_string(file.size)}
+				{get_file_size_display_string($file_size ?? -1)}
 			</div>
 		</div>
 	</div>
