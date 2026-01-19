@@ -11,7 +11,10 @@
 		type Inode,
 		get_file_primary_key,
 		type FileOnDisplay,
-		type FileTransferTask
+		type FileTransferTask,
+
+		is_folder
+
 	} from '$lib/ts/types';
 
 	import {
@@ -69,7 +72,7 @@
 		get_date_mapping(file_primary_key)
 	);
 
-	const is_folder = file.type === 'inode/directory';
+	const file_is_folder = $derived(is_folder(file));
 
 	function get_created_info(date_mapping: Record<string, Date> | undefined, full_string = false) {
 		if (!date_mapping) return '';
@@ -149,7 +152,7 @@
 	}
 
 	async function open() {
-		if (is_folder) {
+		if (file_is_folder) {
 			await change_file_path($current_file_path + file.name + '/');
 		} else {
 			const path_to_file = $current_file_path + file.name;
@@ -213,28 +216,28 @@
 	{#if !not_interactable}
 		<div class="h-{$current_height.file} aspect-square max-w-15 flex">
 			<Button
-				disabled={!is_folder && get_file_type(file) === null}
-				title={!is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
-				className="flex rounded-l-lg rounded-r-none {is_folder
+				disabled={!file_is_folder && get_file_type(file) === null}
+				title={!file_is_folder && get_file_type(file) === null ? 'Dateityp nicht unterstützt' : ''}
+				className="flex rounded-l-lg rounded-r-none {file_is_folder
 					? 'text-stone-450'
 					: 'text-stone-800'} w-full"
 				div_class="w-full"
 				bg={get_selectable_color_classes(
-					!is_folder && get_file_type(file) !== null,
+					!file_is_folder && get_file_type(file) !== null,
 					{
 						bg: true
 					},
 					-50
 				)}
 				hover_bg={get_selectable_color_classes(
-					!is_folder,
+					!file_is_folder,
 					{
 						bg: true
 					},
 					50
 				)}
 				active_bg={get_selectable_color_classes(
-					!is_folder,
+					!file_is_folder,
 					{
 						bg: true
 					},
@@ -245,7 +248,7 @@
 					e.stopPropagation();
 				}}
 			>
-				{#if is_folder}
+				{#if file_is_folder}
 					<ArrowRight class="size-full" strokeWidth="3" />
 				{:else if $missing_colliding_displays_ids && $missing_colliding_displays_ids.missing.length !== 0}
 					<RefreshPlay className="size-full" />
@@ -274,7 +277,7 @@
 		{/if}
 		<div class="flex flex-row gap-2 min-w-0 w-full z-10">
 			<div class="aspect-square rounded-md flex justify-center items-center">
-				{#if is_folder}
+				{#if file_is_folder}
 					<Folder class="size-full p-2" />
 				{:else if $thumbnail_url || null}
 					<img
@@ -291,7 +294,7 @@
 				{/if}
 			</div>
 			<div class="content-center truncate select-none w-full" title={file.name}>
-				{file.name.includes('.') && !is_folder && get_file_type(file)
+				{file.name.includes('.') && !file_is_folder && get_file_type(file)
 					? file.name.slice(0, file.name.lastIndexOf('.'))
 					: file.name}
 			</div>
@@ -343,7 +346,7 @@
 				class="w-12 content-center text-center select-none text-xs whitespace-nowrap truncate"
 				title={file.type}
 			>
-				{is_folder ? 'Ordner' : (get_file_type(file)?.display_name ?? '?')}
+				{file_is_folder ? 'Ordner' : (get_file_type(file)?.display_name ?? '?')}
 			</div>
 			<div
 				class="h-[70%] border {get_grayed_out_border_color_strings(

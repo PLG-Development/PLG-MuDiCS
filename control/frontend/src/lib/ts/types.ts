@@ -46,7 +46,7 @@ export type FileTransferTaskData =
 			type: 'sync';
 			destination_display_data: {
 				display: ShortDisplay;
-				loading_data: FileLoadingData
+				loading_data: FileLoadingData;
 			}[];
 	  };
 
@@ -135,11 +135,11 @@ export type PopupContent = {
 };
 
 export type NumberSetting = {
-	max: number,
-	min: number,
-	now: number,
-	step: number
-}
+	max: number;
+	min: number;
+	now: number;
+	step: number;
+};
 
 export type DisplayStatus = 'host_offline' | 'app_offline' | 'app_online' | null;
 
@@ -147,4 +147,8 @@ export function to_display_status(value: string): DisplayStatus {
 	return ['host_offline', 'app_offline', 'app_online'].includes(value)
 		? (value as DisplayStatus)
 		: null;
+}
+
+export function is_folder(inode: Inode) {
+	return inode.type === 'inode/directory';
 }

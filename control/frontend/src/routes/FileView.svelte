@@ -27,7 +27,7 @@
 	import { slide } from 'svelte/transition';
 	import InodeElement from '../lib/components/InodeElement.svelte';
 	import PopUp from '$lib/components/PopUp.svelte';
-	import { get_file_primary_key, type Inode, type PopupContent } from '$lib/ts/types';
+	import { get_file_primary_key, is_folder, type Inode, type PopupContent } from '$lib/ts/types';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import {
 		first_letter_is_valid,
@@ -59,7 +59,9 @@
 	$effect(() => {
 		const s = $selected_file_ids;
 		one_file_selected = liveQuery(async () => {
-			return s.length === 1 && (await get_file_by_id(s[0]))?.type !== 'inode/directory';
+			const inode = await get_file_by_id(s[0]);
+			if (!inode) return false;
+			return s.length === 1 && is_folder(inode);
 		});
 	});
 
@@ -110,14 +112,14 @@
 	const show_edit_file_popup = async () => {
 		const file = await get_file_by_id($selected_file_ids[0]);
 		if (!file) return;
-		const is_folder = file.type === 'inode/directory';
-		const extension = is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
+		const file_is_folder = is_folder(file);
+		const extension = file_is_folder ? '' : '.' + file.name.split('.').at(-1) || '';
 		current_name = file.name.slice(0, file.name.length - extension.length);
 		current_valid = true;
 		popup_content = {
 			open: true,
 			snippet: edit_file_name_popup,
-			title: `${is_folder ? 'Ordner' : 'Datei'} umbenennen`,
+			title: `${file_is_folder ? 'Ordner' : 'Datei'} umbenennen`,
 			title_icon: FolderPlus,
 			snippet_arg: extension,
 		};

@@ -1,6 +1,7 @@
 import { get, writable, type Writable } from 'svelte/store';
 import {
 	get_file_primary_key,
+	is_folder,
 	type Display,
 	type FileOnDisplay,
 	type Inode,
@@ -59,7 +60,7 @@ export async function remove_file_from_display_recusively(
 
 	const inode_element = await get_file_by_id(found.file_primary_key);
 	if (!inode_element) return;
-	if (inode_element.type === 'inode/directory') {
+	if (is_folder(inode_element)) {
 		const path_inside_folder = inode_element.path + inode_element.name + `/`;
 		const primary_file_keys_in_folder = (
 			await db.files.where('path').equals(path_inside_folder).toArray()
@@ -149,7 +150,7 @@ export async function get_displays_where_path_not_exists(
 	const folders_of_current_path = await db.files
 		.where('name')
 		.equals(last_path_part)
-		.filter((inode) => inode.path === path_without_last_part && inode.type === 'inode/directory')
+		.filter((inode) => inode.path === path_without_last_part && is_folder(inode))
 		.first();
 	if (!folders_of_current_path) return [];
 	const folder_primary_key = get_file_primary_key(folders_of_current_path);
@@ -278,7 +279,7 @@ export async function update_folder_elements_recursively(
 			};
 			await db.files_on_display.put(file_on_display);
 
-			if (new_element.folder_element.type === 'inode/directory') {
+			if (is_folder(new_element.folder_element)) {
 				await update_folder_elements_recursively(
 					display,
 					file_path + new_element.folder_element.name + '/'
@@ -334,8 +335,8 @@ export async function get_folder_elements(
 
 function sort_files(files: Inode[]) {
 	files.sort((a, b) => {
-		const isDirA = a.type === 'inode/directory';
-		const isDirB = b.type === 'inode/directory';
+		const isDirA = is_folder(a);
+		const isDirB = is_folder(b);
 
 		// Ordner zuerst
 		if (isDirA && !isDirB) return -1;

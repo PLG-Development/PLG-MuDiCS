@@ -12,6 +12,7 @@ import { notifications } from './stores/notification';
 import { generate_thumbnail } from './stores/thumbnails';
 import {
 	get_file_primary_key,
+	is_folder,
 	type FileLoadingData,
 	type FileOnDisplay,
 	type FileTransferTask,
@@ -109,7 +110,7 @@ export async function add_sync_recursively(
 	);
 	if (!file_data) return console.warn('Sync canceled: no file_data');
 
-	if (file_data.file.type === 'inode/directory') {
+	if (is_folder(file_data.file)) {
 		const new_path = file_data.file.path + file_data.file.name + '/';
 		const elements_in_folder = await get_folder_elements(new_path, selected_display_ids);
 		if (elements_in_folder.length === 0) {
@@ -294,7 +295,7 @@ export async function download_file(selected_file_id: string, selected_display_i
 		selected_file_id,
 		selected_display_ids
 	);
-	if (!file_data || file_data.file.type === 'inode/directory')
+	if (!file_data || is_folder(file_data.file))
 		return console.warn('Download cancelled: is folder');
 
 	try {
