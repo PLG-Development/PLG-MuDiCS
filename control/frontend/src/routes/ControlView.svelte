@@ -273,7 +273,7 @@
 					<Button
 						className="px-3 flex gap-3 w-full xl:w-75 justify-normal"
 						disabled={$all_display_states === 'on' ||
-							$selected_online_display_ids.length === 0}
+							$selected_display_ids.length === 0}
 						click_function={startup_action}
 					>
 						<Power /> Bildschirm Hochfahren
