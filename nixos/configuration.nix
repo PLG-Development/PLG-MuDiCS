@@ -106,6 +106,7 @@
     xfconf.settings = {
       xfce4-power-manager."xfce4-power-manager/dpms-enabled" = false;
       xfce4-screensaver."saver/enabled" = false;
+      displays.Notify = 0; # disable popup when connecting new display
     };
 
     home.stateVersion = "25.05";
