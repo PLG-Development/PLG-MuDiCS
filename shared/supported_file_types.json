@@ -1,34 +1,34 @@
 {
-    ".mp4": {
-        "display_name": "MP4",
-        "mime_type": "video/mp4"
-    },
-    ".jpg": {
-        "display_name": "JPG",
-        "mime_type": "image/jpg"
-    },
-    ".jpeg": {
-        "display_name": "JPG",
-        "mime_type": "image/jpeg"
-    },
-    ".png": {
-        "display_name": "PNG",
-        "mime_type": "image/png"
-    },
-    ".gif": {
-        "display_name": "GIF",
-        "mime_type": "image/gif"
-    },
-    ".pptx": {
-        "display_name": "PPTX",
-        "mime_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    },
-    ".odp": {
-        "display_name": "ODP",
-        "mime_type": "application/vnd.oasis.opendocument.presentation"
-    },
-    ".pdf": {
-        "display_name": "PDF",
-        "mime_type": "application/pdf"
-    }
+  ".mp4": {
+    "display_name": "MP4",
+    "mime_type": "video/mp4"
+  },
+  ".jpg": {
+    "display_name": "JPG",
+    "mime_type": "image/jpg"
+  },
+  ".jpeg": {
+    "display_name": "JPG",
+    "mime_type": "image/jpeg"
+  },
+  ".png": {
+    "display_name": "PNG",
+    "mime_type": "image/png"
+  },
+  ".gif": {
+    "display_name": "GIF",
+    "mime_type": "image/gif"
+  },
+  ".pptx": {
+    "display_name": "PPTX",
+    "mime_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  },
+  ".odp": {
+    "display_name": "ODP",
+    "mime_type": "application/vnd.oasis.opendocument.presentation"
+  },
+  ".pdf": {
+    "display_name": "PDF",
+    "mime_type": "application/pdf"
+  }
 }
