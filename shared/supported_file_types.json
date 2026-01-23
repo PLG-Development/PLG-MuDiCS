@@ -25,7 +25,7 @@
   },
   ".odp": {
     "display_name": "ODP",
-    "mime_type": "application/vnd.oasis.opendocument.presentation"
+    "mime_type": ".odp"
   },
   ".pdf": {
     "display_name": "PDF",
