@@ -23,7 +23,6 @@
 		update_current_folder_on_selected_displays,
 		get_displays_where_path_not_exists,
 		create_path_on_all_selected_displays
-
 	} from '$lib/ts/stores/files';
 	import { slide } from 'svelte/transition';
 	import InodeElement from '../lib/components/InodeElement.svelte';
@@ -69,7 +68,7 @@
 	let popup_content: PopupContent = $state({
 		open: false,
 		snippet: null,
-		title: '',
+		title: ''
 	});
 
 	let file_input: HTMLInputElement;
@@ -119,7 +118,7 @@
 			snippet: edit_file_name_popup,
 			title: `${file_is_folder ? 'Ordner' : 'Datei'} umbenennen`,
 			title_icon: FolderPlus,
-			snippet_arg: extension,
+			snippet_arg: extension
 		};
 	};
 
@@ -133,7 +132,7 @@
 			open: true,
 			snippet: new_folder_popup,
 			title: 'Neuen Ordner erstellen',
-			title_icon: FolderPlus,
+			title_icon: FolderPlus
 		};
 	};
 
@@ -142,7 +141,7 @@
 			open: true,
 			snippet: delete_request_popup,
 			title: `${$selected_file_ids.length} ${$selected_file_ids.length === 1 ? 'Objekt' : 'Objekte'} wirklich löschen?`,
-			title_icon: Trash2,
+			title_icon: Trash2
 		};
 	};
 
@@ -152,7 +151,9 @@
 		current_folder_elements: Inode[]
 	) {
 		if (current_selected_file_ids.length === 0 && current_folder_elements.length > 0) {
-			current_selected_file_ids = current_folder_elements.map((inode) => get_file_primary_key(inode));
+			current_selected_file_ids = current_folder_elements.map((inode) =>
+				get_file_primary_key(inode)
+			);
 		}
 		if (current_selected_file_ids.length === 0) return;
 		// Mit For-Schleife über ausgewählte Elemente gehen
@@ -276,8 +277,11 @@
 	bind:this={file_input}
 	multiple
 	accept={get_accepted_file_type_string()}
-	onchange={(e) =>
-		add_upload((e.target as HTMLInputElement).files!, $selected_online_display_ids, $current_file_path)}
+	onchange={async (e) => {
+		const target = e.target as HTMLInputElement;
+		await add_upload(target.files!, $selected_online_display_ids, $current_file_path);
+		target.value = '';
+	}}
 />
 
 <div class="bg-stone-800 h-full rounded-2xl grid grid-rows-[2.5rem_1fr] min-h-0">
