@@ -46,7 +46,7 @@
 		open: false,
 		snippet: null,
 		title: '',
-		title_class: '!text-xl',
+		title_class: '!text-xl'
 	});
 	let remove_display_name = $state('');
 
@@ -120,7 +120,7 @@
 			title: 'Neuen Bildschirm Hinzufügen',
 			title_icon: Monitor,
 			title_class: '!text-xl',
-			window_class: 'w-3xl',
+			window_class: 'w-3xl'
 		};
 	};
 
@@ -131,7 +131,7 @@
 			title: 'Einstellungen',
 			title_icon: Settings,
 			title_class: '!text-xl',
-			window_class: 'w-3xl',
+			window_class: 'w-3xl'
 		};
 	};
 
@@ -143,7 +143,7 @@
 			snippet_arg: display_id,
 			title: 'Bildschirm wirklich löschen?',
 			title_class: 'text-red-400 !text-xl',
-			title_icon: Trash2,
+			title_icon: Trash2
 		};
 	};
 
@@ -161,7 +161,7 @@
 			snippet_arg: display_id,
 			title: 'Bildschirm bearbeiten',
 			title_icon: Monitor,
-			title_class: '!text-xl',
+			title_class: '!text-xl'
 		};
 	};
 
@@ -173,7 +173,7 @@
 			snippet: about_popup,
 			title: 'Über PLG MuDiCS',
 			title_icon: Info,
-			title_class: '!text-xl',
+			title_class: '!text-xl'
 		};
 	};
 </script>
@@ -182,8 +182,8 @@
 	<div class="px-2">
 		<h3 class="text-lg font-bold mt-4">Entwickler</h3>
 		<p>
-			<a target="_blank" class="link" href="https://github.com/programmer-44">E44</a>
-			<a target="_blank" class="link" href="https://codeberg.org/2mal3">2mal3</a>,
+			<a target="_blank" class="link" href="https://github.com/programmer-44">E44</a>,
+			<a target="_blank" class="link" href="https://codeberg.org/2mal3">2mal3</a>
 		</p>
 
 		<h3 class="text-lg font-bold mt-4">Lizenz</h3>
