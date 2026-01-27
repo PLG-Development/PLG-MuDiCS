@@ -6,7 +6,7 @@ import (
 )
 
 //go:embed splash_screen.html
-var SplashScreenTemplate string
+var RawSplashScreenTemplate string
 
 //go:embed version.txt
 var versionNotTrimmed string

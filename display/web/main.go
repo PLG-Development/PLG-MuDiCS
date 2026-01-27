@@ -1,52 +1,26 @@
 package web
 
 import (
-	"bytes"
-	"context"
 	"errors"
 	"fmt"
-	"image/color"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	shared "plg-mudics/shared"
-	"strings"
 
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/skip2/go-qrcode"
 
+	"plg-mudics/display/browser"
 	"plg-mudics/display/pkg"
 )
 
-var version string
-var sseConnection chan string
-
-func StartWebServer(v string, port string) {
-	version = v
-
+func StartWebServer(port string) {
 	e := echo.New()
-
-	e.GET("/", indexRoute)
-	e.GET("/sse", sseRoute)
-	e.GET("/splash", func(ctx echo.Context) error {
-		html := shared.SplashScreenTemplate
-		html = strings.ReplaceAll(html, "%%APP-VERSION%%", version)
-		return ctx.HTML(http.StatusOK, html)
-	})
-	e.GET("/qr", qrRoute)
-
-	staticGroup := e.Group("/static")
-	staticGroup.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Filesystem: http.FS(StaticDirFS),
-		HTML5:      true,
-	}))
 
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.CORS())
@@ -55,6 +29,7 @@ func StartWebServer(v string, port string) {
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
 	apiGroup.PATCH("/showHTML", showHTMLRoute)
 	apiGroup.PATCH("/takeScreenshot", takeScreenshotRoute)
+	apiGroup.PATCH("/openWebsite", openWebsiteRoute)
 
 	fileGroup := apiGroup.Group("/file")
 	fileGroup.Use(extractFilePathMiddleware)
@@ -67,85 +42,6 @@ func StartWebServer(v string, port string) {
 	if err != nil {
 		slog.Error("Failed to start server", "error", err)
 	}
-}
-
-func indexRoute(ctx echo.Context) error {
-	return indexTemplate().Render(ctx.Request().Context(), ctx.Response().Writer)
-}
-
-func sseRoute(ctx echo.Context) error {
-	slog.Info("SSE client connected")
-
-	w := ctx.Response()
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.WriteHeader(http.StatusOK)
-	flusher, _ := w.Writer.(http.Flusher)
-
-	sseConnection = make(chan string)
-
-	// init display
-	ip, err := pkg.GetDeviceIp()
-	if err != nil {
-		slog.Error("Failed to get device IP address", "error", err)
-	}
-	mac, err := pkg.GetDeviceMac()
-	if err != nil {
-		slog.Error("Failed to get device MAC address", "error", err)
-	}
-	showQR := !isPortFree(8080)
-	var status bytes.Buffer
-	deviceInfoTemplate(ip, mac, showQR).Render(context.Background(), &status)
-	connectedEvent := Event{
-		Data: status.Bytes(),
-	}
-	connectedEvent.MarshalTo(w)
-	flusher.Flush()
-
-	for {
-		select {
-		case <-ctx.Request().Context().Done():
-			slog.Info("SSE client disconnected")
-			sseConnection = nil
-			return nil
-
-		case event := <-sseConnection:
-			rawEvent := Event{
-				Event: []byte(""),
-				Data:  []byte(event),
-			}
-
-			if err := rawEvent.MarshalTo(w); err != nil {
-				slog.Warn("Error writing to client", "error", err)
-				return err
-			}
-			flusher.Flush()
-		}
-	}
-}
-
-func qrRoute(c echo.Context) error {
-	data := c.QueryParam("data")
-	if data == "" {
-		return c.String(http.StatusBadRequest, "missing data")
-	}
-
-	qr, err := qrcode.New(data, qrcode.Medium)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "could not generate qr")
-	}
-
-	qr.DisableBorder = true
-	qr.ForegroundColor = color.RGBA{R: 0x1c, G: 0x19, B: 0x17, A: 0xff}
-	qr.BackgroundColor = color.RGBA{R: 0xe7, G: 0xe5, B: 0xe4, A: 0xff}
-
-	png, err := qr.PNG(-1)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "could not encode png")
-	}
-
-	return c.Blob(http.StatusOK, "image/png", png)
 }
 
 func extractFilePathMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -308,38 +204,7 @@ func openFileRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusNotFound, shared.ErrorResponse{Description: "File not found"})
 	}
 
-	if sseConnection == nil {
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Cant connect to display browser client"})
-	}
-
-	err = resetView()
-	if err != nil {
-		slog.Error("Failed to reset view", "error", err)
-	}
-
-	mType, err := mimetype.DetectFile(fullPath)
-	if err != nil {
-		slog.Error("Failed to detect mime type", "file", pathParam, "error", err)
-		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to detect file type"})
-	}
-
-	switch mType.String() {
-	case "video/mp4":
-		var templateBuffer bytes.Buffer
-		videoTemplate(pathParam).Render(context.Background(), &templateBuffer)
-
-		sseConnection <- templateBuffer.String()
-	case "image/jpeg", "image/png", "image/gif":
-		var templateBuffer bytes.Buffer
-		imageTemplate(pathParam).Render(context.Background(), &templateBuffer)
-		sseConnection <- templateBuffer.String()
-	case "application/pdf", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
-		err = pkg.FileHandler.OpenFile(fullPath)
-	default:
-		slog.Info("Unsupported file type", "type", mType)
-		return ctx.JSON(http.StatusUnsupportedMediaType, shared.ErrorResponse{Description: "Unsupported file type: " + mType.String()})
-	}
-
+	err = pkg.OpenFile(fullPath)
 	if err != nil {
 		slog.Error("Failed to open file", "file", pathParam, "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open file"})
@@ -358,12 +223,11 @@ func showHTMLRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
-	err := resetView()
+	err := pkg.ShowHTML(request.HTML)
 	if err != nil {
-		slog.Error("Failed to reset view", "error", err)
+		slog.Error("Failed to open html", "error", err)
+		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open html"})
 	}
-
-	sseConnection <- request.HTML
 
 	slog.Info("HTML content sent to client")
 	return ctx.JSON(http.StatusOK, struct{}{})
@@ -372,7 +236,7 @@ func showHTMLRoute(ctx echo.Context) error {
 func pingRoute(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, struct {
 		Version string `json:"version"`
-	}{Version: version})
+	}{Version: shared.Version})
 }
 
 func takeScreenshotRoute(ctx echo.Context) error {
@@ -415,24 +279,18 @@ func previewRoute(ctx echo.Context) error {
 	return ctx.File(outputFilePath)
 }
 
-// Reset previous file views so they dont collide with the new one
-func resetView() error {
-	err := pkg.FileHandler.CloseRunningProgram()
-	if err != nil {
-		return fmt.Errorf("failed to close running program: %w", err)
+func openWebsiteRoute(ctx echo.Context) error {
+	var request struct {
+		URL string `json:"url"`
+	}
+	if err := ctx.Bind(&request); err != nil {
+		slog.Error("Failed to parse website input", "error", err)
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
-	sseConnection <- ""
+	slog.Info("Opening url")
 
-	return nil
-}
+	browser.Browser.OpenPage(request.URL)
 
-func isPortFree(port int) bool {
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		return false
-	}
-	_ = l.Close()
-	return true
+	return ctx.JSON(http.StatusOK, struct{}{})
 }
