@@ -12,6 +12,8 @@ import (
 	"syscall"
 
 	"github.com/gabriel-vasile/mimetype"
+
+	"plg-mudics/display/browser"
 )
 
 var fileHandler fileHandlerType = fileHandlerType{}
@@ -32,13 +34,13 @@ func OpenFile(path string) error {
 	case "video/mp4":
 		var templateBuffer bytes.Buffer
 		videoTemplate(path).Render(context.Background(), &templateBuffer)
-		B.openHTML(templateBuffer.String())
+		browser.Browser.OpenHTML(templateBuffer.String())
 	case "image/jpeg", "image/png", "image/gif":
 		var templateBuffer bytes.Buffer
 		imageTemplate(path).Render(context.Background(), &templateBuffer)
-		B.openHTML(templateBuffer.String())
+		browser.Browser.OpenHTML(templateBuffer.String())
 	case "application/pdf":
-		B.OpenPDF(path)
+		browser.Browser.OpenPDF(path)
 	case "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
 		err = fileHandler.openFileWithApp(path)
 	default:

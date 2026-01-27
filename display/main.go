@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 
+	"plg-mudics/display/browser"
 	"plg-mudics/display/pkg"
 	"plg-mudics/display/web"
 )
@@ -26,8 +27,8 @@ func main() {
 	// and since its the last action in the main go func all other goroutines (e.g. the webserver) are killed
 	go web.StartWebServer(port)
 
-	pkg.B.Init()
+	browser.Browser.Init()
 	pkg.OpenStartScreen()
-	defer pkg.B.Cancel()
-	<-pkg.B.Ctx.Done()
+	defer browser.Browser.Cancel()
+	<-browser.Browser.Ctx.Done()
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"plg-mudics/display/browser"
 	"plg-mudics/shared"
 )
 
@@ -83,7 +84,7 @@ func ShowHTML(html string) error {
 
 	var templateBuffer bytes.Buffer
 	htmlTemplate(html).Render(context.Background(), &templateBuffer)
-	err := B.openHTML(templateBuffer.String())
+	err := browser.Browser.OpenHTML(templateBuffer.String())
 
 	return err
 }

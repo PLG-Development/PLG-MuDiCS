@@ -1,4 +1,4 @@
-package pkg
+package browser
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-var B browser = browser{}
+var Browser BrowserType = BrowserType{}
 
-type browser struct {
+type BrowserType struct {
 	Ctx    context.Context
 	Cancel context.CancelFunc
 }
 
-func (b *browser) Init() error {
+func (b *BrowserType) Init() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("unable to determine user home directory: %w", err)
@@ -41,13 +41,13 @@ func (b *browser) Init() error {
 	return nil
 }
 
-func (b *browser) OpenPage(url string) {
+func (b *BrowserType) OpenPage(url string) {
 	chromedp.Run(b.Ctx, chromedp.Navigate(url))
 }
 
 // Yes, we need that trick with creating a temp file and not directly sending html since
 // chrome only allows us to access local files via other local files
-func (b *browser) openHTML(html string) error {
+func (b *BrowserType) OpenHTML(html string) error {
 	var err error
 
 	tempFile, err := os.CreateTemp("", "mudics-*.html")
@@ -66,6 +66,6 @@ func (b *browser) openHTML(html string) error {
 	return nil
 }
 
-func (b *browser) OpenPDF(path string) {
+func (b *BrowserType) OpenPDF(path string) {
 	b.OpenPage("file://" + path + "#toolbar=0&view=Fit")
 }

@@ -11,6 +11,8 @@ import (
 	"plg-mudics/shared"
 	"strings"
 
+	"plg-mudics/display/browser"
+
 	"github.com/skip2/go-qrcode"
 )
 
@@ -41,7 +43,7 @@ func OpenStartScreen() {
 
 	var templateBuffer bytes.Buffer
 	startScreenTemplate(html, ip, mac, qrCodePath).Render(context.Background(), &templateBuffer)
-	B.openHTML(templateBuffer.String())
+	browser.Browser.OpenHTML(templateBuffer.String())
 }
 
 func getDeviceIp() (string, error) {

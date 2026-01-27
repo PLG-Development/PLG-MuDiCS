@@ -15,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"plg-mudics/display/browser"
 	"plg-mudics/display/pkg"
 )
 
@@ -289,7 +290,7 @@ func openWebsiteRoute(ctx echo.Context) error {
 
 	slog.Info("Opening url")
 
-	pkg.B.OpenPage(request.URL)
+	browser.Browser.OpenPage(request.URL)
 
 	return ctx.JSON(http.StatusOK, struct{}{})
 }
