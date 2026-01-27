@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -73,4 +75,12 @@ func ResolveStorageFilePath(pathParam string) (string, bool, error) {
 	}
 
 	return fullPath, true, nil
+}
+
+func ShowHTML(html string) error {
+	var templateBuffer bytes.Buffer
+	htmlTemplate(html).Render(context.Background(), &templateBuffer)
+	err := B.OpenHTML(templateBuffer.String())
+
+	return err
 }

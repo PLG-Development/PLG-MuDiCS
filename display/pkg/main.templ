@@ -73,6 +73,12 @@ templ videoTemplate(path string) {
 	}
 }
 
+templ htmlTemplate(html string) {
+	@basicTemplate() {
+		@templ.Raw(html)
+	}
+}
+
 templ imageTemplate(path string) {
 	@basicTemplate() {
 		<img src={ "file://" + path }/>

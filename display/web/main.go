@@ -223,7 +223,7 @@ func showHTMLRoute(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
 	}
 
-	err := pkg.B.OpenHTML(request.HTML)
+	err := pkg.ShowHTML(request.HTML)
 	if err != nil {
 		slog.Error("Failed to open html", "error", err)
 		return ctx.JSON(http.StatusInternalServerError, shared.ErrorResponse{Description: "Failed to open html"})
