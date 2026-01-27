@@ -3,7 +3,6 @@ package main
 import (
 	"log/slog"
 	"os"
-	"time"
 
 	"plg-mudics/display/pkg"
 	"plg-mudics/display/web"
@@ -26,9 +25,9 @@ func main() {
 	// the order is important, the open browser command exitsts as soon as the winodw is closed
 	// and since its the last action in the main go func all other goroutines (e.g. the webserver) are killed
 	go web.StartWebServer(port)
+
 	pkg.B.Init()
 	pkg.OpenStartScreen()
 	defer pkg.B.Cancel()
-
-	time.Sleep(time.Second * 1000)
+	<-pkg.B.Ctx.Done()
 }

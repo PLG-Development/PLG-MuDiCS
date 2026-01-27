@@ -12,7 +12,7 @@ import (
 var B browser = browser{}
 
 type browser struct {
-	ctx    context.Context
+	Ctx    context.Context
 	Cancel context.CancelFunc
 }
 
@@ -36,13 +36,13 @@ func (b *browser) Init() error {
 	}
 
 	initCtx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
-	b.ctx, b.Cancel = chromedp.NewContext(initCtx)
+	b.Ctx, b.Cancel = chromedp.NewContext(initCtx)
 
 	return nil
 }
 
 func (b *browser) OpenPage(url string) {
-	chromedp.Run(b.ctx, chromedp.Navigate(url))
+	chromedp.Run(b.Ctx, chromedp.Navigate(url))
 }
 
 // Yes, we need that trick with creating a temp file and not directly sending html since
@@ -61,7 +61,7 @@ func (b *browser) OpenHTML(html string) error {
 		return fmt.Errorf("could not write to tempfile: %w", err)
 	}
 
-	chromedp.Run(b.ctx, chromedp.Navigate("file://"+tempFile.Name()))
+	chromedp.Run(b.Ctx, chromedp.Navigate("file://"+tempFile.Name()))
 
 	return nil
 }
