@@ -51,6 +51,17 @@ export async function show_html(ip: string, html: string): Promise<void> {
 	await request_display(ip, '/showHTML', options);
 }
 
+export async function open_website(ip: string, url: string): Promise<void> {
+	const options = {
+		method: 'PATCH',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({
+			url: url
+		})
+	};
+	await request_display(ip, '/openWebsite', options);
+}
+
 export async function get_file_data(
 	ip: string,
 	path: string

@@ -21,7 +21,8 @@
 		show_blackscreen,
 		shutdown,
 		startup,
-		show_html
+		show_html,
+		open_website
 	} from '$lib/ts/api_handler';
 	import {
 		get_display_by_id,
@@ -144,7 +145,7 @@
 	async function send_website() {
 		popup_content.open = false;
 		await run_on_all_selected_displays((d) =>
-			show_html(d.ip, `<iframe src="${website_url}"></iframe>`)
+			open_website(d.ip, website_url)
 		);
 	}
 </script>
