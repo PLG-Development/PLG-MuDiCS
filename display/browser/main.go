@@ -28,6 +28,7 @@ func (b *BrowserType) Init() error {
 
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.Flag("headless", false),
+		chromedp.Flag("app", "http://example.com"), // app mode prevents a few unwanted features of chrome, the start url is directly overwritten
 		chromedp.Flag("start-fullscreen", true),
 		chromedp.Flag("hide-scrollbars", true),
 		chromedp.Flag("allow-file-access-from-files", true),
