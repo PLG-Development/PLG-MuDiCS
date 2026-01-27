@@ -92,7 +92,6 @@
     nushell
     unzip
     iputils
-    xreader
     tree
     jq
 
