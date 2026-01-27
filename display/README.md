@@ -62,6 +62,12 @@ Even when the command itself fails.
 
 The screenshot as binary in the response body.
 
+## PATCH `/openWebsite`
+
+### Request Body
+
+- `url`: string
+
 ## POST `/file/<path>` - Upload File
 
 ### Responses

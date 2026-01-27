@@ -28,6 +28,7 @@ func StartWebServer(port string) {
 	apiGroup.PATCH("/keyboardInput", keyboardInputRoute)
 	apiGroup.PATCH("/showHTML", showHTMLRoute)
 	apiGroup.PATCH("/takeScreenshot", takeScreenshotRoute)
+	apiGroup.PATCH("/openWebsite", openWebsiteRoute)
 
 	fileGroup := apiGroup.Group("/file")
 	fileGroup.Use(extractFilePathMiddleware)
@@ -277,4 +278,20 @@ func previewRoute(ctx echo.Context) error {
 	}
 
 	return ctx.File(outputFilePath)
+}
+
+func openWebsiteRoute(ctx echo.Context) error {
+	var request struct {
+		URL string `json:"url"`
+	}
+	if err := ctx.Bind(&request); err != nil {
+		slog.Error("Failed to parse website input", "error", err)
+		return ctx.JSON(http.StatusBadRequest, shared.ErrorResponse{Description: shared.BadRequestDescription})
+	}
+
+	slog.Info("Opening url")
+
+	pkg.B.OpenPage(request.URL)
+
+	return ctx.JSON(http.StatusOK, struct{}{})
 }
