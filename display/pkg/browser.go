@@ -28,7 +28,7 @@ func (b *browser) Init() error {
 
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.Flag("headless", false),
-		chromedp.Flag("start-fullscreen", false),
+		chromedp.Flag("start-fullscreen", true),
 		chromedp.Flag("hide-scrollbars", true),
 		chromedp.Flag("allow-file-access-from-files", true),
 		chromedp.Flag("user-data-dir", browserProfileDirPath),
