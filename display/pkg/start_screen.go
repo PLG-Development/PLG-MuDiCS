@@ -41,7 +41,7 @@ func OpenStartScreen() {
 
 	var templateBuffer bytes.Buffer
 	startScreenTemplate(html, ip, mac, qrCodePath).Render(context.Background(), &templateBuffer)
-	B.OpenHTML(templateBuffer.String())
+	B.openHTML(templateBuffer.String())
 }
 
 func getDeviceIp() (string, error) {

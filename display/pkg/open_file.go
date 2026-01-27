@@ -14,14 +14,14 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
-var FileHandler fileHandler = fileHandler{}
+var fileHandler fileHandlerType = fileHandlerType{}
 
-type fileHandler struct {
+type fileHandlerType struct {
 	runningProgram *exec.Cmd
 }
 
 func OpenFile(path string) error {
-	// TODO: check if file exists
+	ResetView()
 
 	mType, err := mimetype.DetectFile(path)
 	if err != nil {
@@ -32,15 +32,15 @@ func OpenFile(path string) error {
 	case "video/mp4":
 		var templateBuffer bytes.Buffer
 		videoTemplate(path).Render(context.Background(), &templateBuffer)
-		B.OpenHTML(templateBuffer.String())
+		B.openHTML(templateBuffer.String())
 	case "image/jpeg", "image/png", "image/gif":
 		var templateBuffer bytes.Buffer
 		imageTemplate(path).Render(context.Background(), &templateBuffer)
-		B.OpenHTML(templateBuffer.String())
+		B.openHTML(templateBuffer.String())
 	case "application/pdf":
 		B.OpenPDF(path)
 	case "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.presentation":
-		err = FileHandler.openFileWithApp(path)
+		err = fileHandler.openFileWithApp(path)
 	default:
 		return fmt.Errorf("unsupported file type: %s", mType.String())
 	}
@@ -48,17 +48,12 @@ func OpenFile(path string) error {
 	return nil
 }
 
-func (fh *fileHandler) openFileWithApp(path string) error {
+func (fh *fileHandlerType) openFileWithApp(path string) error {
 	var err error
 
 	mType, err := mimetype.DetectFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to detect mime type: %w", err)
-	}
-
-	err = fh.CloseRunningProgram()
-	if err != nil {
-		return err
 	}
 
 	switch mType.String() {
@@ -81,7 +76,7 @@ func (fh *fileHandler) openFileWithApp(path string) error {
 	return nil
 }
 
-func (fh *fileHandler) openLibreoffice(path string) error {
+func (fh *fileHandlerType) openLibreoffice(path string) error {
 	// yes, we need this weird workaround to delete lock files since libreoffice
 	// doesn't expose an option to ignore them or prevent their creation
 	// the --view argument for some reason doesn't work with --show
@@ -101,7 +96,7 @@ func (fh *fileHandler) openLibreoffice(path string) error {
 	return nil
 }
 
-func (fh *fileHandler) CloseRunningProgram() error {
+func (fh *fileHandlerType) closeRunningProgram() error {
 	if fh.runningProgram == nil {
 		return nil
 	}

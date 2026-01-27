@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -78,9 +79,18 @@ func ResolveStorageFilePath(pathParam string) (string, bool, error) {
 }
 
 func ShowHTML(html string) error {
+	ResetView()
+
 	var templateBuffer bytes.Buffer
 	htmlTemplate(html).Render(context.Background(), &templateBuffer)
-	err := B.OpenHTML(templateBuffer.String())
+	err := B.openHTML(templateBuffer.String())
 
 	return err
+}
+
+func ResetView() {
+	err := fileHandler.closeRunningProgram()
+	if err != nil {
+		slog.Error("Failed to close running program", "error", err)
+	}
 }

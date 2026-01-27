@@ -47,7 +47,7 @@ func (b *browser) OpenPage(url string) {
 
 // Yes, we need that trick with creating a temp file and not directly sending html since
 // chrome only allows us to access local files via other local files
-func (b *browser) OpenHTML(html string) error {
+func (b *browser) openHTML(html string) error {
 	var err error
 
 	tempFile, err := os.CreateTemp("", "mudics-*.html")

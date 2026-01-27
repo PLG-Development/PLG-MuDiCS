@@ -193,7 +193,6 @@ func downloadFileRoute(ctx echo.Context) error {
 	return ctx.File(fullPath)
 }
 
-// TODO: reset view
 func openFileRoute(ctx echo.Context) error {
 	var err error
 
@@ -214,7 +213,6 @@ func openFileRoute(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, struct{}{})
 }
 
-// TODO: reset view
 func showHTMLRoute(ctx echo.Context) error {
 	var request struct {
 		HTML string `json:"html"`
