@@ -64,7 +64,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	err = shared.OpenBrowserWindow("http://localhost:"+port, false, "control")
+	err = openBrowserWindow("http://localhost:" + port)
 	if err != nil {
 		slog.Error("Failed to open browser window", "error", err)
 		os.Exit(1)

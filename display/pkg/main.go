@@ -3,7 +3,6 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,37 +11,6 @@ import (
 
 	"plg-mudics/shared"
 )
-
-func GetDeviceIp() (string, error) {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-	for _, addr := range addrs {
-		ipNet, ok := addr.(*net.IPNet)
-		if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-			return ipNet.IP.String(), nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable IP address found")
-}
-
-func GetDeviceMac() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-
-	for _, interf := range interfaces {
-		mac := interf.HardwareAddr.String()
-		if mac != "" {
-			return mac, nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable MAC address found")
-}
 
 func TakeScreenshot() (string, error) {
 	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("screenshot_%d.png", time.Now().Unix()))

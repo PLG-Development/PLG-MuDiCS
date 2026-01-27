@@ -1,4 +1,4 @@
-package shared
+package main
 
 import (
 	"errors"
@@ -6,35 +6,30 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"plg-mudics/shared"
 )
 
-func OpenBrowserWindow(url string, fullscreen bool, profile string) error {
+func openBrowserWindow(url string) error {
 	bins := []string{"chromium", "chromium-browser"}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("unable to determine user home directory: %w", err)
 	}
-	browserProfileDirPath := filepath.Join(home, ".local", "share", "plg-mudics", fmt.Sprintf("browser-%s", profile))
+	browserProfileDirPath := filepath.Join(home, ".local", "share", "plg-mudics", "browser-control")
 	if err := os.MkdirAll(browserProfileDirPath, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create local config directory: %w", err)
 	}
 
 	args := []string{
 		fmt.Sprintf("--app=%s", url),
-		"--autoplay-policy=no-user-gesture-required",
 		fmt.Sprintf("--user-data-dir=%s", browserProfileDirPath),
-		"--allow-running-insecure-content",
-		"--disable-features=XFrameOptions",
-	}
-	if fullscreen {
-		args = append(args, "--start-fullscreen")
 	}
 
 	errs := []string{}
 	for _, bin := range bins {
 		cmd := exec.Command(bin, args...)
-		commandOutput := RunShellCommand(cmd)
+		commandOutput := shared.RunShellCommand(cmd)
 		if commandOutput.ExitCode == 0 {
 			return nil
 		}
