@@ -1,48 +1,20 @@
 package pkg
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"net"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"plg-mudics/display/browser"
 	"plg-mudics/shared"
 )
-
-func GetDeviceIp() (string, error) {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-	for _, addr := range addrs {
-		ipNet, ok := addr.(*net.IPNet)
-		if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-			return ipNet.IP.String(), nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable IP address found")
-}
-
-func GetDeviceMac() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
-
-	for _, interf := range interfaces {
-		mac := interf.HardwareAddr.String()
-		if mac != "" {
-			return mac, nil
-		}
-	}
-
-	return "", fmt.Errorf("no suitable MAC address found")
-}
 
 func TakeScreenshot() (string, error) {
 	tempFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("screenshot_%d.png", time.Now().Unix()))
@@ -105,4 +77,21 @@ func ResolveStorageFilePath(pathParam string) (string, bool, error) {
 	}
 
 	return fullPath, true, nil
+}
+
+func ShowHTML(html string) error {
+	ResetView()
+
+	var templateBuffer bytes.Buffer
+	htmlTemplate(html).Render(context.Background(), &templateBuffer)
+	err := browser.Browser.OpenHTML(templateBuffer.String())
+
+	return err
+}
+
+func ResetView() {
+	err := fileHandler.closeRunningProgram()
+	if err != nil {
+		slog.Error("Failed to close running program", "error", err)
+	}
 }
