@@ -218,7 +218,7 @@
 					</button>
 
 					<button
-						title="Vorherige Folie (Pfeil nach Links) [gedrückt halten möglich]"
+						title="Nächste Folie (Pfeil nach Rechts) [gedrückt halten möglich]"
 						class="px-9 bg-stone-700 {$selected_online_display_ids.length === 0
 							? 'text-stone-500 cursor-not-allowed'
 							: 'hover:bg-stone-600 active:bg-stone-500 cursor-pointer'} py-2 rounded-xl flex justify-center items-center transition-colors duration-200"
