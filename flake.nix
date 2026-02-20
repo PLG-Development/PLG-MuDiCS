@@ -11,12 +11,11 @@
   in {
     devShells."x86_64-linux".default = pkgs.mkShell {
       packages = with pkgs; [
+        gcc
         libreoffice
         ungoogled-chromium
-        xreader
         imagemagick
         ffmpeg
-        ghostscript
         gnome-screenshot
 
         playwright-driver.browsers
