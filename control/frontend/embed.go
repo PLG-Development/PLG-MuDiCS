@@ -5,9 +5,6 @@ import (
 	"io/fs"
 )
 
-//go:generate deno install
-//go:generate deno task build
-
 //go:embed all:build
 var buildDir embed.FS
 

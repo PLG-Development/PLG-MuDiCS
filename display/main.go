@@ -9,8 +9,6 @@ import (
 	"plg-mudics/display/web"
 )
 
-//go:generate go tool templ generate
-
 func main() {
 	var err error
 

@@ -1,0 +1,5 @@
+gen:
+    go tool templ generate
+
+dev: gen
+    go run *.go

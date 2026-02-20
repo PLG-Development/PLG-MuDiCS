@@ -1,0 +1,7 @@
+[working-directory: 'frontend']
+gen:
+    deno install
+    deno task build
+
+dev: gen
+    go run *.go
