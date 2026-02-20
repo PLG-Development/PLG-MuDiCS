@@ -98,7 +98,6 @@
     # Libraries
     imagemagick
     ffmpeg
-    ghostscript
   ];
 
   home-manager.users.mudics = {
