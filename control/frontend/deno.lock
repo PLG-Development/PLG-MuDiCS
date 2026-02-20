@@ -3,7 +3,6 @@
   "specifiers": {
     "npm:@eslint/compat@^1.4.1": "1.4.1_eslint@9.39.2",
     "npm:@eslint/js@^9.39.2": "9.39.2",
-    "npm:@playwright/test@1.56.1": "1.56.1",
     "npm:@sveltejs/adapter-auto@^6.1.1": "6.1.1_@sveltejs+kit@2.49.3__@sveltejs+vite-plugin-svelte@6.2.3___svelte@5.46.1____acorn@8.15.0___vite@7.3.1____sass-embedded@1.97.2____picomatch@4.0.3___sass-embedded@1.97.2__svelte@5.46.1___acorn@8.15.0__typescript@5.9.3__vite@7.3.1___sass-embedded@1.97.2___picomatch@4.0.3__acorn@8.15.0__sass-embedded@1.97.2_@sveltejs+vite-plugin-svelte@6.2.3__svelte@5.46.1___acorn@8.15.0__vite@7.3.1___sass-embedded@1.97.2___picomatch@4.0.3__sass-embedded@1.97.2_svelte@5.46.1__acorn@8.15.0_typescript@5.9.3_vite@7.3.1__sass-embedded@1.97.2__picomatch@4.0.3_sass-embedded@1.97.2",
     "npm:@sveltejs/adapter-static@^3.0.10": "3.0.10_@sveltejs+kit@2.49.3__@sveltejs+vite-plugin-svelte@6.2.3___svelte@5.46.1____acorn@8.15.0___vite@7.3.1____sass-embedded@1.97.2____picomatch@4.0.3___sass-embedded@1.97.2__svelte@5.46.1___acorn@8.15.0__typescript@5.9.3__vite@7.3.1___sass-embedded@1.97.2___picomatch@4.0.3__acorn@8.15.0__sass-embedded@1.97.2_@sveltejs+vite-plugin-svelte@6.2.3__svelte@5.46.1___acorn@8.15.0__vite@7.3.1___sass-embedded@1.97.2___picomatch@4.0.3__sass-embedded@1.97.2_svelte@5.46.1__acorn@8.15.0_typescript@5.9.3_vite@7.3.1__sass-embedded@1.97.2__picomatch@4.0.3_sass-embedded@1.97.2",
     "npm:@sveltejs/kit@^2.49.3": "2.49.3_@sveltejs+vite-plugin-svelte@6.2.3__svelte@5.46.1___acorn@8.15.0__vite@7.3.1___sass-embedded@1.97.2___picomatch@4.0.3__sass-embedded@1.97.2_svelte@5.46.1__acorn@8.15.0_typescript@5.9.3_vite@7.3.1__sass-embedded@1.97.2__picomatch@4.0.3_acorn@8.15.0_sass-embedded@1.97.2",
@@ -368,13 +367,6 @@
         "@parcel/watcher-win32-x64"
       ],
       "scripts": true
-    },
-    "@playwright/test@1.56.1": {
-      "integrity": "sha512-vSMYtL/zOcFpvJCW71Q/OEGQb7KYBPAdKh35WNSkaZA75JlAO8ED8UN6GUNTm3drWomcbcqRPFqQbLae8yBTdg==",
-      "dependencies": [
-        "playwright"
-      ],
-      "bin": true
     },
     "@polka/url@1.0.0-next.29": {
       "integrity": "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="
@@ -1374,11 +1366,6 @@
     "flatted@3.3.3": {
       "integrity": "sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg=="
     },
-    "fsevents@2.3.2": {
-      "integrity": "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==",
-      "os": ["darwin"],
-      "scripts": true
-    },
     "fsevents@2.3.3": {
       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
       "os": ["darwin"],
@@ -1694,20 +1681,6 @@
     "picomatch@4.0.3": {
       "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q=="
     },
-    "playwright-core@1.56.1": {
-      "integrity": "sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==",
-      "bin": true
-    },
-    "playwright@1.56.1": {
-      "integrity": "sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==",
-      "dependencies": [
-        "playwright-core"
-      ],
-      "optionalDependencies": [
-        "fsevents@2.3.2"
-      ],
-      "bin": true
-    },
     "postcss-load-config@3.1.4_postcss@8.5.6": {
       "integrity": "sha512-6DiM4E7v4coTE4uzA8U//WhtPwyhiim3eyjEMFCnUpzbrkK9wJHgKDT2mR+HbtSrd/NubVaYTOpSpjUl8NQeRg==",
       "dependencies": [
@@ -1942,7 +1915,7 @@
         "@rollup/rollup-win32-ia32-msvc",
         "@rollup/rollup-win32-x64-gnu",
         "@rollup/rollup-win32-x64-msvc",
-        "fsevents@2.3.3"
+        "fsevents"
       ],
       "bin": true
     },
@@ -2291,7 +2264,7 @@
         "tinyglobby"
       ],
       "optionalDependencies": [
-        "fsevents@2.3.3"
+        "fsevents"
       ],
       "optionalPeers": [
         "sass-embedded"
@@ -2335,7 +2308,6 @@
       "dependencies": [
         "npm:@eslint/compat@^1.4.1",
         "npm:@eslint/js@^9.39.2",
-        "npm:@playwright/test@1.56.1",
         "npm:@sveltejs/adapter-auto@^6.1.1",
         "npm:@sveltejs/adapter-static@^3.0.10",
         "npm:@sveltejs/kit@^2.49.3",

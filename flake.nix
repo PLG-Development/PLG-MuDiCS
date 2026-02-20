@@ -17,13 +17,7 @@
         imagemagick
         ffmpeg
         gnome-screenshot
-
-        playwright-driver.browsers
       ];
-
-      PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "true";
-      PW_DISABLE_TS_ESM = "true";
     };
   };
 }
